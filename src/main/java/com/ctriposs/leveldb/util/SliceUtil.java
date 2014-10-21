@@ -10,5 +10,15 @@ public class SliceUtil {
         return data.copySlice(0, data.length() - Constant.SIZE_OF_LONG);
     }
     
-    
+    public static int calSharedCount(Slice left,Slice right){
+    	int shared = 0;
+    	if(left != null && right != null){
+    		int min = Math.min(left.length(), right.length());
+    		while(shared < min && left.getByte(shared)==right.getByte(shared) ){
+    			shared++;
+    		}
+    	}
+    	
+    	return shared;
+    }
 }

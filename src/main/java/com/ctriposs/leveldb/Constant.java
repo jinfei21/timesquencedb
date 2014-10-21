@@ -13,6 +13,6 @@ public class Constant {
     public static final int PAGE_SIZE  = 1024 * 1024;
     public static final int BUFFER_SIZE = 4096 * 4;
     
-    
+    public static final int MAX_LEVELS = 7;
     
 }

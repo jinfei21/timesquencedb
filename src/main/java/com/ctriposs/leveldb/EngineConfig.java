@@ -3,6 +3,7 @@ package com.ctriposs.leveldb;
 import java.io.File;
 
 import com.ctriposs.leveldb.util.FileUtil;
+import com.google.common.base.Preconditions;
 
 
 
@@ -14,6 +15,7 @@ public class EngineConfig {
     private String storageDir;
 	
     public EngineConfig(String dir){
+    	Preconditions.checkNotNull(dir, "storage data directory is null!");
         this.storageDir = dir;
 		if (!storageDir.endsWith(File.separator)) {
 			storageDir += File.separator;
@@ -22,6 +24,10 @@ public class EngineConfig {
 		if (!FileUtil.isFilenameValid(storageDir)) {
 			throw new IllegalArgumentException("Invalid storage data directory : " + storageDir);
 		}
+    }
+    
+    public String getStorageDir(){
+    	return this.storageDir;
     }
     
 	public LogMode getLogMode() {

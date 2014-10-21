@@ -1,5 +1,5 @@
 package com.ctriposs.leveldb.storage;
 
-public class Filename {
+public class FileName {
 
 }

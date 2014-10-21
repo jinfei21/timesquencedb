@@ -53,6 +53,10 @@ public class Slice implements Comparable<Slice>{
 		return data[index];
 	}
 	
+	public short getUnsignedByte(int index){
+		return (short)(getByte(index) & 0xFF);
+	}
+	
 	public short getShort(int index){
 		Preconditions.checkPositionIndexes(index, index + Constant.SIZE_OF_SHORT, length);
 		index += offset;
@@ -93,6 +97,12 @@ public class Slice implements Comparable<Slice>{
 		Preconditions.checkPositionIndexes(destIndex, destIndex + length, dest.length);
 		index += offset;
 		System.arraycopy(data, index, dest, destIndex, length);
+	}
+	
+	public void setByte(int index,int value){
+		Preconditions.checkPositionIndexes(index, index + Constant.SIZE_OF_BYTE, this.length);
+		index += offset;
+		data[index] = (byte)value;
 	}
 	
 	public Slice copySlice(){
