@@ -10,7 +10,6 @@ import static java.nio.file.Files.isSymbolicLink;
 
 public class FileUtil {
 
-	private static final int BUFFER_SIZE = 4096 * 4;
 	
 	/**
 	 * Only check if a given filename is valid according to the OS rules.

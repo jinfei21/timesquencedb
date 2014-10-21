@@ -5,13 +5,13 @@ import java.io.IOException;
 
 import com.ctriposs.leveldb.util.FileUtil;
 
-public class DBEngine<K> implements IEngine<K> {
+public class LevelDBEngine<K> implements IEngine<K> {
 	
 	
 	
     
 	
-	public DBEngine(String dir, EngineConfig config) throws IOException {
+	public LevelDBEngine(String dir, EngineConfig config) throws IOException {
     	
         String cacheDir = dir;
 		if (!cacheDir.endsWith(File.separator)) {
@@ -22,8 +22,7 @@ public class DBEngine<K> implements IEngine<K> {
 			throw new IllegalArgumentException("Invalid storage data directory : " + cacheDir);
 		}
      	
-		
-		
+
     	
     }
 

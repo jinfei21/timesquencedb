@@ -11,7 +11,6 @@ public class EngineConfig {
     private long maxOffHeapMemorySize = 2 * 1024 * 1024 * 1024L; // Unit: GB
 	
     
-    
 	public long getMaxOffHeapMemorySize() {
 		return this.maxOffHeapMemorySize;
 	}   

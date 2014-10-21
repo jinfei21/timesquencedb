@@ -1,12 +1,16 @@
 package com.ctriposs.leveldb;
 
-public interface ISeekIterator<T> {
+import java.util.Map.Entry;
+
+public interface ISeekIterator<K,V> extends Iterable<Entry<K, V>> {
 	
-	void seek(T key);
+	void seek(K key);
 	
 	byte[] key();
 	
 	byte[] value();
+	
+	boolean valid();
 	
 	void next();
 
