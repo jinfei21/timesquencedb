@@ -13,7 +13,6 @@ import com.ctriposs.leveldb.ILogWriter;
 import com.ctriposs.leveldb.table.Slice;
 import com.ctriposs.leveldb.util.ByteBufferUtil;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.io.Closeables;
 
 public class MapFileLogWriter implements ILogWriter {
@@ -22,15 +21,14 @@ public class MapFileLogWriter implements ILogWriter {
 	private final long fileNumber;
 	private final FileChannel fileChannel;
 	private final MappedByteBuffer mappedByteBuffer;
-	private final AtomicBoolean closed = new AtomicBoolean();
+	private final AtomicBoolean closed = new AtomicBoolean(false);
 	private long offset;
 
 	public MapFileLogWriter(File file, long fileNumber) throws IOException {
 		this.file = file;
 		this.fileNumber = fileNumber;
 		this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-		this.mappedByteBuffer = fileChannel.map(MapMode.READ_WRITE, 0,
-				Constant.PAGE_SIZE);
+		this.mappedByteBuffer = fileChannel.map(MapMode.READ_WRITE, 0,Constant.PAGE_SIZE);
 		this.offset = 0;
 
 	}
@@ -76,5 +74,8 @@ public class MapFileLogWriter implements ILogWriter {
 		if (force) {
 			mappedByteBuffer.force();
 		}
+		
+		
+		
 	}
 }

@@ -1,45 +1,41 @@
 package com.ctriposs.leveldb;
 
+import java.io.File;
+
+import com.ctriposs.leveldb.util.FileUtil;
+
 
 
 
 public class EngineConfig {
 
 	
-    private StorageMode storageMode = StorageMode.PureFile;
-    private StartMode startMode = StartMode.ClearOldFile;
-    private long maxOffHeapMemorySize = 2 * 1024 * 1024 * 1024L; // Unit: GB
+    private LogMode logMode = LogMode.MapFile;
+    private String storageDir;
 	
+    public EngineConfig(String dir){
+        this.storageDir = dir;
+		if (!storageDir.endsWith(File.separator)) {
+			storageDir += File.separator;
+		}
+		// validate directory
+		if (!FileUtil.isFilenameValid(storageDir)) {
+			throw new IllegalArgumentException("Invalid storage data directory : " + storageDir);
+		}
+    }
     
-	public long getMaxOffHeapMemorySize() {
-		return this.maxOffHeapMemorySize;
-	}   
-	
-	public StorageMode getStorageMode() {
-		return storageMode;
+	public LogMode getLogMode() {
+		return logMode;
 	}
 
-	public EngineConfig setStorageMode(StorageMode storageMode) {
-		this.storageMode = storageMode;
+	public EngineConfig setStorageMode(LogMode logMode) {
+		this.logMode = logMode;
 		return this;
 	}
-
-	public StartMode getStartMode() {
-		return startMode;
-	}
-
-	public void setStartMode(StartMode startMode) {
-		this.startMode = startMode;
-	}
 	
-	public enum StorageMode {
+	public enum LogMode {
 		PureFile,
-		MapFile,
-		OffHeapFile,
+		MapFile
 	}
 	
-	public enum StartMode {
-		ClearOldFile,
-		RecoveryFromFile
-	}
 }

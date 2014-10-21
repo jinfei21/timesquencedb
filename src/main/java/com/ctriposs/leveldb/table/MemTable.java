@@ -1,11 +1,11 @@
 package com.ctriposs.leveldb.table;
 
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.leveldb.ISeekIterator;
+import com.ctriposs.leveldb.iterator.MemTableIterator;
 import com.google.common.base.Preconditions;
 
 public class MemTable {
@@ -51,57 +51,7 @@ public class MemTable {
         return null;
     }
     
-    class MemTableIterator implements ISeekIterator<InternalKey, Slice>{
-
-		@Override
-		public Iterator<Entry<InternalKey, Slice>> iterator() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void seek(InternalKey key) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public byte[] key() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public byte[] value() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public boolean valid() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		@Override
-		public void next() {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void prev() {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void close() {
-			// TODO Auto-generated method stub
-			
-		}
-    	
-    	
+    public ISeekIterator<InternalKey, Slice> iterator(){
+    	return new MemTableIterator(table);
     }
-    
 }

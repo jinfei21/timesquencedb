@@ -1,8 +1,10 @@
 package com.ctriposs.leveldb;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map.Entry;
 
-public interface IEngine<K> {
+public interface IEngine extends Iterable<Entry<byte[], byte[]>>, Closeable{
 
 	/**
 	 * Puts the value with the specified key.
@@ -11,7 +13,7 @@ public interface IEngine<K> {
 	 * @param value the value
 	 * @throws IOException
 	 */
-	void put(K key, byte[] value) throws IOException;
+	void put(byte[] key, byte[] value) throws IOException;
 	
 	/**
 	 * Puts the value with specified key and time to idle in milliseconds.
@@ -21,7 +23,7 @@ public interface IEngine<K> {
 	 * @param ttl the time to idle value in milliseconds
 	 * @throws IOException
 	 */
-	void put(K key, byte[] value, long ttl)  throws IOException;
+	void put(byte[] key, byte[] value, long ttl)  throws IOException;
 
 	/**
 	 * Gets the value with the specified key.
@@ -30,7 +32,7 @@ public interface IEngine<K> {
 	 * @return the value
 	 * @throws IOException
 	 */
-	byte[] get(K key) throws IOException;
+	byte[] get(byte[] key) throws IOException;
 
 	/**
 	 * Delete the value with the specified key.
@@ -39,15 +41,7 @@ public interface IEngine<K> {
 	 * @return the value
 	 * @throws IOException
 	 */
-	byte[] delete(K key) throws IOException;
-	
-	/**
-	 * Get iterator for seek.
-	 *
-	 * @return the iterator
-	 * @throws IOException
-	 */
-	ISeekIterator iterator() throws IOException;
+	byte[] delete(byte[] key) throws IOException;
 	
 	/**
 	 * Close the engine.
