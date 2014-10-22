@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import com.ctriposs.leveldb.Constant;
+import com.ctriposs.leveldb.storage.SliceInput;
+import com.ctriposs.leveldb.storage.SliceOutput;
 import com.google.common.base.Preconditions;
 
 public class Slice implements Comparable<Slice>{
@@ -105,6 +107,42 @@ public class Slice implements Comparable<Slice>{
 		data[index] = (byte)value;
 	}
 	
+    public void setBytes(int index, byte[] source, int sourceIndex, int length){
+        Preconditions.checkPositionIndexes(index, index + length, this.length);
+        Preconditions.checkPositionIndexes(sourceIndex, sourceIndex + length, source.length);
+        index += offset;
+        System.arraycopy(source, sourceIndex, data, index, length);
+    }
+    
+	public void setShort(int index,int value){
+        Preconditions.checkPositionIndexes(index, index + Constant.SIZE_OF_SHORT, this.length);
+        index += offset;
+        data[index] = (byte) (value);
+        data[index + 1] = (byte) (value >>> 8);
+	}
+	
+    public void setInt(int index, int value){
+        Preconditions.checkPositionIndexes(index, index + Constant.SIZE_OF_INT, this.length);
+        index += offset;
+        data[index] = (byte) (value);
+        data[index + 1] = (byte) (value >>> 8);
+        data[index + 2] = (byte) (value >>> 16);
+        data[index + 3] = (byte) (value >>> 24);
+    }
+    
+    public void setLong(int index, long value){
+        Preconditions.checkPositionIndexes(index, index + Constant.SIZE_OF_LONG, this.length);
+        index += offset;
+        data[index] = (byte) (value);
+        data[index + 1] = (byte) (value >>> 8);
+        data[index + 2] = (byte) (value >>> 16);
+        data[index + 3] = (byte) (value >>> 24);
+        data[index + 4] = (byte) (value >>> 32);
+        data[index + 5] = (byte) (value >>> 40);
+        data[index + 6] = (byte) (value >>> 48);
+        data[index + 7] = (byte) (value >>> 56);
+    }
+	
 	public Slice copySlice(){
 		return copySlice(0,length);
 	}
@@ -126,6 +164,15 @@ public class Slice implements Comparable<Slice>{
 		index += offset;
 		return ByteBuffer.wrap(data, index, length).order(ByteOrder.LITTLE_ENDIAN);
 	}
+	
+	public SliceInput input(){
+		return new SliceInput(this);
+	}
+	
+	public SliceOutput output(){
+		return new SliceOutput(this);
+	}
+	
 	
 	@Override
 	public int compareTo(Slice o) {
@@ -192,4 +239,10 @@ public class Slice implements Comparable<Slice>{
 		return hash;
 	}
 	
+    public String toString()
+    {
+        return getClass().getSimpleName() + '(' +
+                "length=" + length() +
+                ')';
+    }
 }

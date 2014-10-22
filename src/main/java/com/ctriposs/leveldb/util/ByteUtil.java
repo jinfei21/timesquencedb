@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 public class ByteUtil {
 
@@ -17,7 +16,7 @@ public class ByteUtil {
 		return bytes;
 	}
 	
-	public static byte[] toByte(byte b) {
+	public static byte[] toBytes(byte b) {
 		byte[] bytes = new byte[1];
 		bytes[0] = b;
 		return bytes;

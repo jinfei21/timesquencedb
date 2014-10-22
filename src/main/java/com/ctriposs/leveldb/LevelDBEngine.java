@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -22,12 +21,14 @@ import com.ctriposs.leveldb.storage.FileMeta;
 import com.ctriposs.leveldb.storage.FileName;
 import com.ctriposs.leveldb.storage.MapFileLogWriter;
 import com.ctriposs.leveldb.storage.PureFileLogWriter;
+import com.ctriposs.leveldb.storage.TableBuilder;
 import com.ctriposs.leveldb.table.BytewiseComparator;
 import com.ctriposs.leveldb.table.InternalKey;
 import com.ctriposs.leveldb.table.InternalKeyComparator;
 import com.ctriposs.leveldb.table.MemTable;
 import com.ctriposs.leveldb.table.Slice;
 import com.ctriposs.leveldb.table.TableCache;
+import com.ctriposs.leveldb.table.ValueType;
 import com.google.common.base.Preconditions;
 
 public class LevelDBEngine implements IEngine {
@@ -84,10 +85,18 @@ public class LevelDBEngine implements IEngine {
 	}
 
 	@Override
-	public Iterator<Entry<byte[], byte[]>> iterator() {
+	public ISeekIterator<byte[], byte[]> iterator() {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
+	
+    public void checkBackgroundException() {
+        Throwable e = backgroundException;
+        if(e!=null) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	private void maybeScheduleCompaction(){
 		Preconditions.checkState(mutex.isHeldByCurrentThread());
@@ -196,15 +205,28 @@ public class LevelDBEngine implements IEngine {
     private FileMeta buildTable(MemTable table,long fileNumber) throws IOException{
     	File file = new File(databaseDir,FileName.tableFileName(fileNumber));
     	try{
-    		FileChannel channel = new FileOutputStream(file).getChannel();
+    		TableBuilder tableBuilder = new TableBuilder(file);
     		InternalKey minKey = null;
     		InternalKey maxKey = null;
     		
     		ISeekIterator<InternalKey, Slice> it = table.iterator();   
     		while(it.hasNext()){
-    			
+    			Entry<InternalKey, Slice> entry = it.next();
+    			InternalKey key = entry.getKey();
+    			if(minKey == null){
+    				minKey = key;
+    			}else{
+    				assert (internalKeyComparator.compare(key, maxKey) > 0) : "key must be greater than last key";
+    			}
+    			maxKey = key;
+    			tableBuilder.add(key.encode(), entry.getValue());
+    		}
+    		tableBuilder.finish();
+    		if(minKey == null){
+    			return null;
     		}
     		FileMeta fileMeta = new FileMeta(fileNumber,file.length(), minKey, maxKey);
+    		
     		
     		return fileMeta;
     	}catch (IOException e) {
@@ -268,19 +290,30 @@ public class LevelDBEngine implements IEngine {
 
 	@Override
 	public void put(byte[] key, byte[] value) throws IOException {
-		
-		
+		writeInternal(new Slice(key),new Slice(value));
 	}
-
-	@Override
-	public void put(byte[] key, byte[] value, long ttl) throws IOException {
-		// TODO Auto-generated method stub
-		
+	
+	private void writeInternal(Slice key,Slice value)throws IOException {
+		checkBackgroundException();
+		try{
+			mutex.lock();
+			makeRoomForWrite(false);
+			final long sequence = versionSet.getLastSequence() + 1;
+			versionSet.setLastSequence(sequence);
+			try{
+				logWriter.addRecord(key,value, true);
+			}catch(IOException e) {
+                throw e;
+            }
+			memTable.add(sequence, ValueType.VALUE, key, value);
+		}finally{
+			mutex.unlock();
+		}	
 	}
 
 	@Override
 	public byte[] get(byte[] key) throws IOException {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 

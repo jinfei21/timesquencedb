@@ -21,4 +21,11 @@ public class SliceUtil {
     	
     	return shared;
     }
+    
+    public static Slice allocate(int capacity){
+        if (capacity == 0) {
+            return Constant.EMPTY_SLICE;
+        }
+        return new Slice(capacity);
+    }
 }

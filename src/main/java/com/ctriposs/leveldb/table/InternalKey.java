@@ -1,6 +1,7 @@
 package com.ctriposs.leveldb.table;
 
 import com.ctriposs.leveldb.Constant;
+import com.ctriposs.leveldb.storage.SliceOutput;
 import com.ctriposs.leveldb.util.SequenceUtil;
 import com.ctriposs.leveldb.util.SliceUtil;
 import com.google.common.base.Preconditions;
@@ -30,6 +31,14 @@ public class InternalKey {
         long packedSequenceAndType = data.getLong(data.length() - Constant.SIZE_OF_LONG);
         this.sequence = SequenceUtil.unpackSequence(packedSequenceAndType);
         this.valueType = SequenceUtil.unpackValueType(packedSequenceAndType);
+    }
+    
+    public Slice encode(){
+        Slice slice = SliceUtil.allocate(userKey.length() + Constant.SIZE_OF_LONG);
+        SliceOutput sliceOutput = slice.output();
+        sliceOutput.writeBytes(userKey.getData());
+        sliceOutput.writeLong(SequenceUtil.packSequenceAndValueType(sequence, valueType));
+        return slice;
     }
 
     public InternalKey(byte[] data)

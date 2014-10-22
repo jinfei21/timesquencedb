@@ -55,7 +55,7 @@ public class PureFileLogWriter implements ILogWriter{
 	}
 
 	@Override
-	public synchronized void addRecord(Slice record, boolean force) throws IOException {
+	public synchronized void addRecord(Slice key,Slice value, boolean force) throws IOException {
 		
 		
 	}

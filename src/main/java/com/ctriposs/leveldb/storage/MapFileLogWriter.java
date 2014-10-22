@@ -12,6 +12,7 @@ import com.ctriposs.leveldb.Constant;
 import com.ctriposs.leveldb.ILogWriter;
 import com.ctriposs.leveldb.table.Slice;
 import com.ctriposs.leveldb.util.ByteBufferUtil;
+import com.ctriposs.leveldb.util.ByteUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
 
@@ -22,15 +23,12 @@ public class MapFileLogWriter implements ILogWriter {
 	private final FileChannel fileChannel;
 	private final MappedByteBuffer mappedByteBuffer;
 	private final AtomicBoolean closed = new AtomicBoolean(false);
-	private long offset;
 
 	public MapFileLogWriter(File file, long fileNumber) throws IOException {
 		this.file = file;
 		this.fileNumber = fileNumber;
 		this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
 		this.mappedByteBuffer = fileChannel.map(MapMode.READ_WRITE, 0,Constant.PAGE_SIZE);
-		this.offset = 0;
-
 	}
 
 	@Override
@@ -66,16 +64,16 @@ public class MapFileLogWriter implements ILogWriter {
 	}
 
 	@Override
-	public synchronized void addRecord(Slice record, boolean force)
+	public synchronized void addRecord(Slice key,Slice value, boolean force)
 			throws IOException {
 		Preconditions.checkState(!closed.get(), "Log has been closed");
-		
+        mappedByteBuffer.put(ByteUtil.toBytes(key.getData().length));
+        mappedByteBuffer.put(ByteUtil.toBytes(value.getData().length));
+        mappedByteBuffer.put(key.getData());
+        mappedByteBuffer.put(value.getData());
 		
 		if (force) {
 			mappedByteBuffer.force();
 		}
-		
-		
-		
 	}
 }

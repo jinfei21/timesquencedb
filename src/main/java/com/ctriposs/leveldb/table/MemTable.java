@@ -27,6 +27,10 @@ public class MemTable {
     }
     
     public void add(long sequence,ValueType valueType,Slice key,Slice value){
+        Preconditions.checkNotNull(valueType, "valueType is null");
+        Preconditions.checkNotNull(key, "key is null");
+        Preconditions.checkNotNull(valueType, "valueType is null");
+        
     	InternalKey internalKey = new InternalKey(key,sequence,valueType);
     	table.put(internalKey, value);
     	used.addAndGet(key.length() + value.length());

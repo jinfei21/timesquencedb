@@ -14,16 +14,6 @@ public interface IEngine extends Iterable<Entry<byte[], byte[]>>, Closeable{
 	 * @throws IOException
 	 */
 	void put(byte[] key, byte[] value) throws IOException;
-	
-	/**
-	 * Puts the value with specified key and time to idle in milliseconds.
-	 * 
-	 * @param key the key
-	 * @param value the value
-	 * @param ttl the time to idle value in milliseconds
-	 * @throws IOException
-	 */
-	void put(byte[] key, byte[] value, long ttl)  throws IOException;
 
 	/**
 	 * Gets the value with the specified key.
@@ -50,4 +40,10 @@ public interface IEngine extends Iterable<Entry<byte[], byte[]>>, Closeable{
 	 */
 	void close() throws IOException;
 	
+	/**
+	 * get the engine iterator.
+	 *
+	 * @throws IOException
+	 */
+	ISeekIterator<byte[], byte[]> iterator();
 }

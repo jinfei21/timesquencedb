@@ -17,5 +17,5 @@ public interface ILogWriter
 
     long getFileNumber();
 
-    void addRecord(Slice record, boolean force)throws IOException;
+    void addRecord(Slice key,Slice value, boolean force)throws IOException;
 }
