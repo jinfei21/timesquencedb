@@ -13,6 +13,7 @@ public class EngineConfig {
 	
     private LogMode logMode = LogMode.MapFile;
     private String storageDir;
+    private long maxMemorySize;
 	
     public EngineConfig(String dir){
     	Preconditions.checkNotNull(dir, "storage data directory is null!");
@@ -32,6 +33,15 @@ public class EngineConfig {
     
 	public LogMode getLogMode() {
 		return logMode;
+	}
+	
+	public EngineConfig setMaxMemorySize(long maxMemorySize){
+		this.maxMemorySize = maxMemorySize;
+		return this;
+	}
+	
+	public long getMaxMemorySize(){
+		return maxMemorySize;
 	}
 
 	public EngineConfig setStorageMode(LogMode logMode) {

@@ -13,6 +13,13 @@ public class Constant {
     public static final int PAGE_SIZE  = 1024 * 1024;
     public static final int BUFFER_SIZE = 4096 * 4;
     
+    //compaction
     public static final int MAX_LEVELS = 7;
+    public static final int LEVEL0_COMPACTION_THRESHOLD = 4;
+    public static final int LEVEL0_SLOWDOWN_WRITES_THRESHOLD = 4;
+    public static final int LEVEL0_STOP_WRITES_THRESHOLD = 4;
+    public static final int COMPACTION_FILE_SIZE = 2 * 1048576;
+    
+    
     
 }
