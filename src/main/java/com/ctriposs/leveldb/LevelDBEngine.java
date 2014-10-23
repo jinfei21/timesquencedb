@@ -1,9 +1,7 @@
 package com.ctriposs.leveldb;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -13,18 +11,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.ctriposs.leveldb.EngineConfig.LogMode;
 import com.ctriposs.leveldb.merge.Version;
 import com.ctriposs.leveldb.merge.VersionEdit;
 import com.ctriposs.leveldb.merge.VersionSet;
 import com.ctriposs.leveldb.storage.FileMeta;
 import com.ctriposs.leveldb.storage.FileName;
 import com.ctriposs.leveldb.storage.MapFileLogWriter;
-import com.ctriposs.leveldb.storage.PureFileLogWriter;
 import com.ctriposs.leveldb.storage.TableBuilder;
 import com.ctriposs.leveldb.table.BytewiseComparator;
 import com.ctriposs.leveldb.table.InternalKey;
 import com.ctriposs.leveldb.table.InternalKeyComparator;
+import com.ctriposs.leveldb.table.InternalUserComparator;
 import com.ctriposs.leveldb.table.MemTable;
 import com.ctriposs.leveldb.table.Slice;
 import com.ctriposs.leveldb.table.TableCache;
@@ -44,7 +41,7 @@ public class LevelDBEngine implements IEngine {
 	
 	private final InternalKeyComparator internalKeyComparator;
 	private final VersionSet versionSet;
-	private final TableCache tableCache = new TableCache();
+	private final TableCache tableCache;
     private final ReentrantLock mutex = new ReentrantLock();
     private final Condition backgroundCondition = mutex.newCondition();
    
@@ -62,6 +59,7 @@ public class LevelDBEngine implements IEngine {
 		
 		try{
 			mutex.lock();
+			tableCache = new TableCache(databaseDir, engineConfig.getTableCacheSize(), new InternalUserComparator(internalKeyComparator));
 			versionSet = new VersionSet(databaseDir,tableCache,internalKeyComparator);
 			
 			//从文件中恢复
@@ -76,14 +74,6 @@ public class LevelDBEngine implements IEngine {
      	
     }
 	
-	private ILogWriter createLogWriter(File file,long fileNumber) throws IOException{
-		if(engineConfig.getLogMode() == LogMode.MapFile){
-			return new MapFileLogWriter(file, fileNumber);
-		}else{
-			return new PureFileLogWriter(file, fileNumber);
-		}
-	}
-
 	@Override
 	public ISeekIterator<byte[], byte[]> iterator() {
 		// TODO Auto-generated method stub
@@ -274,7 +264,7 @@ public class LevelDBEngine implements IEngine {
 				long logFileNumber = versionSet.getNextFileNumber();
 				
 				try{
-					this.logWriter = createLogWriter(new File(databaseDir,FileName.logFileName(logFileNumber)), logFileNumber);
+					this.logWriter = new MapFileLogWriter(new File(databaseDir,FileName.logFileName(logFileNumber)), logFileNumber);
 				}catch(IOException e){
                     throw new RuntimeException("Unable to open new log file " + new File(databaseDir, FileName.logFileName(logFileNumber)).getAbsoluteFile(), e);
 				}

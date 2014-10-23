@@ -13,7 +13,8 @@ public class EngineConfig {
 	
     private LogMode logMode = LogMode.MapFile;
     private String storageDir;
-    private long maxMemorySize;
+    private long maxMemorySize = Constant.DEFAULT_MEMORY_SIZE;
+    private int tableCacheSize = Constant.DEFAULT_TABLE_CACHE_SIZE; 
 	
     public EngineConfig(String dir){
     	Preconditions.checkNotNull(dir, "storage data directory is null!");
@@ -42,6 +43,15 @@ public class EngineConfig {
 	
 	public long getMaxMemorySize(){
 		return maxMemorySize;
+	}
+
+	public int getTableCacheSize() {
+		return tableCacheSize;
+	}
+
+	public EngineConfig setTableCacheSize(int tableCacheSize) {
+		this.tableCacheSize = tableCacheSize;
+		return this;
 	}
 
 	public EngineConfig setStorageMode(LogMode logMode) {

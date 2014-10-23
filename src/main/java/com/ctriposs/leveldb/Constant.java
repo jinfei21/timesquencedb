@@ -23,7 +23,10 @@ public class Constant {
     public static final int COMPACTION_FILE_SIZE = 2 * 1048576;
     public final static int LEVEL0_DEFAULT_CAPACITY = 256 * 1024 * 1024; // 128M
     
-    public static final Slice EMPTY_SLICE = new Slice(0);
+    //const
+    public static final int DEFAULT_TABLE_CACHE_SIZE = 1024;
+    public static final int DEFAULT_MEMORY_SIZE =2*1024*1024;
     
+    public static final Slice EMPTY_SLICE = new Slice(0);
 	public final static int ITEM_META_SIZE = 8;
 }

@@ -2,9 +2,8 @@ package com.ctriposs.leveldb;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Map.Entry;
 
-public interface IEngine extends Iterable<Entry<byte[], byte[]>>, Closeable{
+public interface IEngine extends ISeekIterable<byte[], byte[]>, Closeable{
 
 	/**
 	 * Puts the value with the specified key.
@@ -40,10 +39,4 @@ public interface IEngine extends Iterable<Entry<byte[], byte[]>>, Closeable{
 	 */
 	void close() throws IOException;
 	
-	/**
-	 * get the engine iterator.
-	 *
-	 * @throws IOException
-	 */
-	ISeekIterator<byte[], byte[]> iterator();
 }

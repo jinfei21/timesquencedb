@@ -82,6 +82,4 @@ public class MemTableIterator implements ISeekIterator<InternalKey, Slice> {
 		throw new UnsupportedOperationException();
 	}
 
-
-
 }
