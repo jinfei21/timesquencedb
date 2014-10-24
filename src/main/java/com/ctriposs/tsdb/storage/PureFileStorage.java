@@ -38,7 +38,12 @@ public class PureFileStorage implements IStorage {
 
 	@Override
 	public void put(int position, byte[] source) throws IOException {
-		fileChannel.write(ByteBuffer.wrap(source), position);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(source);
+
+        while (byteBuffer.hasRemaining()) {
+            int len = fileChannel.write(byteBuffer, position);
+            position += len;
+        }
 	}
 
 	@Override
