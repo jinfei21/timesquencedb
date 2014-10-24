@@ -97,6 +97,7 @@ public class StoreLevel {
 					table = memQueue.take();
 					int size = table.entrySet().size();
 					//MapFileStorage storage = new MapFileStorage(fileManager.getStoreDir(),, capacity);
+					
 					for(Entry<InternalKey,byte[]> entry:table.entrySet()){
 						
 					}
