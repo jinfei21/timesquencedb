@@ -16,6 +16,13 @@ public class ByteUtil {
 		return bytes;
 	}
 	
+	public static void toBytes(int n,byte[] bytes,int offset) {
+		bytes[offset+3] = (byte) (n & 0xff);
+		bytes[offset+2] = (byte) (n >> 8 & 0xff);
+		bytes[offset+1] = (byte) (n >> 16 & 0xff);
+		bytes[offset+0] = (byte) (n >> 24 & 0xff);
+	}
+	
 	public static byte[] toBytes(byte b) {
 		byte[] bytes = new byte[1];
 		bytes[0] = b;

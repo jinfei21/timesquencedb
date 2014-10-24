@@ -1,31 +1,37 @@
 package com.ctriposs.tsdb.level;
 
-import java.util.concurrent.locks.Condition;
-
 import com.ctriposs.tsdb.manage.FileManager;
 
-public class PurgeLevel {
-	public final static int MAX_SIZE = 2;
+public class PurgeLevel implements Runnable{
+	public final static int MAX_PERIOD = 1000*60*60*24*30;
+	
+	
 	private FileManager fileManager;
-	private Condition condition;
-	public PurgeLevel(FileManager fileManager,int threads){
+	private volatile boolean run = false;
+	
+	public PurgeLevel(FileManager fileManager){
 		this.fileManager = fileManager;
-		this.condition = condition;
 	}
 
 	public void start(){
-		
+		if(!run){
+			run = true;
+			new Thread(this).start();
+			
+		}
 	}
 	
 	public void stop(){
+		run = false;
+	}
+
+	@Override
+	public void run() {
+
+		while(run){
+			
+		}
 		
 	}
-	
-	public void awaitUninterruptibly(){
-		condition.awaitUninterruptibly();
-	}
-	
-	public void signalAll(){
-		condition.signalAll();
-	}
+
 }

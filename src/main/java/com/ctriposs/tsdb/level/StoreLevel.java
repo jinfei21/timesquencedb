@@ -1,33 +1,40 @@
 package com.ctriposs.tsdb.level;
 
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.table.MemTable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class StoreLevel {
 	public final static int MAX_SIZE = 6;
-
+	public final static int MAX_MEM_SIZE = 6;
+	public final static int THREAD_COUNT = 2;
+	
 	private ExecutorService executor = Executors.newFixedThreadPool(2);
 	private Task[] tasks;
 	private volatile boolean run = false;
-	private PurgeLevel level1Merger;
+	private FileManager fileManager;
 	private ArrayBlockingQueue<MemTable> memQueue;
 
-	public StoreLevel(PurgeLevel level1Merger, int threads,int memSize) {
+	public StoreLevel(FileManager fileManager,int threads,int memCount) {
 		
 		this.executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder()
 															 .setNameFormat("Level0Merger-%d")
 															 .setDaemon(true)
 															 .build());
-		this.level1Merger = level1Merger;
+
 		this.tasks = new Task[threads];
 		for(int i=0;i<threads;i++){
 			tasks[i] = new Task(i);
 		}
-		this.memQueue = new ArrayBlockingQueue<MemTable>(memSize);
+		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);
+		this.fileManager = fileManager;
 	}
 
 	public void addMemTable(MemTable memTable) throws Exception {
@@ -52,22 +59,47 @@ public class StoreLevel {
 			executor.shutdownNow();
 		}
 	}
-
+	
+	public byte[] getValue(InternalKey key){
+		byte[] value = null;
+		for(MemTable table:memQueue){
+			value = table.getValue(key);
+			if(value != null){
+				return value;
+			}
+		}
+		for(Task task:tasks){
+			value = task.getValue(key);
+		}
+		return value;
+	}
 
 	class Task implements Runnable {
 
 		private int num;
-
+		private MemTable table = null;
 		public Task(int num) {
 			this.num = num;
+		}
+		
+		public byte[] getValue(InternalKey key){
+			if(table != null){
+				return table.getValue(key);
+			}else{
+				return null;
+			}
 		}
 
 		@Override
 		public void run() {
 			while(run){
 				try {
-					MemTable table1 = memQueue.take();
-					MemTable table2 = memQueue.take();
+					table = memQueue.take();
+					int size = table.entrySet().size();
+					//MapFileStorage storage = new MapFileStorage(fileManager.getStoreDir(),, capacity);
+					for(Entry<InternalKey,byte[]> entry:table.entrySet()){
+						
+					}
 					
 				} catch (InterruptedException e) {
 					//TODO 

@@ -4,17 +4,18 @@ import java.io.File;
 
 import com.ctriposs.tsdb.level.PurgeLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
-import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 import com.google.common.base.Preconditions;
 
 public class DBConfig {
 
-	private int maxMemInLevel0 = StoreLevel.MAX_SIZE;
-	private int maxMemInLevel1 = PurgeLevel.MAX_SIZE;
-	private long maxFileSize = FileManager.MAX_FILE_SIZE;
-	private int maxFileCount = FileManager.MAX_FILES;
-    private int maxMemTableSize;
+	private int maxMemTable = StoreLevel.MAX_SIZE;
+	private int storeThread = StoreLevel.THREAD_COUNT;
+    private long maxMemTableSize = MemTable.MAX_MEM_SIZE;
+    private long maxPeriod = PurgeLevel.MAX_PERIOD;
+    
+    
 	private String dir = null;	
 	
 	public DBConfig(String dir){
@@ -29,35 +30,41 @@ public class DBConfig {
 		}
 		this.dir = dir;
 	}
-	public int getMaxMemInLevel0() {
-		return maxMemInLevel0;
+
+	public int getMaxMemTable() {
+		return maxMemTable;
 	}
-	public void setMaxMemInLevel0(int maxMemInLevel0) {
-		this.maxMemInLevel0 = maxMemInLevel0;
+
+	public void setMaxMemTable(int maxMemTable) {
+		this.maxMemTable = maxMemTable;
 	}
-	public int getMaxMemInLevel1() {
-		return maxMemInLevel1;
+
+	public int getStoreThread() {
+		return storeThread;
 	}
-	public void setMaxMemInLevel1(int maxMemInLevel1) {
-		this.maxMemInLevel1 = maxMemInLevel1;
+
+	public void setStoreThread(int storeThread) {
+		this.storeThread = storeThread;
 	}
-	public long getMaxFileSize() {
-		return maxFileSize;
-	}
-	public void setMaxFileSize(long maxFileSize) {
-		this.maxFileSize = maxFileSize;
-	}
-	public int getMaxFileCount() {
-		return maxFileCount;
-	}
-	public void setMaxFileCount(int maxFileCount) {
-		this.maxFileCount = maxFileCount;
-	}
-	public int getMaxMemTableSize() {
+
+	public long getMaxMemTableSize() {
 		return maxMemTableSize;
 	}
-	public void setMaxMemTableSize(int maxMemTableSize) {
+
+	public void setMaxMemTableSize(long maxMemTableSize) {
 		this.maxMemTableSize = maxMemTableSize;
+	}
+
+	public long getMaxPeriod() {
+		return maxPeriod;
+	}
+
+	public void setMaxPeriod(long maxPeriod) {
+		this.maxPeriod = maxPeriod;
+	}
+
+	public String getDBDir() {
+		return dir;
 	}
 
 }

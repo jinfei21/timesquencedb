@@ -17,12 +17,12 @@ public class MapFileStorage implements IStorage {
 	private ThreadLocalByteBuffer threadLocalBuffer;
 	private MappedByteBuffer mappedByteBuffer;
 
-	public MapFileStorage(String dir, int index, int capacity) throws IOException {
+	public MapFileStorage(String dir, long time, int capacity) throws IOException {
 		File backFile = new File(dir);
 		if (!backFile.exists()) {
 			backFile.mkdirs();
 		}
-		String backFileName = dir + index + "-" + System.currentTimeMillis() + DATA_FILE_SUFFIX;
+		String backFileName = dir + time + DATA_FILE_SUFFIX;
 		raf = new RandomAccessFile(backFileName, "rw");
 		fileChannel = raf.getChannel();
 		mappedByteBuffer = fileChannel.map(FileChannel.MapMode.PRIVATE, 0, capacity);

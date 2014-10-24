@@ -5,11 +5,13 @@ import java.util.Map.Entry;
 
 public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
-	void seek(K key);
+	void seek(String table,String column,long time);
 	
-	void seekToFirst();
+	String table();
 	
-	byte[] key();
+	String column();
+	
+	long time();
 	
 	byte[] value();
 	

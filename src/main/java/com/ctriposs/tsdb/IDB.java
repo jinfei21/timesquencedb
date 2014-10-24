@@ -1,9 +1,13 @@
 package com.ctriposs.tsdb;
 
-public interface IDB {
+import java.io.Closeable;
+import java.io.IOException;
 
-	void put(String table,String column,long ts,byte[] value);
-	byte[] get(String table,String column,long ts);
-	void delete(long after);
+public interface IDB extends ISeekIterable<InternalKey, byte[]>, Closeable {
+
+	void put(String tableName,String colName,long time,byte[] value)throws IOException;
 	
+	byte[] get(String tableName,String colName,long time);
+	
+	void delete(long afterTime);
 }

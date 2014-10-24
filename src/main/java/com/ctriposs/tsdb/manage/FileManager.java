@@ -1,29 +1,73 @@
 package com.ctriposs.tsdb.manage;
 
-import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.FileMeta;
 
 public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
-	public final static int MAX_FILES = 500; 
+	public final static int MAX_FILES = 30; 
+
 	
-	private int maxFileCount = 0;
-	private long maxFileSize = 0;
+	private ConcurrentSkipListMap<Long,List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
+
+																			@Override
+																			public int compare(Long o1, Long o2) {
+																				
+																				return (int)(o1.longValue() - o2.longValue());
+																			}
+																		});
 	
-	private ConcurrentHashMap<FileMeta, File> fileMap = new ConcurrentHashMap<FileMeta, File>();	
-	public FileManager(int maxFileCount,long maxFileSize){
-		this.maxFileCount = maxFileCount;
-		this.maxFileSize = maxFileSize;
+	/** The list change lock. */
+	private final Lock lock = new ReentrantLock();
+	
+	private String dir;
+	
+	public FileManager(String dir){
+		this.dir = dir;
 	}
 	
-	public void add(FileMeta meta, File file){
-		this.fileMap.put(meta, file);
+	public void add(long time, FileMeta file){
+		List<FileMeta> list = timeFileMap.get(time);
+		if(list == null){
+			try{
+				lock.lock();
+				list = timeFileMap.get(time);
+				if(list==null){
+					list = new Vector<FileMeta>();
+				}
+			}finally{
+				lock.unlock();
+			}
+		}
+		list.add(file);
+		timeFileMap.put(time, list);
+	}
+	
+	public List<FileMeta> getFiles(long time){
+		return timeFileMap.get(time);
 	}
 	
 	public int getSize(){
-		return fileMap.size();
+		return timeFileMap.size();
+	}
+	
+	public byte[] getValue(InternalKey key){
+		return null;
+	}
+	
+	public void delete(long afterTime){
+		
+	}
+	
+	public String getStoreDir(){
+		return dir;
 	}
 	
 }
