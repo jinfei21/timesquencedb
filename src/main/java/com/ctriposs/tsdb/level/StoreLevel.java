@@ -1,13 +1,19 @@
 package com.ctriposs.tsdb.level;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.MapFileStorage;
+import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.MemTable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -21,6 +27,7 @@ public class StoreLevel {
 	private volatile boolean run = false;
 	private FileManager fileManager;
 	private ArrayBlockingQueue<MemTable> memQueue;
+	private AtomicInteger fileCount = new AtomicInteger(0);
 
 	public StoreLevel(FileManager fileManager,int threads,int memCount) {
 		
@@ -95,9 +102,27 @@ public class StoreLevel {
 			while(run){
 				try {
 					table = memQueue.take();
-					int size = table.entrySet().size();
-					//MapFileStorage storage = new MapFileStorage(fileManager.getStoreDir(),, capacity);
 					
+					Map<Long,IStorage> storeMap = new HashMap<Long,IStorage>();
+					for(Entry<Long,AtomicInteger> entry:table.timeMap().entrySet()){
+						int fCount = fileCount.incrementAndGet();
+						if(fCount<8){
+							
+							try {
+								storeMap.put(entry.getKey(), new MapFileStorage(fileManager.getStoreDir(), entry.getKey(),fCount, fileManager.getFileCapacity()));
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}else{
+							try {
+								storeMap.put(entry.getKey(), new PureFileStorage(fileManager.getStoreDir(), entry.getKey(),fCount, fileManager.getFileCapacity()));
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}
 					for(Entry<InternalKey,byte[]> entry:table.entrySet()){
 						
 					}

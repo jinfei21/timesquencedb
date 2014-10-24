@@ -28,8 +28,8 @@ public class FileManager {
 	private final Lock lock = new ReentrantLock();
 	
 	private String dir;
-	
-	public FileManager(String dir){
+	private int fileCapacity;
+	public FileManager(String dir,int fileCapacity){
 		this.dir = dir;
 	}
 	
@@ -68,6 +68,10 @@ public class FileManager {
 	
 	public String getStoreDir(){
 		return dir;
+	}
+
+	public int getFileCapacity() {
+		return fileCapacity;
 	}
 	
 }
