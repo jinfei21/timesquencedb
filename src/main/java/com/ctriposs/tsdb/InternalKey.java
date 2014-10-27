@@ -10,7 +10,7 @@ public class InternalKey implements Comparator<InternalKey>{
 	private long code;
 	private long time;
 	
-	public InternalKey(int tableCode,int columnCode,long time){
+	public InternalKey(int tableCode, int columnCode, long time) {
 		this.code = ByteUtil.ToLong(tableCode, columnCode);
 		this.time = time;
 	}
