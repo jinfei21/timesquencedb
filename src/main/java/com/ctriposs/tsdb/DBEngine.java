@@ -49,7 +49,7 @@ public class DBEngine implements IDB{
 	public DBEngine(DBConfig config){
 		this.config = config;
 		this.internalKeyComparator = new InternalKeyComparator();
-		this.fileManager = new FileManager(config.getDBDir());
+		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity());
 		this.nameManager = new NameManager(config.getDBDir());
 		this.memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
@@ -59,10 +59,7 @@ public class DBEngine implements IDB{
 		this.purgeLevel.start();
 	}
 	
-	private long format(long time){
-		return time/1000*1000;
-	}
-	
+
 	private void checkTime(long time){
 		long threshold = time -(System.currentTimeMillis() - config.getMaxPeriod());
 		if(threshold < 0){
@@ -77,7 +74,7 @@ public class DBEngine implements IDB{
 		
 		checkTime(time);
 		
-		InternalKey key = new InternalKey(nameManager.getTableCode(tableName),nameManager.getColumnCode(colName),format(time));
+		InternalKey key = new InternalKey(nameManager.getCode(tableName),nameManager.getCode(colName),time);
 		
 		if(!memTable.add(key, value)){
 			try{
@@ -106,7 +103,7 @@ public class DBEngine implements IDB{
 		getCounter.incrementAndGet();
 		checkTime(time);
 		
-		InternalKey key = new InternalKey(nameManager.getTableCode(tableName),nameManager.getColumnCode(colName),format(time));
+		InternalKey key = new InternalKey(nameManager.getCode(tableName),nameManager.getCode(colName),time);
 		byte[] value = memTable.getValue(key);
 		if(value == null){
 			value = storeLevel.getValue(key);
@@ -121,7 +118,7 @@ public class DBEngine implements IDB{
 	public void delete(long afterTime) {
 		deleteCounter.incrementAndGet();
 		checkTime(afterTime);
-		fileManager.delete(format(afterTime));
+		fileManager.delete(afterTime);
 	}
 	
 	@Override

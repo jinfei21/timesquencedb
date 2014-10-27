@@ -8,12 +8,8 @@ public class FileName {
 		return makeFileName(number, "log");
 	}
 	
-	public static String colFileName(long number){
-		return makeFileName(number,"col");
-	}
-	
-	public static String tableFileName(long number){
-		return makeFileName(number,"table");
+	public static String nameFileName(long number){
+		return makeFileName(number,"name");
 	}
 	
 	public static String metaFileName(long number){

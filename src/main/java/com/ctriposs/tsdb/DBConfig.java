@@ -14,7 +14,7 @@ public class DBConfig {
 	private int storeThread = StoreLevel.THREAD_COUNT;
     private long maxMemTableSize = MemTable.MAX_MEM_SIZE;
     private long maxPeriod = PurgeLevel.MAX_PERIOD;
-    
+    private long fileCapacity = StoreLevel.FILE_SIZE;
     
 	private String dir = null;	
 	
@@ -65,6 +65,14 @@ public class DBConfig {
 
 	public String getDBDir() {
 		return dir;
+	}
+
+	public long getFileCapacity() {
+		return fileCapacity;
+	}
+
+	public void setFileCapacity(long fileCapacity) {
+		this.fileCapacity = fileCapacity;
 	}
 
 }

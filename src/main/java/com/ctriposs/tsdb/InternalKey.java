@@ -1,15 +1,15 @@
 package com.ctriposs.tsdb;
 
+import com.ctriposs.tsdb.util.ByteUtil;
+
 
 public class InternalKey {
 
-	private int tableCode;
-	private int columnCode;
+	private long code;
 	private long time;
 	
 	public InternalKey(int tableCode,int columnCode,long time){
-		this.tableCode = tableCode;
-		this.columnCode = columnCode;
+		this.code = ByteUtil.ToLong(tableCode, columnCode);
 		this.time = time;
 	}
 
@@ -22,19 +22,27 @@ public class InternalKey {
 	}
 
 	public int getTableCode() {
-		return tableCode;
-	}
-
-	public void setTableCode(int tableCode) {
-		this.tableCode = tableCode;
+		byte[] bytes = ByteUtil.toBytes(code);				
+		return ByteUtil.ToInt(bytes, 0);
 	}
 
 	public int getColumnCode() {
-		return columnCode;
+		byte[] bytes = ByteUtil.toBytes(code);		
+		return ByteUtil.ToInt(bytes, 4);
 	}
 
-	public void setColumnCode(int columnCode) {
-		this.columnCode = columnCode;
+	public long getCode(){
+		return this.code;
 	}
-
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof InternalKey){
+			InternalKey other = (InternalKey) o;
+			if(code == other.code && time == other.time){
+				return true;
+			}
+		}
+		return false;
+	}
 }

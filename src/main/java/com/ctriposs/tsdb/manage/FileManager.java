@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -28,9 +29,13 @@ public class FileManager {
 	private final Lock lock = new ReentrantLock();
 	
 	private String dir;
-	private int fileCapacity;
-	public FileManager(String dir,int fileCapacity){
+	private long fileCapacity;
+	private AtomicLong maxFileNumber = new AtomicLong(0L); 
+	
+	
+	public FileManager(String dir,long fileCapacity){
 		this.dir = dir;
+		this.fileCapacity = fileCapacity;
 	}
 	
 	public void add(long time, FileMeta file){
@@ -70,8 +75,11 @@ public class FileManager {
 		return dir;
 	}
 
-	public int getFileCapacity() {
+	public long getFileCapacity() {
 		return fileCapacity;
 	}
 	
+	public long getFileNumber(){
+		return maxFileNumber.incrementAndGet();
+	}
 }

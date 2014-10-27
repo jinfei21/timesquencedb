@@ -13,7 +13,7 @@ public class PureFileStorage implements IStorage {
 	private FileChannel fileChannel;
 	private RandomAccessFile raf;
 	
-	public PureFileStorage(String dir, long time,int index, int capacity) throws IOException {
+	public PureFileStorage(String dir, long time,long index, long capacity) throws IOException {
 		File dirFile = new File(dir);
 		if (!dirFile.exists()) {
             dirFile.mkdirs();
@@ -25,7 +25,7 @@ public class PureFileStorage implements IStorage {
 		fileChannel = raf.getChannel();
 	}
 
-	public PureFileStorage(File file, int capacity) throws IOException {
+	public PureFileStorage(File file, long capacity) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
 		raf.setLength(capacity);
 		fileChannel = raf.getChannel();
@@ -42,6 +42,15 @@ public class PureFileStorage implements IStorage {
 
         while (byteBuffer.hasRemaining()) {
             int len = fileChannel.write(byteBuffer, position);
+            position += len;
+        }
+	}
+	
+	@Override
+	public void put(int position, ByteBuffer source) throws IOException {
+
+        while (source.hasRemaining()) {
+            int len = fileChannel.write(source, position);
             position += len;
         }
 	}
@@ -64,4 +73,6 @@ public class PureFileStorage implements IStorage {
 			this.raf.close();
 		}
 	}
+
+
 }

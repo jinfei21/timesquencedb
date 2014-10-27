@@ -10,11 +10,11 @@ public class InternalKeyComparator implements Comparator<InternalKey>{
 
 	@Override
 	public int compare(InternalKey o1, InternalKey o2) {
-		int code = o1.getTableCode() - o2.getTableCode();
-		if(code == 0){
-			code = o1.getColumnCode() - o2.getColumnCode();
+		int diff = (int) (o1.getCode() - o2.getCode());
+		if(diff == 0){
+			diff = (int) (o1.getTime() - o2.getTime());
 		}
-		return code;
+		return diff;
 	}
 
 

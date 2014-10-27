@@ -2,6 +2,7 @@ package com.ctriposs.tsdb;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 
 /**
@@ -28,6 +29,13 @@ public interface IStorage  extends Closeable {
 	 */
 	void put(int position, byte[] source) throws IOException;
 	
+	/**
+	 * Puts source to the specified location of the Storage.
+	 *
+	 * @param position the position
+	 * @param source the source
+	 */
+	void put(int position, ByteBuffer source) throws IOException;
 	
 	/**
 	 * Frees the storage.
