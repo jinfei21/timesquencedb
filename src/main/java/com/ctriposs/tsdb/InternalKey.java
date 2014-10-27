@@ -14,6 +14,11 @@ public class InternalKey implements Comparator<InternalKey>{
 		this.code = ByteUtil.ToLong(tableCode, columnCode);
 		this.time = time;
 	}
+	
+	public InternalKey(long code,long time) {
+		this.code = code;
+		this.time = time;
+	}
 
 	public long getTime() {
 		return time;

@@ -12,13 +12,15 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
 	String column();
 	
+	K key();
+	
 	long time();
 	
 	byte[] value()throws IOException;
 	
 	boolean valid();
 	
-	void prev();
+	Entry<K,V> prev();
 
 	void close()throws IOException; 
 }

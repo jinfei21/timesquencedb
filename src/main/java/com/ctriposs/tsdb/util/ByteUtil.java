@@ -71,8 +71,28 @@ public class ByteUtil {
 	}
 
 	public static int ToInt(byte bytes[]) {
-		return bytes[3] & 0xff | (bytes[2] & 0xff) << 8
-				| (bytes[1] & 0xff) << 16 | (bytes[0] & 0xff) << 24;
+		return (bytes[3] & 0xff 
+				| (bytes[2] & 0xff) << 8
+				| (bytes[1] & 0xff) << 16 
+				| (bytes[0] & 0xff) << 24);
+	}
+	
+	public static int ToInt(byte bytes[],int offset){
+		return (bytes[offset+3] & 0xff 
+				| (bytes[offset+2] & 0xff) << 8
+				| (bytes[offset+1] & 0xff) << 16 
+				| (bytes[offset+0] & 0xff) << 24);
+	}
+	
+	public static long ToLong(byte[] bytes,int offset){
+		return ((((long) bytes[offset+0] & 0xff) << 56)
+				| (((long) bytes[offset+1] & 0xff) << 48)
+				| (((long) bytes[offset+2] & 0xff) << 40)
+				| (((long) bytes[offset+3] & 0xff) << 32)
+				| (((long) bytes[offset+4] & 0xff) << 24)
+				| (((long) bytes[offset+5] & 0xff) << 16)
+				| (((long) bytes[offset+6] & 0xff) << 8) 
+				| (((long) bytes[offset+7] & 0xff) << 0));
 	}
 
 	public static long ToLong(byte[] bytes) {
@@ -94,15 +114,10 @@ public class ByteUtil {
 		bytes[0] = (byte) (n1 >> 24 & 0xff);
 		
 		bytes[7] = (byte) (n2 & 0xff);
-		bytes[7] = (byte) (n2 >> 8 & 0xff);
+		bytes[6] = (byte) (n2 >> 8 & 0xff);
 		bytes[5] = (byte) (n2 >> 16 & 0xff);
 		bytes[4] = (byte) (n2 >> 24 & 0xff);
 		return ToLong(bytes);
-	}
-	
-	public static int ToInt(byte[] bytes,int offset){
-		return bytes[offset+3] & 0xff | (bytes[offset+2] & 0xff) << 8
-				| (bytes[offset+1] & 0xff) << 16 | (bytes[offset+0] & 0xff) << 24;
 	}
 
     public static int compare(byte[] left, byte[] right) {
