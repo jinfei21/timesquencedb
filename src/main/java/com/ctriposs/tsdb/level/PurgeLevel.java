@@ -3,9 +3,10 @@ package com.ctriposs.tsdb.level;
 import com.ctriposs.tsdb.manage.FileManager;
 
 public class PurgeLevel implements Runnable{
-	public final static int MAX_PERIOD = 1000*60*60*24*30;
-	
-	
+
+	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30;
+
+
 	private FileManager fileManager;
 	private volatile boolean run = false;
 	
