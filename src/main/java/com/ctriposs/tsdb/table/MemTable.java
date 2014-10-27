@@ -32,10 +32,9 @@ public class MemTable {
 	}
 
 	private long format(long time){
-		return time/1000*1000;
+		return time/60000*60000;
 	}
 	
-
 	public boolean add(InternalKey key, byte value[]) {
 		boolean result = true;
 

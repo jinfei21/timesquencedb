@@ -1,11 +1,12 @@
 package com.ctriposs.tsdb;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
-	void seek(String table,String column,long time);
+	void seek(String table,String column,long time)throws IOException;
 	
 	String table();
 	
@@ -13,11 +14,11 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
 	long time();
 	
-	byte[] value();
+	byte[] value()throws IOException;
 	
 	boolean valid();
 	
 	void prev();
 
-	void close(); 
+	void close()throws IOException; 
 }

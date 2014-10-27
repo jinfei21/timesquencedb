@@ -1,32 +1,23 @@
 package com.ctriposs.tsdb.storage;
 
 
+import java.io.File;
+
 import com.ctriposs.tsdb.InternalKey;
 
 public class FileMeta {
 
-    private final String fileName;
-
-    private final long fileSize;
+    private final File file;
 
     private final InternalKey smallest;
 
     private final InternalKey largest;
 
-	public FileMeta(String fileName, long fileSize, InternalKey smallest, InternalKey largest) {
-        this.fileName = fileName;
-        this.fileSize = fileSize;
+	public FileMeta(File file, InternalKey smallest, InternalKey largest) {
+        this.file = file;
         this.smallest = smallest;
         this.largest = largest;
 	}
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public long getFileSize() {
-        return fileSize;
-    }
 
     public InternalKey getSmallest() {
         return smallest;
@@ -36,12 +27,16 @@ public class FileMeta {
         return largest;
     }
 
+    public File getFile(){
+    	return file;
+    }
+    
 	@Override
 	public String toString(){
 		final StringBuilder sb = new StringBuilder();
 		sb.append("FileMeta");
-		sb.append("{name=").append(fileName);
-        sb.append(", fileSize=").append(fileSize);
+		sb.append("{name=").append(file.getName());
+        sb.append(", fileSize=").append(file.length());
         sb.append(", smallest=").append(smallest);
         sb.append(", largest=").append(largest);
 		sb.append('}');

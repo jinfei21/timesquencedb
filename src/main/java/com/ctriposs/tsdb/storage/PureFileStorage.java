@@ -12,14 +12,14 @@ public class PureFileStorage implements IStorage {
 
 	private FileChannel fileChannel;
 	private RandomAccessFile raf;
-	
+	private String fullFileName;
 	public PureFileStorage(String dir, long time,long index, long capacity) throws IOException {
 		File dirFile = new File(dir);
 		if (!dirFile.exists()) {
             dirFile.mkdirs();
         }
 
-		String fullFileName = dir + time+"-"+index + DATA_FILE_SUFFIX;
+		fullFileName = dir + time+"-"+index + DATA_FILE_SUFFIX;
 		raf = new RandomAccessFile(fullFileName, "rw");
 		raf.setLength(capacity);
 		fileChannel = raf.getChannel();
@@ -27,6 +27,7 @@ public class PureFileStorage implements IStorage {
 
 	public PureFileStorage(File file, long capacity) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
+		fullFileName = file.getPath();
 		raf.setLength(capacity);
 		fileChannel = raf.getChannel();
 	}
@@ -72,6 +73,11 @@ public class PureFileStorage implements IStorage {
 		if (this.raf != null) {
 			this.raf.close();
 		}
+	}
+
+	@Override
+	public String getName() {
+		return fullFileName;
 	}
 
 

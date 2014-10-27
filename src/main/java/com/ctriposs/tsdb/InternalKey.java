@@ -1,9 +1,11 @@
 package com.ctriposs.tsdb;
 
+import java.util.Comparator;
+
 import com.ctriposs.tsdb.util.ByteUtil;
 
 
-public class InternalKey {
+public class InternalKey implements Comparator<InternalKey>{
 
 	private long code;
 	private long time;
@@ -44,5 +46,14 @@ public class InternalKey {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public int compare(InternalKey o1, InternalKey o2) {
+		int diff = (int) (o1.getCode() - o2.getCode());
+		if(diff == 0){
+			diff = (int) (o1.getTime() - o2.getTime());
+		}
+		return diff;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.File;
 
 import com.ctriposs.tsdb.level.PurgeLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
+import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 import com.google.common.base.Preconditions;
@@ -15,7 +16,7 @@ public class DBConfig {
     private long maxMemTableSize = MemTable.MAX_MEM_SIZE;
     private long maxPeriod = PurgeLevel.MAX_PERIOD;
     private long fileCapacity = StoreLevel.FILE_SIZE;
-    
+    private InternalKeyComparator internalKeyComparator = new InternalKeyComparator();
 	private String dir = null;	
 	
 	public DBConfig(String dir){
@@ -73,6 +74,14 @@ public class DBConfig {
 
 	public void setFileCapacity(long fileCapacity) {
 		this.fileCapacity = fileCapacity;
+	}
+
+	public InternalKeyComparator getInternalKeyComparator() {
+		return internalKeyComparator;
+	}
+
+	public void setInternalKeyComparator(InternalKeyComparator internalKeyComparator) {
+		this.internalKeyComparator = internalKeyComparator;
 	}
 
 }
