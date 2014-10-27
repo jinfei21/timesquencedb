@@ -11,14 +11,14 @@ import com.ctriposs.tsdb.storage.DataMeta;
 public class MemTable {
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
 
-	private final ConcurrentHashMap<Long,ConcurrentSkipListMap<InternalKey, byte[]>> table;	
+	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final int maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	
 	public MemTable(int maxMemTableSize,InternalKeyComparator internalKeyComparator) {
-		this.table = new ConcurrentHashMap<Long,ConcurrentSkipListMap<InternalKey, byte[]>>();
+		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
 	}
@@ -34,7 +34,6 @@ public class MemTable {
 	private long format(long time){
 		return time/1000*1000;
 	}
-	
 
 	public boolean add(InternalKey key, byte value[]) {
 		boolean result = true;
