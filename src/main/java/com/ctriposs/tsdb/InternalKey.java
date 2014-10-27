@@ -7,7 +7,7 @@ public class InternalKey {
 	private int columnCode;
 	private long time;
 	
-	public InternalKey(int tableCode,int columnCode,long time){
+	public InternalKey(int tableCode, int columnCode, long time) {
 		this.tableCode = tableCode;
 		this.columnCode = columnCode;
 		this.time = time;

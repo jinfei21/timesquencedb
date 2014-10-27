@@ -4,9 +4,7 @@ import java.util.Comparator;
 
 import com.ctriposs.tsdb.InternalKey;
 
-
-
-public class InternalKeyComparator implements Comparator<InternalKey>{
+public class InternalKeyComparator implements Comparator<InternalKey> {
 
 	@Override
 	public int compare(InternalKey o1, InternalKey o2) {
@@ -16,6 +14,4 @@ public class InternalKeyComparator implements Comparator<InternalKey>{
 		}
 		return code;
 	}
-
-
 }

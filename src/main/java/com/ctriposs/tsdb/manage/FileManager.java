@@ -15,7 +15,7 @@ public class FileManager {
 	public final static long MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024L;
 	public final static int MAX_FILES = 30; 
 
-	private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(
+    private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(
         new Comparator<Long>() {
 
             @Override
