@@ -17,7 +17,7 @@ public class MapFileStorage implements IStorage {
 	private ThreadLocalByteBuffer threadLocalBuffer;
 	private MappedByteBuffer mappedByteBuffer;
 
-	public MapFileStorage(String dir, long time, int index,int capacity) throws IOException {
+	public MapFileStorage(String dir, long time, long index,long capacity) throws IOException {
 		File backFile = new File(dir);
 		if (!backFile.exists()) {
 			backFile.mkdirs();
@@ -29,7 +29,7 @@ public class MapFileStorage implements IStorage {
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 	
-	public MapFileStorage(File file, int capacity) throws IOException {
+	public MapFileStorage(File file, long capacity) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
 		mappedByteBuffer = raf.getChannel().map(FileChannel.MapMode.PRIVATE, 0, capacity);
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
@@ -71,6 +71,13 @@ public class MapFileStorage implements IStorage {
 		ByteBuffer buffer = this.getLocal(position);
 		buffer.put(source);
 	}
+	
+
+	@Override
+	public void put(int position, ByteBuffer source) throws IOException {
+		ByteBuffer buffer = this.getLocal(position);
+		buffer.put(source);
+	}
 
 	@Override
 	public void free() {
@@ -98,5 +105,6 @@ public class MapFileStorage implements IStorage {
             return _src.duplicate();
 		}
 	}
+
 
 }

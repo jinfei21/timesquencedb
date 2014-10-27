@@ -82,7 +82,27 @@ public class ByteUtil {
 				| (((long) bytes[3] & 0xff) << 32)
 				| (((long) bytes[4] & 0xff) << 24)
 				| (((long) bytes[5] & 0xff) << 16)
-				| (((long) bytes[6] & 0xff) << 8) | (((long) bytes[7] & 0xff) << 0));
+				| (((long) bytes[6] & 0xff) << 8) 
+				| (((long) bytes[7] & 0xff) << 0));
+	}
+	
+	public static long ToLong(int n1,int n2){
+		byte[] bytes = new byte[8];
+		bytes[3] = (byte) (n1 & 0xff);
+		bytes[2] = (byte) (n1 >> 8 & 0xff);
+		bytes[1] = (byte) (n1 >> 16 & 0xff);
+		bytes[0] = (byte) (n1 >> 24 & 0xff);
+		
+		bytes[7] = (byte) (n2 & 0xff);
+		bytes[7] = (byte) (n2 >> 8 & 0xff);
+		bytes[5] = (byte) (n2 >> 16 & 0xff);
+		bytes[4] = (byte) (n2 >> 24 & 0xff);
+		return ToLong(bytes);
+	}
+	
+	public static int ToInt(byte[] bytes,int offset){
+		return bytes[offset+3] & 0xff | (bytes[offset+2] & 0xff) << 8
+				| (bytes[offset+1] & 0xff) << 16 | (bytes[offset+0] & 0xff) << 24;
 	}
 
     public static int compare(byte[] left, byte[] right) {
