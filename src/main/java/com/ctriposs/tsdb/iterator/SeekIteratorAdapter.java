@@ -17,11 +17,13 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private FileManager fileManager;
 	private NameManager nameManager;
-	private List<ISeekIterator<InternalKey, byte[]>> iterators;
+	private List<IInternalSeekIterator<InternalKey, byte[]>> iterators;
 	private Direction direction;
 	private InternalKeyComparator internalKeyComparator;
 	private Entry<InternalKey, byte[]> curEntry;
-	private ISeekIterator<InternalKey, byte[]> curIterator;
+	private IInternalSeekIterator<InternalKey, byte[]> curIterator;
+	private long curSeekTime;
+	private InternalKey seekKey;
 	
 	public SeekIteratorAdapter(FileManager fileManager,NameManager nameManager,InternalKeyComparator internalKeyComparator){
 		this.fileManager = fileManager;
@@ -30,18 +32,36 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.direction = Direction.forward;
 		this.internalKeyComparator = internalKeyComparator;
 		this.curIterator = null;
+		this.iterators = null;
 	}
 
 	@Override
 	public boolean hasNext() {
 		boolean result = false;
-		for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+		for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
 			if(it.hasNext()){
 				result = true; 
 			}
 		}
 		if(!result){
-			
+			curSeekTime += 60000;
+			if(curSeekTime < System.currentTimeMillis()){
+				try {
+					iterators = getNextIterators(curSeekTime);
+					if(null != iterators){
+						for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+							it.seek(seekKey.getCode(), curSeekTime);
+						}		
+						findSmallest();
+						direction = Direction.forward;
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					result = false;
+				}
+			}else{
+				result = false;
+			}
 		}
 		return result;
 	}
@@ -49,12 +69,12 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
-			for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+			for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
 
 				if (it != curIterator) {
 					try {
 						if (it.hasNext()) {
-							it.seek(table(), column(), key().getTime());
+							it.seek(seekKey.getCode(), curSeekTime);
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -74,11 +94,11 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if(direction != Direction.reverse){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
 				if(curIterator != it){
 					try {
 						if(it.hasNext()){
-							it.seek(table(), column(), key().getTime());
+							it.seek(seekKey.getCode(), curSeekTime);
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -104,20 +124,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
+		seekKey = new InternalKey(nameManager.getCode(table),nameManager.getCode(column),time);
 		iterators = getNextIterators(time);
 		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
-				it.seek(table, column, time);
-			}
+			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+				it.seek(seekKey.getCode(), time);
+			}		
+			findSmallest();
+			direction = Direction.forward;
 		}
-		findSmallest();
-		direction = Direction.forward;
 	}
 	
 	private void findSmallest(){
 		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> smallest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			IInternalSeekIterator<InternalKey, byte[]> smallest = null;
+			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
 				if(it.hasNext()){
 					if(smallest == null){
 						smallest = it;
@@ -132,8 +153,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findLargest(){
 		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> largest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			IInternalSeekIterator<InternalKey, byte[]> largest = null;
+			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
 				if(it.hasNext()){
 					if(largest == null){
 						largest = it;
@@ -146,17 +167,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-	private List<ISeekIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException{
-		
+	private List<IInternalSeekIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException{
+		if(time > System.currentTimeMillis()){
+			return null;
+		}
+		curSeekTime = time;
 		List<FileMeta> metas = fileManager.getFiles(format(time));
 		if(metas != null){
-			List<ISeekIterator<InternalKey, byte[]>> list = new ArrayList<ISeekIterator<InternalKey, byte[]>>();
+			List<IInternalSeekIterator<InternalKey, byte[]>> list = new ArrayList<IInternalSeekIterator<InternalKey, byte[]>>();
 			for(FileMeta meta:metas){
 				list.add(new FileSeekInterator(new PureFileStorage(meta.getFile(), meta.getFile().length()), nameManager));
 			}
 			return list;
+		}else{
+			return getNextIterators(time+60000);
 		}
-		return null;
 	}
 	
 
@@ -206,7 +231,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public void close() throws IOException{
 		
 		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
 				it.close();
 			}
 		}

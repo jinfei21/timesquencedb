@@ -3,7 +3,6 @@ package com.ctriposs.tsdb.iterator;
 import java.io.IOException;
 import java.util.Map.Entry;
 
-import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
@@ -11,7 +10,7 @@ import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class FileSeekInterator implements ISeekIterator<InternalKey, byte[]>{
+public class FileSeekInterator implements IInternalSeekIterator<InternalKey, byte[]>{
 	
 	private final NameManager nameManager;
 	private int current = -1;
@@ -19,7 +18,6 @@ public class FileSeekInterator implements ISeekIterator<InternalKey, byte[]>{
 	private int count = 0;
 	private DataMeta curMeta;
 	private Entry<InternalKey, byte[]> curEntry;
-	private InternalKey seekKey;
 	
 	public FileSeekInterator(IStorage storage,NameManager nameManager) throws IOException{
 		this.storage = storage;
@@ -66,15 +64,14 @@ public class FileSeekInterator implements ISeekIterator<InternalKey, byte[]>{
 	}
 
 	@Override
-	public void seek(String table, String column, long time)throws IOException {
+	public void seek(long code, long time)throws IOException {
 		
-		seekKey = new InternalKey(nameManager.getCode(table),nameManager.getCode(column),time);
 		int left = 0;
 		int right = count - 1;
 		while(left < right){
 			int mid = (left + right + 1)/2;
 			DataMeta meta = read(mid);
-			if(seekKey.getCode() < meta.getCode()){
+			if(code < meta.getCode()){
 				right = mid - 1;
 			}else{
 				left = mid + 1;
