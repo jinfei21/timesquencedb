@@ -1,5 +1,6 @@
 package com.ctriposs.tsdb.level;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +104,7 @@ public class StoreLevel {
 		}
 		
 		private FileMeta storeFile(Long time,ConcurrentSkipListMap<InternalKey, byte[]> dataMap)throws IOException{
-			FileMeta fileMeta = new FileMeta();
+			
 			IStorage storage = null;
 			if(fileCount.get() < 8){
 				storage = new MapFileStorage(fileManager.getStoreDir(),time,fileManager.getFileNumber(), fileManager.getFileCapacity());
@@ -116,7 +117,12 @@ public class StoreLevel {
 
 			storage.put(0, ByteUtil.toBytes(size));
 			int i=0;
+			InternalKey smallest = null;
+			InternalKey largest = null;
 			for(Entry<InternalKey, byte[]> entry:dataMap.entrySet()){
+				if(i==0){
+					smallest = entry.getKey();
+				}
 				//write meta
 				int metaOffset = 4+DataMeta.META_SIZE*i;
 				storage.put(metaOffset + DataMeta.CODE_OFFSET, ByteUtil.toBytes(entry.getKey().getCode()));
@@ -128,8 +134,9 @@ public class StoreLevel {
 				storage.put(dataOffset, entry.getValue());
 				dataOffset += entry.getValue().length;
 				i++;
+				largest =  entry.getKey();
 			}
-			
+			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
 			return fileMeta;	
 		}
 

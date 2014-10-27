@@ -10,18 +10,20 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.table.InternalKeyComparator;
 
 public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
 	public final static int MAX_FILES = 30; 
 
-    private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(
-        new Comparator<Long>() {
-            @Override
-            public int compare(Long o1, Long o2) {
-                return (int)(o1.longValue() - o2.longValue());
-        }
-    });
+	private ConcurrentSkipListMap<Long,List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
+
+																			@Override
+																			public int compare(Long o1, Long o2) {
+																				
+																				return (int)(o1.longValue() - o2.longValue());
+																			}
+																		});
 	
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
@@ -29,11 +31,12 @@ public class FileManager {
 	private String dir;
 	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(0L); 
+	private InternalKeyComparator internalKeyComparator;
 	
-	
-	public FileManager(String dir,long fileCapacity){
+	public FileManager(String dir,long fileCapacity, InternalKeyComparator internalKeyComparator){
 		this.dir = dir;
 		this.fileCapacity = fileCapacity;
+		this.internalKeyComparator = internalKeyComparator;
 	}
 	
 	public void add(long time, FileMeta file){
@@ -44,13 +47,13 @@ public class FileManager {
 				list = timeFileMap.get(time);
 				if(list==null){
 					list = new Vector<FileMeta>();
+					timeFileMap.put(time, list);
 				}
 			}finally{
 				lock.unlock();
 			}
 		}
 		list.add(file);
-		timeFileMap.put(time, list);
 	}
 	
 	public List<FileMeta> getFiles(long time){
@@ -61,7 +64,29 @@ public class FileManager {
 		return timeFileMap.size();
 	}
 	
+	private long format(long time){
+		return time/60000*60000;
+	}
+	
+	private boolean contain(FileMeta meta,InternalKey key){
+		if(key.compare(key, meta.getSmallest())>=0
+			&&key.compare(key, meta.getLargest())<=0){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
 	public byte[] getValue(InternalKey key){
+		long ts = key.getTime();
+		List<FileMeta> list = getFiles(format(ts));
+		if(list != null){
+			for(FileMeta meta:list){
+				if(contain(meta,key)){
+					
+				}
+			}
+		}
 		return null;
 	}
 	

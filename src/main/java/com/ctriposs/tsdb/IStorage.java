@@ -41,6 +41,9 @@ public interface IStorage  extends Closeable {
 	 * Frees the storage.
 	 */
 	void free();
+	
+	
+	public String getName();
   
 }
 

@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
 import com.ctriposs.tsdb.level.PurgeLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
@@ -14,16 +15,22 @@ import com.ctriposs.tsdb.table.MemTable;
 
 public class DBEngine implements IDB{
 
+	/** The engine config*/
 	private DBConfig config;
 	
+	/** The memory table for kv*/
 	private MemTable memTable;
 	
+	/** Store memtable to file*/
 	private StoreLevel storeLevel;
 	
+	/** Clean too old files*/
 	private PurgeLevel purgeLevel;
 	
+	/** Manage the file by time sequence */
 	private FileManager fileManager;
 	
+	/** Map name to code for table and column*/
 	private NameManager nameManager;
 	
 	private InternalKeyComparator internalKeyComparator;
@@ -48,8 +55,12 @@ public class DBEngine implements IDB{
 	
 	public DBEngine(DBConfig config){
 		this.config = config;
-		this.internalKeyComparator = new InternalKeyComparator();
-		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity());
+		if(config.getInternalKeyComparator() == null){
+			this.internalKeyComparator = new InternalKeyComparator();
+		}else{
+			this.internalKeyComparator = config.getInternalKeyComparator();
+		}
+		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator);
 		this.nameManager = new NameManager(config.getDBDir());
 		this.memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
@@ -124,7 +135,7 @@ public class DBEngine implements IDB{
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
 		
-		return null;
+		return new SeekIteratorAdapter(fileManager,nameManager,internalKeyComparator);
 	}
 
 	@Override

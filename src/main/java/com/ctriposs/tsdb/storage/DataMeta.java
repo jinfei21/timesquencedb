@@ -2,6 +2,8 @@ package com.ctriposs.tsdb.storage;
 
 import java.io.Serializable;
 
+import com.ctriposs.tsdb.util.ByteUtil;
+
 public class DataMeta implements Serializable {
 
 
@@ -26,22 +28,29 @@ public class DataMeta implements Serializable {
 		this.valueSize = 0;
 		this.offSet = offSet;
 	}
-
+	
+	public DataMeta(byte[] bytes){
+		this.code = ByteUtil.ToLong(bytes,0);
+		this.time = ByteUtil.ToLong(bytes, TIME_OFFSET);
+		this.valueSize = ByteUtil.ToInt(bytes, VALUE_SIZE_OFFSET);
+		this.offSet = ByteUtil.ToInt(bytes, VALUE_OFFSET_OFFSET);
+	}
 
 	public int getValueSize() {
 		return valueSize;
-	}
-
-	public void setValueSize(int valueSize) {
-		this.valueSize = valueSize;
 	}
 
 	public int getOffSet() {
 		return offSet;
 	}
 
-	public void setOffSet(int offSet) {
-		this.offSet = offSet;
+	public long getCode() {
+		return code;
 	}
+
+	public long getTime() {
+		return time;
+	}
+
 
 }
