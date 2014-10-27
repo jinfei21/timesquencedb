@@ -18,6 +18,7 @@ import com.ctriposs.tsdb.table.MemTable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class StoreLevel {
+
 	public final static int MAX_SIZE = 6;
 	public final static int MAX_MEM_SIZE = 6;
 	public final static int THREAD_COUNT = 2;
@@ -29,15 +30,15 @@ public class StoreLevel {
 	private ArrayBlockingQueue<MemTable> memQueue;
 	private AtomicInteger fileCount = new AtomicInteger(0);
 
-	public StoreLevel(FileManager fileManager,int threads,int memCount) {
+	public StoreLevel(FileManager fileManager, int threads, int memCount) {
 		
 		this.executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder()
-															 .setNameFormat("Level0Merger-%d")
-															 .setDaemon(true)
-															 .build());
+                                     .setNameFormat("Level0Merger-%d")
+                                     .setDaemon(true)
+                                     .build());
 
 		this.tasks = new Task[threads];
-		for(int i=0;i<threads;i++){
+		for(int i=0; i< threads; i++){
 			tasks[i] = new Task(i);
 		}
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);
@@ -45,17 +46,16 @@ public class StoreLevel {
 	}
 
 	public void addMemTable(MemTable memTable) throws Exception {
-		
 		this.memQueue.put(memTable);
 	}
 
 	public void start() {
 
-		if(!run){
-			
-			for (int i = 0; i < tasks.length; i++) {
-				executor.submit(tasks[i]);
-			}
+		if(!run) {
+
+            for (Task task : tasks) {
+                executor.submit(task);
+            }
 			run = true;
 		}
 	}
@@ -69,13 +69,13 @@ public class StoreLevel {
 	
 	public byte[] getValue(InternalKey key){
 		byte[] value = null;
-		for(MemTable table:memQueue){
+		for(MemTable table : memQueue){
 			value = table.getValue(key);
 			if(value != null){
 				return value;
 			}
 		}
-		for(Task task:tasks){
+		for(Task task : tasks){
 			value = task.getValue(key);
 		}
 		return value;
@@ -103,8 +103,8 @@ public class StoreLevel {
 				try {
 					table = memQueue.take();
 					
-					Map<Long,IStorage> storeMap = new HashMap<Long,IStorage>();
-					for(Entry<Long,AtomicInteger> entry:table.timeMap().entrySet()){
+					Map<Long, IStorage> storeMap = new HashMap<Long,IStorage>();
+					for(Entry<Long,AtomicInteger> entry : table.timeMap().entrySet()){
 						int fCount = fileCount.incrementAndGet();
 						if(fCount<8){
 							

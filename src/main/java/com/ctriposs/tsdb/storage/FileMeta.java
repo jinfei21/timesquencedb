@@ -3,15 +3,9 @@ package com.ctriposs.tsdb.storage;
 
 public class FileMeta {
 
-	
-	
-	
 	public FileMeta(){
 
 	}
-	
-	
-
 
 	@Override
 	public String toString(){

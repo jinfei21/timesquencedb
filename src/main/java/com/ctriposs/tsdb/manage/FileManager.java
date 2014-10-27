@@ -11,26 +11,29 @@ import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.FileMeta;
 
 public class FileManager {
-	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
+
+	public final static long MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024L;
 	public final static int MAX_FILES = 30; 
 
-	
-	private ConcurrentSkipListMap<Long,List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
+	private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(
+        new Comparator<Long>() {
 
-																			@Override
-																			public int compare(Long o1, Long o2) {
-																				
-																				return (int)(o1.longValue() - o2.longValue());
-																			}
-																		});
+            @Override
+            public int compare(Long o1, Long o2) {
+
+                return (int)(o1 - o2);
+            }
+    });
 	
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 	
 	private String dir;
 	private int fileCapacity;
-	public FileManager(String dir,int fileCapacity){
+
+	public FileManager(String dir, int fileCapacity){
 		this.dir = dir;
+        this.fileCapacity = fileCapacity;
 	}
 	
 	public void add(long time, FileMeta file){
@@ -39,10 +42,10 @@ public class FileManager {
 			try{
 				lock.lock();
 				list = timeFileMap.get(time);
-				if(list==null){
+				if(list == null){
 					list = new Vector<FileMeta>();
 				}
-			}finally{
+			} finally {
 				lock.unlock();
 			}
 		}

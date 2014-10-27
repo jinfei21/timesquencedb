@@ -12,7 +12,7 @@ import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 
-public class DBEngine implements IDB{
+public class DBEngine implements IDB {
 
 	private DBConfig config;
 	
@@ -49,7 +49,7 @@ public class DBEngine implements IDB{
 	public DBEngine(DBConfig config){
 		this.config = config;
 		this.internalKeyComparator = new InternalKeyComparator();
-		this.fileManager = new FileManager(config.getDBDir());
+		this.fileManager = new FileManager(config.getDBDir(), 0);
 		this.nameManager = new NameManager(config.getDBDir());
 		this.memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());

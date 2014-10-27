@@ -16,12 +16,12 @@ public class MemTable {
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
 
 	private final ConcurrentSkipListMap<InternalKey, byte[]> table;	
-	private final int maxMemTableSize;
+	private final long maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
-	private final Map<Long,AtomicInteger> timeMap = new ConcurrentHashMap<Long, AtomicInteger>();
+	private final Map<Long, AtomicInteger> timeMap = new ConcurrentHashMap<Long, AtomicInteger>();
 	private Lock lock = new ReentrantLock();
-	
-	public MemTable(int maxMemTableSize,InternalKeyComparator internalKeyComparator) {
+
+	public MemTable(long maxMemTableSize, InternalKeyComparator internalKeyComparator) {
 		this.table = new ConcurrentSkipListMap<InternalKey, byte[]>(internalKeyComparator);
 		this.maxMemTableSize = maxMemTableSize;
 	}
