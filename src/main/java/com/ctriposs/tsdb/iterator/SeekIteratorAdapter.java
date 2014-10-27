@@ -69,7 +69,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(metas != null){
 			List<ISeekIterator> list = new ArrayList<ISeekIterator>();
 			for(FileMeta meta:metas){
-				list.add(new FileSeekInterator(new PureFileStorage(meta.getFile(), meta.getFile().length())));
+				list.add(new FileSeekInterator(new PureFileStorage(meta.getFile(), meta.getFile().length()), nameManager));
 			}
 			return list;
 		}
