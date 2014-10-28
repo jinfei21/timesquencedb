@@ -51,7 +51,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					iterators = getNextIterators(curSeekTime);
 					if(null != iterators){
 						for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
-							it.seek(seekKey.getCode(), curSeekTime);
+							it.seek(seekKey.getCode());
 						}		
 						findSmallest();
 						direction = Direction.forward;
@@ -75,14 +75,13 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if (it != curIterator) {
 					try {
 						if (it.hasNext()) {
-							it.seek(seekKey.getCode(), curSeekTime);
+							it.seek(seekKey.getCode());
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
-
 			}
 			direction = Direction.forward;
 		}
@@ -99,7 +98,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if(curIterator != it){
 					try {
 						if(it.hasNext()){
-							it.seek(seekKey.getCode(), curSeekTime);
+							it.seek(seekKey.getCode());
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -126,10 +125,12 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 		seekKey = new InternalKey(nameManager.getCode(table),nameManager.getCode(column),time);
-		iterators = getNextIterators(time);
+		
+		iterators = getNextIterators(format(time));
+		
 		if(null != iterators){
 			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
-				it.seek(seekKey.getCode(), time);
+				it.seek(seekKey.getCode());
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -173,7 +174,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return null;
 		}
 		curSeekTime = time;
-		List<FileMeta> metas = fileManager.getFiles(format(time));
+		List<FileMeta> metas = fileManager.getFiles(time);
 		if(metas != null){
 			List<IInternalSeekIterator<InternalKey, byte[]>> list = new ArrayList<IInternalSeekIterator<InternalKey, byte[]>>();
 			for(FileMeta meta:metas){

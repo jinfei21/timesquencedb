@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 public interface IInternalSeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
-	void seek(long code,long time)throws IOException;
+	void seek(long code)throws IOException;
 	
 	String table();
 	

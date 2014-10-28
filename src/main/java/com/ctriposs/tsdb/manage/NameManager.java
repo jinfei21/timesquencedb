@@ -12,9 +12,10 @@ public class NameManager {
 	private Map<Integer,String> codeMap = new ConcurrentHashMap<Integer,String>();
 	private Lock lock = new ReentrantLock();
 	private AtomicInteger maxCode = new AtomicInteger(0);
+
 	
 	public NameManager(String dir){
-		
+	
 	}
 
 	
