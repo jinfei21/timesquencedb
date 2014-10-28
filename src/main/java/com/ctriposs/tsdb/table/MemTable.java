@@ -9,17 +9,18 @@ import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.DataMeta;
 
 public class MemTable {
+
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
 
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
-	private final int maxMemTableSize;
+	private final long maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	
-	public MemTable(int maxMemTableSize,InternalKeyComparator internalKeyComparator) {
+	public MemTable(long maxMemTableSize, InternalKeyComparator internalKeyComparator) {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
-		this.maxMemTableSize = maxMemTableSize;
+		this.maxMemTableSize = maxMemTableSize >= MAX_MEM_SIZE ? MAX_MEM_SIZE : maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
 	}
 
@@ -45,35 +46,35 @@ public class MemTable {
 			long ts = format(key.getTime());
 			ConcurrentSkipListMap<InternalKey, byte[]> slot = table.get(ts);
 					
-			if(slot==null){
-				try{
+			if(slot == null){
+				try {
 					lock.lock();
 					slot = table.get(ts);
-					if(slot==null){	
+					if(slot == null) {
 						slot = new ConcurrentSkipListMap<InternalKey, byte[]>(internalKeyComparator);
 						table.put(ts, slot);
 					}
-				}finally{
+				} finally {
 					lock.unlock();
 				}
 			}
 			slot.put(key, value);
 		}
+
 		return result;
 	}
 	
 	public byte[] getValue(InternalKey key){
 		long ts = format(key.getTime());
 		ConcurrentSkipListMap<InternalKey, byte[]> slot = table.get(ts);
-		if(slot != null){
+		if(slot != null) {
 			return slot.get(key);
-		}else{
+		} else {
 			return null;
 		}
 	}
 	
-	public ConcurrentHashMap<Long,ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
+	public ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
 		return this.table;
 	}
-
 }

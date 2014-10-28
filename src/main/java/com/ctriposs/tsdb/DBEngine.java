@@ -85,10 +85,10 @@ public class DBEngine implements IDB{
 		
 		checkTime(time);
 		
-		InternalKey key = new InternalKey(nameManager.getCode(tableName),nameManager.getCode(colName),time);
+		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
 		
-		if(!memTable.add(key, value)){
-			try{
+		if(!memTable.add(key, value)) {
+			try {
 				lock.lock();
 				if(!memTable.add(key, value)){
 					
@@ -97,11 +97,11 @@ public class DBEngine implements IDB{
 					} catch (Exception e) {
 						throw new IOException(e);
 					}
-					memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
+					memTable = new MemTable(config.getMaxMemTable(), internalKeyComparator);
 					memTable.add(key, value);
 				}
 				
-			}finally{
+			} finally {
 				lock.unlock();
 			}
 		}
