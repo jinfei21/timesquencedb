@@ -39,11 +39,14 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public boolean hasNext() {
 		boolean result = false;
-		for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
-			if(it.hasNext()){
-				result = true; 
+		if(iterators != null){
+			for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
+				if(it.hasNext()){
+					result = true; 
+				}
 			}
 		}
+		
 		if(!result){
 			curSeekTime += MemTable.MINUTE;
 			if(curSeekTime < System.currentTimeMillis()){
@@ -124,6 +127,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
+		
 		seekKey = new InternalKey(nameManager.getCode(table),nameManager.getCode(column),time);
 		
 		iterators = getNextIterators(format(time));

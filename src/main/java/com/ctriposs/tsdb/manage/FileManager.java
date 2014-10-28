@@ -13,6 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.iterator.FileSeekInterator;
 import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.PureFileStorage;
@@ -41,12 +42,13 @@ public class FileManager {
 	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(0L); 
 	private InternalKeyComparator internalKeyComparator;
-
+	private NameManager nameManager;
 	
-	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator){
+	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator,NameManager nameManager){
 		this.dir = dir;
 		this.fileCapacity = fileCapacity;
 		this.internalKeyComparator = internalKeyComparator;
+		this.nameManager = nameManager;
 	}
 	
 	public void add(long time, FileMeta file) {
@@ -85,19 +87,14 @@ public class FileManager {
 			for(FileMeta meta : list){
 				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
-                    byte[] bytes = new byte[4];
-                    storage.get(0, bytes);
-                    int metaSize = ByteUtil.ToInt(bytes);
-                    bytes = new byte[DataMeta.META_SIZE];
-                    for (int i = 0; i < metaSize; i++) {
-                        int metaOffset = 4 + DataMeta.META_SIZE * i;
-                        storage.get(metaOffset, bytes);
-                        long code = ByteUtil.ToLong(bytes, 0);
-                        if (code == key.getCode()) {
-                            int valueSize = ByteUtil.ToInt(bytes, DataMeta.VALUE_SIZE_OFFSET);
-                            int valueOffset = ByteUtil.ToInt(bytes, DataMeta.VALUE_OFFSET_OFFSET);
-                        }
-                    }
+					FileSeekInterator it = new FileSeekInterator(storage, nameManager);
+					it.seek(key.getCode());
+					while(it.hasNext()){
+						if(0==internalKeyComparator.compare(key,it.key())){
+							return it.value();
+						}
+						it.next();
+					}
 				}
 			}
 		}

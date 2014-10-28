@@ -29,6 +29,7 @@ public class DBConfig {
 		if (!FileUtil.isFilenameValid(dir)) {
 			throw new IllegalArgumentException("Invalid storage data directory : " + dir);
 		}
+
 		this.dir = dir;
 	}
 
