@@ -1,9 +1,12 @@
 package com.ctriposs.tsdb.level;
 
+import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
+import com.ctriposs.tsdb.util.ByteUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,11 +47,20 @@ public class PurgeLevel implements Runnable {
                 fileManager.delete(start);
                 for (long l = start; l < end; l++) {
                     List<FileMeta> fileMetaList = fileManager.getFiles(l);
-                    if (fileMetaList != null && fileMetaList.size() != 0) {
-                        int size = fileMetaList.size();
-                        for (int i = 0; i < size; i++) {
+                    if (fileMetaList != null && fileMetaList.size() >= 2) {
+                        // Just merge the beginning two meta files
+                        FileMeta metaOne = fileMetaList.get(0);
+                        FileMeta metaTwo = fileMetaList.get(1);
 
-                        }
+                        IStorage iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
+                        IStorage iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+
+                        byte[] bytes = new byte[4];
+                        iStorageOne.get(0, bytes);
+                        int metaSizeOne = ByteUtil.ToInt(bytes);
+                        iStorageTwo.get(0, bytes);
+                        int metaSizeTwo = ByteUtil.ToInt(bytes);
+
                     }
                 }
             } catch (IOException e) {
