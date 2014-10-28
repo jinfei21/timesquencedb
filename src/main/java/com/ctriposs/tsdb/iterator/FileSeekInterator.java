@@ -47,7 +47,7 @@ public class FileSeekInterator implements
 			curPos++;
 			try {
 				curMeta = read(curPos);
-				if (curMeta.getCode() == seekCode) {
+				if (curMeta.getCode() == seekCode||seekCode == -1) {
 
 					InternalKey key = new InternalKey(curMeta.getCode(),
 							curMeta.getTime());
@@ -182,7 +182,7 @@ public class FileSeekInterator implements
 			curPos--;
 			try {
 				curMeta = read(curPos);
-				if (curMeta.getCode() == seekCode) {
+				if (curMeta.getCode() == seekCode||seekCode == -1) {
 					InternalKey key = new InternalKey(curMeta.getCode(),
 							curMeta.getTime());
 					byte[] value = new byte[curMeta.getValueSize()];
