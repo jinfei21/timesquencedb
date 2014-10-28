@@ -12,6 +12,7 @@ import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MemTable;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
@@ -44,7 +45,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			}
 		}
 		if(!result){
-			curSeekTime += 60000;
+			curSeekTime += MemTable.MINUTE;
 			if(curSeekTime < System.currentTimeMillis()){
 				try {
 					iterators = getNextIterators(curSeekTime);
@@ -119,7 +120,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	}
 	
 	private long format(long time){
-		return time/60000*60000;
+		return time/MemTable.MINUTE*MemTable.MINUTE;
 	}
 	
 	@Override
@@ -180,7 +181,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			}
 			return list;
 		}else{
-			return getNextIterators(time+60000);
+			return getNextIterators(time+MemTable.MINUTE);
 		}
 	}
 	

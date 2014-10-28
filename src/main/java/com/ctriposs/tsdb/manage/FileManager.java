@@ -1,16 +1,22 @@
 package com.ctriposs.tsdb.manage;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
@@ -32,6 +38,7 @@ public class FileManager {
 	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(0L); 
 	private InternalKeyComparator internalKeyComparator;
+
 	
 	public FileManager(String dir,long fileCapacity, InternalKeyComparator internalKeyComparator){
 		this.dir = dir;
@@ -77,21 +84,32 @@ public class FileManager {
 		}
 	}
 	
-	public byte[] getValue(InternalKey key){
+	public byte[] getValue(InternalKey key)throws IOException{
 		long ts = key.getTime();
 		List<FileMeta> list = getFiles(format(ts));
 		if(list != null){
 			for(FileMeta meta:list){
 				if(contain(meta,key)){
 					
+					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
+						
+
 				}
 			}
 		}
 		return null;
 	}
 	
-	public void delete(long afterTime){
+	public void delete(long afterTime)throws IOException{
 		
+		for(Entry<Long,List<FileMeta>> entry:timeFileMap.entrySet()){
+			if(entry.getKey()<afterTime){
+				List<FileMeta> list = entry.getValue();
+				for(FileMeta meta:list){
+					FileUtil.forceDelete(meta.getFile());
+				}
+			}
+		}
 	}
 	
 	public String getStoreDir(){
