@@ -16,6 +16,7 @@ import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
@@ -40,15 +41,15 @@ public class FileManager {
 	private InternalKeyComparator internalKeyComparator;
 
 	
-	public FileManager(String dir,long fileCapacity, InternalKeyComparator internalKeyComparator){
+	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator){
 		this.dir = dir;
 		this.fileCapacity = fileCapacity;
 		this.internalKeyComparator = internalKeyComparator;
 	}
 	
-	public void add(long time, FileMeta file){
+	public void add(long time, FileMeta file) {
 		List<FileMeta> list = timeFileMap.get(time);
-		if(list == null){
+		if(list == null) {
 			try{
 				lock.lock();
 				list = timeFileMap.get(time);
@@ -72,25 +73,15 @@ public class FileManager {
 	}
 	
 	private long format(long time){
-		return time/60000*60000;
+		return time/ MemTable.MINUTE*MemTable.MINUTE;
 	}
 	
-	private boolean contain(FileMeta meta, InternalKey key){
-		if(key.compare(key, meta.getSmallest())>=0
-			&&key.compare(key, meta.getLargest())<=0){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public byte[] getValue(InternalKey key)throws IOException{
+	public byte[] getValue(InternalKey key) throws IOException{
 		long ts = key.getTime();
 		List<FileMeta> list = getFiles(format(ts));
 		if(list != null){
-			for(FileMeta meta:list){
-				if(contain(meta,key)){
-					
+			for(FileMeta meta : list){
+				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
 						
 
@@ -100,7 +91,7 @@ public class FileManager {
 		return null;
 	}
 	
-	public void delete(long afterTime)throws IOException {
+	public void delete(long afterTime) throws IOException {
 		
 		for(Entry<Long, List<FileMeta>> entry : timeFileMap.entrySet()) {
 			if(entry.getKey() < afterTime) {
