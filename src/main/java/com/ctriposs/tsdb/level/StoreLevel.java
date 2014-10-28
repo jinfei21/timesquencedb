@@ -142,6 +142,7 @@ public class StoreLevel {
 				i++;
 				largest =  entry.getKey();
 			}
+
 			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
 			return fileMeta;	
 		}
@@ -153,7 +154,7 @@ public class StoreLevel {
 					table = memQueue.take();
 					storeCounter.incrementAndGet();
 					Map<Long,IStorage> storeMap = new HashMap<Long,IStorage>();
-					for(Entry<Long,ConcurrentSkipListMap<InternalKey, byte[]>>entry:table.getTable().entrySet()){
+					for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 						try{
 							fileCount.incrementAndGet();
 							FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue());

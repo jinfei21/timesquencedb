@@ -22,7 +22,7 @@ public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
 	public final static int MAX_FILES = 30; 
 
-	private ConcurrentSkipListMap<Long,List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
+	private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
 
 																			@Override
 																			public int compare(Long o1, Long o2) {
@@ -52,11 +52,11 @@ public class FileManager {
 			try{
 				lock.lock();
 				list = timeFileMap.get(time);
-				if(list==null){
+				if(list == null) {
 					list = new Vector<FileMeta>();
 					timeFileMap.put(time, list);
 				}
-			}finally{
+			} finally {
 				lock.unlock();
 			}
 		}
@@ -75,7 +75,7 @@ public class FileManager {
 		return time/60000*60000;
 	}
 	
-	private boolean contain(FileMeta meta,InternalKey key){
+	private boolean contain(FileMeta meta, InternalKey key){
 		if(key.compare(key, meta.getSmallest())>=0
 			&&key.compare(key, meta.getLargest())<=0){
 			return true;
@@ -100,12 +100,12 @@ public class FileManager {
 		return null;
 	}
 	
-	public void delete(long afterTime)throws IOException{
+	public void delete(long afterTime)throws IOException {
 		
-		for(Entry<Long,List<FileMeta>> entry:timeFileMap.entrySet()){
-			if(entry.getKey()<afterTime){
+		for(Entry<Long, List<FileMeta>> entry : timeFileMap.entrySet()) {
+			if(entry.getKey() < afterTime) {
 				List<FileMeta> list = entry.getValue();
-				for(FileMeta meta:list){
+				for(FileMeta meta : list){
 					FileUtil.forceDelete(meta.getFile());
 				}
 			}

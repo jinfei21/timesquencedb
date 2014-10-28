@@ -3,7 +3,9 @@ package com.ctriposs.tsdb.level;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MemTable;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -33,9 +35,26 @@ public class PurgeLevel implements Runnable {
 	@Override
 	public void run() {
 
-		while (run){
+		while (run) {
+            try {
+                long start = (System.currentTimeMillis() - MAX_PERIOD)/MemTable.MINUTE*MemTable.MINUTE;
+                long end = System.currentTimeMillis()/MemTable.MINUTE*MemTable.MINUTE;
 
-		}
+                // Delete too old files
+                fileManager.delete(start);
+                for (long l = start; l < end; l++) {
+                    List<FileMeta> fileMetaList = fileManager.getFiles(l);
+                    if (fileMetaList != null && fileMetaList.size() != 0) {
+                        int size = fileMetaList.size();
+                        for (int i = 0; i < size; i++) {
+
+                        }
+                    }
+                }
+            } catch (IOException e) {
+
+            }
+        }
 		
 	}
 

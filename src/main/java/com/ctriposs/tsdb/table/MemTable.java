@@ -14,7 +14,7 @@ import com.ctriposs.tsdb.storage.DataMeta;
 public class MemTable {
 
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
-	public final static long MINUTE = 1000*60;
+	public final static long MINUTE = 1000 * 60;
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final long maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
@@ -22,7 +22,7 @@ public class MemTable {
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
 	
-	public MemTable(String dir,long fileNumber,long capacity,int maxMemTableSize,InternalKeyComparator internalKeyComparator) throws IOException {
+	public MemTable(String dir, long fileNumber, long capacity, int maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = maxMemTableSize >= MAX_MEM_SIZE ? MAX_MEM_SIZE : maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
@@ -37,7 +37,7 @@ public class MemTable {
 		return used.get();
 	}
 
-	private long format(long time){
+	private long format(long time) {
 		return time/MINUTE*MINUTE;
 	}
 
