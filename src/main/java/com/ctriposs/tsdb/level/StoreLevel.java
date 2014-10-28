@@ -10,12 +10,14 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.MemTable;
@@ -33,7 +35,11 @@ public class StoreLevel {
 	private volatile boolean run = false;
 	private FileManager fileManager;
 	private ArrayBlockingQueue<MemTable> memQueue;
+	
 	private AtomicInteger fileCount = new AtomicInteger(0);
+	
+	private AtomicLong storeCounter = new AtomicLong(0);
+	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
 	public StoreLevel(FileManager fileManager,int threads,int memCount) {
 		
@@ -107,9 +113,9 @@ public class StoreLevel {
 			
 			IStorage storage = null;
 			if(fileCount.get() < 8){
-				storage = new MapFileStorage(fileManager.getStoreDir(),time,fileManager.getFileNumber(), fileManager.getFileCapacity());
+				storage = new MapFileStorage(fileManager.getStoreDir(),time,FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
 			}else{
-				storage = new PureFileStorage(fileManager.getStoreDir(),time,fileManager.getFileNumber(), fileManager.getFileCapacity());
+				storage = new PureFileStorage(fileManager.getStoreDir(),time,FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
 			}
 			
 			int size = dataMap.size();
@@ -144,7 +150,8 @@ public class StoreLevel {
 		public void run() {
 			while(run){
 				try {
-					table = memQueue.take();					
+					table = memQueue.take();
+					storeCounter.incrementAndGet();
 					Map<Long,IStorage> storeMap = new HashMap<Long,IStorage>();
 					for(Entry<Long,ConcurrentSkipListMap<InternalKey, byte[]>>entry:table.getTable().entrySet()){
 						try{
@@ -156,13 +163,24 @@ public class StoreLevel {
 							//TODO
 							e.printStackTrace();
 						}						
-					}					
-				} catch (InterruptedException e) {
+					}
+					
+				} catch (Throwable e) {
 					//TODO 
 					e.printStackTrace();
+					storeErrorCounter.incrementAndGet();
 				}
 			}
 		}
 
 	}
+	
+	public long getStoreCounter(){
+		return storeCounter.get();
+	}
+	
+	public long getStoreErrorCounter(){
+		return storeErrorCounter.get();
+	}
+	
 }

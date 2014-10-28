@@ -33,6 +33,7 @@ public class DBEngine implements IDB{
 	/** Map name to code for table and column*/
 	private NameManager nameManager;
 	
+	/** The comparator for key*/
 	private InternalKeyComparator internalKeyComparator;
 	
 	/** The memtable change lock. */
@@ -53,7 +54,9 @@ public class DBEngine implements IDB{
     /** The delete counter. */
     private AtomicLong deleteCounter = new AtomicLong();
 	
-	public DBEngine(DBConfig config){
+    
+    
+	public DBEngine(DBConfig config) throws IOException{
 		this.config = config;
 		if(config.getInternalKeyComparator() == null){
 			this.internalKeyComparator = new InternalKeyComparator();
@@ -62,7 +65,7 @@ public class DBEngine implements IDB{
 		}
 		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator);
 		this.nameManager = new NameManager(config.getDBDir());
-		this.memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
+		this.memTable = new MemTable(config.getDBDir(),fileManager.getFileNumber(),config.getFileCapacity(),config.getMaxMemTable(),internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
 		this.purgeLevel = new PurgeLevel(fileManager);
 		
@@ -93,12 +96,14 @@ public class DBEngine implements IDB{
 				if(!memTable.add(key, value)){
 					
 					try {
+						memTable.close();
 						storeLevel.addMemTable(memTable);
+						memTable = new MemTable(config.getDBDir(),fileManager.getFileNumber(),config.getFileCapacity(),config.getMaxMemTable(),internalKeyComparator);
+						memTable.add(key, value);					
 					} catch (Exception e) {
 						throw new IOException(e);
 					}
-					memTable = new MemTable(config.getMaxMemTable(),internalKeyComparator);
-					memTable.add(key, value);
+
 				}
 				
 			}finally{
@@ -110,7 +115,7 @@ public class DBEngine implements IDB{
 	
 
 	@Override
-	public byte[] get(String tableName, String colName, long time) {
+	public byte[] get(String tableName, String colName, long time)throws IOException {
 		getCounter.incrementAndGet();
 		checkTime(time);
 		
@@ -126,7 +131,7 @@ public class DBEngine implements IDB{
 	}
 
 	@Override
-	public void delete(long afterTime) {
+	public void delete(long afterTime)throws IOException{
 		deleteCounter.incrementAndGet();
 		checkTime(afterTime);
 		fileManager.delete(afterTime);
@@ -145,24 +150,31 @@ public class DBEngine implements IDB{
 		this.purgeLevel.stop();
 	}
 
-	public AtomicLong getHitCounter() {
-		return hitCounter;
+	public long getHitCounter() {
+		return hitCounter.get();
 	}
 
-	public AtomicLong getMissCounter() {
-		return missCounter;
+	public long getMissCounter() {
+		return missCounter.get();
 	}
 
-	public AtomicLong getGetCounter() {
-		return getCounter;
+	public long getGetCounter() {
+		return getCounter.get();
 	}
 
-	public AtomicLong getPutCounter() {
-		return putCounter;
+	public long getPutCounter() {
+		return putCounter.get();
 	}
 
-	public AtomicLong getDeleteCounter() {
-		return deleteCounter;
+	public long getDeleteCounter() {
+		return deleteCounter.get();
 	}
 
+	public long getStoreCounter(){
+		return storeLevel.getStoreCounter();
+	}
+	
+	public long getStoreErrorCounter(){
+		return storeLevel.getStoreErrorCounter();
+	}
 }

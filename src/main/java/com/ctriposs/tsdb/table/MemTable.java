@@ -1,26 +1,31 @@
 package com.ctriposs.tsdb.table;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.ctriposs.tsdb.ILogWriter;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.DataMeta;
 
 public class MemTable {
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
-
+	public final static long MINUTE = 1000*60;
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final int maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
+	private ILogWriter logWriter;
 	
-	public MemTable(int maxMemTableSize,InternalKeyComparator internalKeyComparator) {
+	public MemTable(String dir,long fileNumber,long capacity,int maxMemTableSize,InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
+		this.logWriter = new MapFileLogWriter(dir, fileNumber, capacity);
 	}
 
 	public boolean isEmpty() {
@@ -32,10 +37,10 @@ public class MemTable {
 	}
 
 	private long format(long time){
-		return time/60000*60000;
+		return time/MINUTE*MINUTE;
 	}
 
-	public boolean add(InternalKey key, byte value[]) {
+	public boolean add(InternalKey key, byte value[]) throws IOException {
 		boolean result = true;
 
 		int length = value.length + DataMeta.META_SIZE;
@@ -57,6 +62,7 @@ public class MemTable {
 					lock.unlock();
 				}
 			}
+			logWriter.add(key.getCode(), key.getTime(), value);
 			slot.put(key, value);
 		}
 		return result;
@@ -74,6 +80,14 @@ public class MemTable {
 	
 	public ConcurrentHashMap<Long,ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
 		return this.table;
+	}
+	
+	public void close() throws IOException{
+		logWriter.close();
+	}
+	
+	public String getLogFile(){
+		return logWriter.getName();
 	}
 
 }

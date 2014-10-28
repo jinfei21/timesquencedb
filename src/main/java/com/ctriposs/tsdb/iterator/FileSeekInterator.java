@@ -38,7 +38,7 @@ public class FileSeekInterator implements IInternalSeekIterator<InternalKey, byt
 	}
 
 	@Override
-	public Entry<InternalKey, byte[]> next() {
+	public Entry<InternalKey, byte[]> next(){
 		if(current < count){
 			current++;
 			try {
