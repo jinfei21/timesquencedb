@@ -66,7 +66,7 @@ public class DBEngine implements IDB{
 		this.nameManager = new NameManager(config.getDBDir());
 		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator,nameManager);
 		
-		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTable(), internalKeyComparator);
+		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
 		this.purgeLevel = new PurgeLevel(fileManager);
 		
@@ -76,8 +76,8 @@ public class DBEngine implements IDB{
 	
 
 	private void checkTime(long time){
-		long threshold = time -(System.currentTimeMillis() - config.getMaxPeriod());
-		if(threshold < 0){
+		long threshold = time -System.currentTimeMillis();
+		if(threshold > config.getMaxPeriod()){
 			throw new IllegalArgumentException("time is to old!");
 		}
 	}
@@ -98,7 +98,7 @@ public class DBEngine implements IDB{
 					try {
 						memTable.close();
 						storeLevel.addMemTable(memTable);
-						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTable(),internalKeyComparator);
+						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(),internalKeyComparator);
 						memTable.add(key, value);					
 					} catch (Exception e) {
 						throw new IOException(e);

@@ -142,7 +142,7 @@ public class StoreLevel {
 				i++;
 				largest =  entry.getKey();
 			}
-
+			storage.close();
 			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
 			return fileMeta;	
 		}

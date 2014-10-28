@@ -12,7 +12,7 @@ import java.util.List;
 
 public class PurgeLevel implements Runnable {
 
-	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30;
+	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
 
 	private FileManager fileManager;
 	private volatile boolean run = false;

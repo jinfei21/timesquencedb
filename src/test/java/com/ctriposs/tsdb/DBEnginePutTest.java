@@ -17,9 +17,13 @@ public class DBEnginePutTest {
         
         String[] str = new String[]{"a","b","c"};
         Random random = new Random();
-        long start = System.currentTimeMillis();
+        long start = System.nanoTime();
+        
+        String data = "fdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsafdsafasdfsdafasdfasdfasdfadsfasdfsdafdasfsdafdsa";
+        
+        
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-        	engine.put(str[random.nextInt(3)], str[random.nextInt(3)], System.currentTimeMillis(), "abd_tead".getBytes());
+        	engine.put(str[random.nextInt(3)], str[random.nextInt(3)], System.currentTimeMillis(), data.getBytes());
         }
 
         long duration = System.nanoTime() - start;

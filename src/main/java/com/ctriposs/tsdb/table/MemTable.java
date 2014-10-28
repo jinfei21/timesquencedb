@@ -22,7 +22,7 @@ public class MemTable {
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
 	
-	public MemTable(String dir, long fileNumber, long capacity, int maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
+	public MemTable(String dir, long fileNumber, long capacity, long maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = maxMemTableSize >= MAX_MEM_SIZE ? MAX_MEM_SIZE : maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;

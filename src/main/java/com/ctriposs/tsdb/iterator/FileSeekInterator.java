@@ -73,6 +73,21 @@ public class FileSeekInterator implements
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
+	
+
+	@Override
+	public void seekToFirst() throws IOException {
+		curPos = 0;
+		if(curPos < maxPos){
+			curMeta = read(curPos);
+			InternalKey key = new InternalKey(curMeta.getCode(),
+					curMeta.getTime());
+			byte[] value = new byte[curMeta.getValueSize()];
+			storage.get(curMeta.getOffSet(), value);
+			curEntry = new InternalEntry(key, value);
+		}
+	}
+
 
 	@Override
 	public void seek(long code) throws IOException {
