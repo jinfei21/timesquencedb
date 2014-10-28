@@ -25,9 +25,9 @@ import com.ctriposs.tsdb.util.ByteUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class StoreLevel {
+
 	public final static int MAX_SIZE = 6;
-	public final static long FILE_SIZE = 256*1024*1024;
-	public final static int MAX_MEM_SIZE = 6;
+	public final static long FILE_SIZE = 256 * 1024 * 1024L;
 	public final static int THREAD_COUNT = 2;
 	
 	private ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -41,7 +41,7 @@ public class StoreLevel {
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
-	public StoreLevel(FileManager fileManager,int threads,int memCount) {
+	public StoreLevel(FileManager fileManager, int threads, int memCount) {
 		
 		this.executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder()
 															 .setNameFormat("Level0Merger-%d")
@@ -49,7 +49,7 @@ public class StoreLevel {
 															 .build());
 
 		this.tasks = new Task[threads];
-		for(int i=0;i<threads;i++){
+		for(int i = 0; i < threads; i++){
 			tasks[i] = new Task(i);
 		}
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);
@@ -57,23 +57,20 @@ public class StoreLevel {
 	}
 
 	public void addMemTable(MemTable memTable) throws Exception {
-		
 		this.memQueue.put(memTable);
 	}
 
 	public void start() {
-
-		if(!run){
-			
-			for (int i = 0; i < tasks.length; i++) {
-				executor.submit(tasks[i]);
-			}
-			run = true;
+		if(!run) {
+            run = true;
+            for (Task task : tasks) {
+                executor.submit(task);
+            }
 		}
 	}
 
 	public void stop() {
-		if(run){
+		if(run) {
 			run = false;
 			executor.shutdownNow();
 		}
@@ -81,15 +78,17 @@ public class StoreLevel {
 	
 	public byte[] getValue(InternalKey key){
 		byte[] value = null;
-		for(MemTable table:memQueue){
+
+		for(MemTable table : memQueue) {
 			value = table.getValue(key);
 			if(value != null){
 				return value;
 			}
 		}
-		for(Task task:tasks){
+		for(Task task: tasks) {
 			value = task.getValue(key);
 		}
+
 		return value;
 	}
 
@@ -97,11 +96,12 @@ public class StoreLevel {
 
 		private int num;
 		private MemTable table = null;
+
 		public Task(int num) {
 			this.num = num;
 		}
 		
-		public byte[] getValue(InternalKey key){
+		public byte[] getValue(InternalKey key) {
 			if(table != null){
 				return table.getValue(key);
 			}else{
@@ -109,28 +109,28 @@ public class StoreLevel {
 			}
 		}
 		
-		private FileMeta storeFile(Long time,ConcurrentSkipListMap<InternalKey, byte[]> dataMap)throws IOException{
+		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap) throws IOException {
 			
 			IStorage storage = null;
-			if(fileCount.get() < 8){
-				storage = new MapFileStorage(fileManager.getStoreDir(),time,FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
-			}else{
-				storage = new PureFileStorage(fileManager.getStoreDir(),time,FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
+			if(fileCount.get() < 8) {
+				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
+			} else {
+				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
 			}
 			
 			int size = dataMap.size();
-			int dataOffset = 4 + DataMeta.META_SIZE*size;
+			int dataOffset = 4 + DataMeta.META_SIZE * size;
 
 			storage.put(0, ByteUtil.toBytes(size));
-			int i=0;
+			int i = 0;
 			InternalKey smallest = null;
 			InternalKey largest = null;
-			for(Entry<InternalKey, byte[]> entry:dataMap.entrySet()){
-				if(i==0){
+			for(Entry<InternalKey, byte[]> entry : dataMap.entrySet()){
+				if (i == 0) {
 					smallest = entry.getKey();
 				}
 				//write meta
-				int metaOffset = 4+DataMeta.META_SIZE*i;
+				int metaOffset = 4 + DataMeta.META_SIZE * i;
 				storage.put(metaOffset + DataMeta.CODE_OFFSET, ByteUtil.toBytes(entry.getKey().getCode()));
 				storage.put(metaOffset + DataMeta.TIME_OFFSET, ByteUtil.toBytes(entry.getKey().getTime()));
 				storage.put(metaOffset + DataMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(entry.getValue().length));
@@ -142,21 +142,22 @@ public class StoreLevel {
 				i++;
 				largest =  entry.getKey();
 			}
+
 			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
 			return fileMeta;	
 		}
 
 		@Override
 		public void run() {
-			while(run){
+			while(run) {
 				try {
 					table = memQueue.take();
 					storeCounter.incrementAndGet();
 					Map<Long,IStorage> storeMap = new HashMap<Long,IStorage>();
-					for(Entry<Long,ConcurrentSkipListMap<InternalKey, byte[]>>entry:table.getTable().entrySet()){
+					for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 						try{
 							fileCount.incrementAndGet();
-							FileMeta fileMeta = storeFile(entry.getKey(),entry.getValue());
+							FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue());
 							fileManager.add(entry.getKey(), fileMeta);
 							fileCount.decrementAndGet();
 						}catch(IOException e){

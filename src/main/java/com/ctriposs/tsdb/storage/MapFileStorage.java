@@ -17,7 +17,7 @@ public class MapFileStorage implements IStorage {
 	private ThreadLocalByteBuffer threadLocalBuffer;
 	private MappedByteBuffer mappedByteBuffer;
 	private String fullFileName;
-	public MapFileStorage(String dir, long time, String suffix,long capacity) throws IOException {
+	public MapFileStorage(String dir, long time, String suffix, long capacity) throws IOException {
 		File backFile = new File(dir);
 		if (!backFile.exists()) {
 			backFile.mkdirs();

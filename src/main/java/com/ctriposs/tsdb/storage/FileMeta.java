@@ -30,7 +30,12 @@ public class FileMeta {
     public File getFile(){
     	return file;
     }
-    
+
+    public boolean contains(InternalKey key) {
+        return key.compare(key, smallest) >= 0 && key.compare(key, largest) <= 0;
+
+    }
+
 	@Override
 	public String toString(){
 		final StringBuilder sb = new StringBuilder();

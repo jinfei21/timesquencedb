@@ -12,18 +12,19 @@ import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.storage.DataMeta;
 
 public class MemTable {
+
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
-	public final static long MINUTE = 1000*60;
+	public final static long MINUTE = 1000 * 60;
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
-	private final int maxMemTableSize;
+	private final long maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(0);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
 	
-	public MemTable(String dir,long fileNumber,long capacity,int maxMemTableSize,InternalKeyComparator internalKeyComparator) throws IOException {
+	public MemTable(String dir, long fileNumber, long capacity, int maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
-		this.maxMemTableSize = maxMemTableSize;
+		this.maxMemTableSize = maxMemTableSize >= MAX_MEM_SIZE ? MAX_MEM_SIZE : maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
 		this.logWriter = new MapFileLogWriter(dir, fileNumber, capacity);
 	}
@@ -36,7 +37,7 @@ public class MemTable {
 		return used.get();
 	}
 
-	private long format(long time){
+	private long format(long time) {
 		return time/MINUTE*MINUTE;
 	}
 
@@ -50,38 +51,39 @@ public class MemTable {
 			long ts = format(key.getTime());
 			ConcurrentSkipListMap<InternalKey, byte[]> slot = table.get(ts);
 					
-			if(slot==null){
-				try{
+			if(slot == null){
+				try {
 					lock.lock();
 					slot = table.get(ts);
-					if(slot==null){	
+					if(slot == null) {
 						slot = new ConcurrentSkipListMap<InternalKey, byte[]>(internalKeyComparator);
 						table.put(ts, slot);
 					}
-				}finally{
+				} finally {
 					lock.unlock();
 				}
 			}
 			logWriter.add(key.getCode(), key.getTime(), value);
 			slot.put(key, value);
 		}
+
 		return result;
 	}
 	
 	public byte[] getValue(InternalKey key){
 		long ts = format(key.getTime());
 		ConcurrentSkipListMap<InternalKey, byte[]> slot = table.get(ts);
-		if(slot != null){
+		if(slot != null) {
 			return slot.get(key);
-		}else{
+		} else {
 			return null;
 		}
 	}
 	
-	public ConcurrentHashMap<Long,ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
+	public ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
 		return this.table;
 	}
-	
+
 	public void close() throws IOException{
 		logWriter.close();
 	}
@@ -89,5 +91,4 @@ public class MemTable {
 	public String getLogFile(){
 		return logWriter.getName();
 	}
-
 }

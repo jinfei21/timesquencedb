@@ -65,7 +65,7 @@ public class DBEngine implements IDB{
 		}
 		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator);
 		this.nameManager = new NameManager(config.getDBDir());
-		this.memTable = new MemTable(config.getDBDir(),fileManager.getFileNumber(),config.getFileCapacity(),config.getMaxMemTable(),internalKeyComparator);
+		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTable(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
 		this.purgeLevel = new PurgeLevel(fileManager);
 		
@@ -88,25 +88,22 @@ public class DBEngine implements IDB{
 		
 		checkTime(time);
 		
-		InternalKey key = new InternalKey(nameManager.getCode(tableName),nameManager.getCode(colName),time);
+		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
 		
-		if(!memTable.add(key, value)){
-			try{
+		if(!memTable.add(key, value)) {
+			try {
 				lock.lock();
 				if(!memTable.add(key, value)){
-					
 					try {
 						memTable.close();
 						storeLevel.addMemTable(memTable);
-						memTable = new MemTable(config.getDBDir(),fileManager.getFileNumber(),config.getFileCapacity(),config.getMaxMemTable(),internalKeyComparator);
+						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTable(),internalKeyComparator);
 						memTable.add(key, value);					
 					} catch (Exception e) {
 						throw new IOException(e);
 					}
-
 				}
-				
-			}finally{
+			} finally {
 				lock.unlock();
 			}
 		}
