@@ -1,10 +1,11 @@
 package com.ctriposs.tsdb.storage;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class DataMeta implements Serializable {
+public class DataMeta implements Serializable, Comparator<DataMeta> {
 
 
 	public static final int META_SIZE = (Long.SIZE + Long.SIZE  + Integer.SIZE + Integer.SIZE) / Byte.SIZE;	
@@ -52,5 +53,13 @@ public class DataMeta implements Serializable {
 		return time;
 	}
 
+    @Override
+    public int compare(DataMeta o1, DataMeta o2) {
+        int diff = (int) (o1.getCode() - o1.getCode());
 
+        if (diff == 0) {
+            diff = (int) (o1.getTime() - o2.getTime());
+        }
+        return diff;
+    }
 }

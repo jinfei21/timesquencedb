@@ -5,7 +5,7 @@ import java.util.Comparator;
 import com.ctriposs.tsdb.util.ByteUtil;
 
 
-public class InternalKey implements Comparator<InternalKey>{
+public class InternalKey implements Comparator<InternalKey> {
 
 	private long code;
 	private long time;

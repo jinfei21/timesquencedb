@@ -22,7 +22,7 @@ public class MapFileStorage implements IStorage {
 		if (!backFile.exists()) {
 			backFile.mkdirs();
 		}
-		fullFileName = dir + time+"-"+suffix;
+		fullFileName = dir + time + "-" + suffix;
 		raf = new RandomAccessFile(fullFileName, "rw");
 		fileChannel = raf.getChannel();
 		mappedByteBuffer = fileChannel.map(FileChannel.MapMode.PRIVATE, 0, capacity);

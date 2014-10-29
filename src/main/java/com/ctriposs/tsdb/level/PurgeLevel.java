@@ -1,17 +1,22 @@
 package com.ctriposs.tsdb.level;
 
 import com.ctriposs.tsdb.IStorage;
+import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
-import com.ctriposs.tsdb.util.ByteUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 public class PurgeLevel implements Runnable {
 
@@ -19,7 +24,13 @@ public class PurgeLevel implements Runnable {
 
 	private FileManager fileManager;
 	private volatile boolean run = false;
-	
+	private ConcurrentSkipListMap<DataMeta, FileMeta> dataFileListMap = new ConcurrentSkipListMap<DataMeta, FileMeta>(new Comparator<DataMeta>() {
+        @Override
+        public int compare(DataMeta o1, DataMeta o2) {
+            return o1.compare(o1, o2);
+        }
+    });
+
 	public PurgeLevel(FileManager fileManager){
 		this.fileManager = fileManager;
 	}
@@ -52,15 +63,38 @@ public class PurgeLevel implements Runnable {
                         FileMeta metaOne = fileMetaList.get(0);
                         FileMeta metaTwo = fileMetaList.get(1);
 
-                        IStorage iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
-                        IStorage iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+                        String firstFileName = metaOne.getFile().getName();
+                        String secondFileName = metaTwo.getFile().getName();
+                        long numberOne = Long.valueOf(firstFileName.split("-")[1]);
+                        long numberTwo = Long.valueOf(secondFileName.split("-")[2]);
+                        IStorage iStorageOne = null;
+                        IStorage iStorageTwo = null;
+                        FileMeta smallOne = null;
+                        FileMeta bigOne = null;
 
-                        byte[] bytes = new byte[4];
-                        iStorageOne.get(0, bytes);
-                        int metaSizeOne = ByteUtil.ToInt(bytes);
-                        iStorageTwo.get(0, bytes);
-                        int metaSizeTwo = ByteUtil.ToInt(bytes);
+                        if (numberOne < numberTwo) {
+                            smallOne = metaOne;
+                            bigOne = metaTwo;
+                            iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
+                            iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+                        } else {
+                            smallOne = metaTwo;
+                            bigOne = metaOne;
+                            iStorageOne = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+                            iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
+                        }
 
+                        FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
+                        FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
+
+                        IStorage iStorage = new PureFileStorage(fileManager.getStoreDir(), l, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
+
+                        iteratorOne.seekToFirst();
+                        iteratorTwo.seekToFirst();
+
+                        while (iteratorOne.hasNext()) {
+
+                        }
                     }
                 }
             } catch (IOException e) {

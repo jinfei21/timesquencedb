@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.iterator.FileSeekInterator;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
@@ -40,7 +40,7 @@ public class FileManager {
 	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(0L); 
 	private InternalKeyComparator internalKeyComparator;
-	private NameManager nameManager;
+    private NameManager nameManager;
 	
 	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator,NameManager nameManager){
 		this.dir = dir;
@@ -81,13 +81,13 @@ public class FileManager {
 	public byte[] getValue(InternalKey key) throws IOException{
 		long ts = key.getTime();
 		List<FileMeta> list = getFiles(format(ts));
-		if(list != null){
-			for(FileMeta meta : list){
+		if(list != null) {
+			for(FileMeta meta : list) {
 				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
-					FileSeekInterator it = new FileSeekInterator(storage, nameManager);
+					FileSeekIterator it = new FileSeekIterator(storage, nameManager);
 					it.seek(key.getCode());
-					while(it.hasNext()){
+					while(it.hasNext()) {
 						if(0==internalKeyComparator.compare(key,it.key())){
 							return it.value();
 						}
@@ -127,4 +127,12 @@ public class FileManager {
 	public long getFileNumber(){
 		return maxFileNumber.incrementAndGet();
 	}
+
+    public NameManager getNameManager() {
+        return nameManager;
+    }
+
+    public InternalKeyComparator getInternalKeyComparator() {
+        return internalKeyComparator;
+    }
 }
