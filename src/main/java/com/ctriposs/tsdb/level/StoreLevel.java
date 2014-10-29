@@ -150,6 +150,10 @@ public class StoreLevel {
 			return fileMeta;	
 		}
 
+        public FileMeta storeFile(ConcurrentSkipListMap<DataMeta, FileMeta> dataFileMeta) {
+            return null;
+        }
+
 		@Override
 		public void run() {
 			while(run) {

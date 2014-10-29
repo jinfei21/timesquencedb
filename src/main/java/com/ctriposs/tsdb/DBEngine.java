@@ -13,7 +13,7 @@ import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 
-public class DBEngine implements IDB{
+public class DBEngine implements IDB {
 
 	/** The engine config*/
 	private DBConfig config;
@@ -77,7 +77,7 @@ public class DBEngine implements IDB{
 
 	private void checkTime(long time){
 		long threshold = time -System.currentTimeMillis();
-		if(threshold > config.getMaxPeriod()){
+		if(threshold > config.getMaxPeriod()) {
 			throw new IllegalArgumentException("time is to old!");
 		}
 	}
@@ -113,18 +113,19 @@ public class DBEngine implements IDB{
 	
 
 	@Override
-	public byte[] get(String tableName, String colName, long time)throws IOException {
+	public byte[] get(String tableName, String colName, long time) throws IOException {
 		getCounter.incrementAndGet();
 		checkTime(time);
 		
-		InternalKey key = new InternalKey(nameManager.getCode(tableName),nameManager.getCode(colName),time);
+		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
 		byte[] value = memTable.getValue(key);
-		if(value == null){
+		if(value == null) {
 			value = storeLevel.getValue(key);
-			if(value == null){
+			if(value == null) {
 				value = fileManager.getValue(key);
 			}
 		}
+
 		return value;
 	}
 
