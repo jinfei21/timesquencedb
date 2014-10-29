@@ -11,13 +11,12 @@ public class NameManager {
 	private Map<String,Integer> nameMap = new ConcurrentHashMap<String,Integer>();
 	private Map<Integer,String> codeMap = new ConcurrentHashMap<Integer,String>();
 	private Lock lock = new ReentrantLock();
-	private AtomicInteger maxCode = new AtomicInteger(0);
+	private AtomicInteger maxCode = new AtomicInteger(1);
 
 	
 	public NameManager(String dir){
 	
 	}
-
 	
 	public int getCode(String name){
 		Integer code = nameMap.get(name);

@@ -66,6 +66,10 @@ public class FileManager {
 		list.add(file);
 	}
 	
+	public void put(long time, List<FileMeta> newList) {
+		timeFileMap.put(time, newList);
+	}
+	
 	public List<FileMeta> getFiles(long time){
 		return timeFileMap.get(time);
 	}
@@ -87,11 +91,17 @@ public class FileManager {
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
 					FileSeekIterator it = new FileSeekIterator(storage, nameManager);
 					it.seek(key.getCode());
-					while(it.hasNext()) {
-						if(0==internalKeyComparator.compare(key,it.key())){
+
+					while(it.hasNext()){
+						int diff = internalKeyComparator.compare(key,it.key());
+						if(0==diff){
 							return it.value();
+						}else if(diff < 0){
+							break;
+						}else{
+							it.next();
+							
 						}
-						it.next();
 					}
 				}
 			}
