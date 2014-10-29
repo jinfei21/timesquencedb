@@ -26,7 +26,7 @@ public class FileSeekIterator implements
 		this.storage = storage;
 		byte[] bytes = new byte[4];
 		this.storage.get(0, bytes);
-		this.maxPos = ByteUtil.ToInt(bytes)-1;
+		this.maxPos = ByteUtil.ToInt(bytes) - 1;
 		this.curMeta = null;
 		this.curEntry = null;
 		this.nameManager = nameManager;
@@ -47,7 +47,7 @@ public class FileSeekIterator implements
 			curPos++;
 			try {
 				curMeta = read(curPos);
-				if (curMeta.getCode() == seekCode||seekCode == -1) {
+				if (curMeta.getCode() == seekCode || seekCode == -1) {
 
 					InternalKey key = new InternalKey(curMeta.getCode(),
 							curMeta.getTime());
@@ -66,6 +66,7 @@ public class FileSeekIterator implements
 		} else {
 			curEntry = null;
 		}
+
 		return curEntry;
 	}
 
@@ -130,7 +131,7 @@ public class FileSeekIterator implements
 		}
 	}
 
-	private DataMeta read(int index) throws IOException {
+	public DataMeta read(int index) throws IOException {
 		byte[] bytes = new byte[DataMeta.META_SIZE];
 		storage.get(4 + DataMeta.META_SIZE * index, bytes);
 		return new DataMeta(bytes);
@@ -173,7 +174,6 @@ public class FileSeekIterator implements
 		if (curEntry == null) {
 			return false;
 		} else {
-
 			return true;
 		}
 	}
@@ -217,6 +217,7 @@ public class FileSeekIterator implements
 		if (curEntry != null) {
 			return curEntry.getKey();
 		}
+
 		return null;
 	}
 
