@@ -112,13 +112,13 @@ public class StoreLevel {
 			}
 		}
 		
-		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap) throws IOException {
+		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap,long fileNumber) throws IOException {
 			
 			IStorage storage = null;
 			if(fileCount.get() < 8) {
-				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
+				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber), fileManager.getFileCapacity());
 			} else {
-				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
+				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber), fileManager.getFileCapacity());
 			}
 			
 			int size = dataMap.size();
@@ -160,7 +160,7 @@ public class StoreLevel {
 					for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 						try{
 							fileCount.incrementAndGet();
-							FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue());
+							FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(),table.getFileNumber());
 							fileManager.add(entry.getKey(), fileMeta);
 							fileCount.decrementAndGet();
 						}catch(IOException e){

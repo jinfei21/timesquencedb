@@ -66,6 +66,10 @@ public class FileManager {
 		list.add(file);
 	}
 	
+	public void put(long time, List<FileMeta> newList) {
+		timeFileMap.put(time, newList);
+	}
+	
 	public List<FileMeta> getFiles(long time){
 		return timeFileMap.get(time);
 	}

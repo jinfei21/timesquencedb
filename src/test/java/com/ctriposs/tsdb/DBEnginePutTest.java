@@ -31,8 +31,8 @@ public class DBEnginePutTest {
 
         	long l = System.currentTimeMillis();
         	String d = data+i;
-        	engine.put("c", "c", l, d.getBytes());
-        	map.put(l, "c-" + d);
+        	engine.put(str[n], str[n], l, d.getBytes());
+        	map.put(l,str[n] + "-" + d);
         }
         
         for(Entry<Long,String> entry:map.entrySet()){
@@ -42,9 +42,6 @@ public class DBEnginePutTest {
         	if(s != null){
         		String dd = new String(s);
         		if(d[1].equals(dd)){
-        			if("a".equals(d[0])) {
-        				System.out.println("1111111111111111");
-        			}
         			System.out.println("OK");
         		}else{
         			System.out.print("error "+entry.getValue()+"---");

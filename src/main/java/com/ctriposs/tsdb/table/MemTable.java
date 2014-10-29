@@ -21,12 +21,15 @@ public class MemTable {
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
+	private long fileNumber;
+	
 	
 	public MemTable(String dir, long fileNumber, long capacity, long maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = maxMemTableSize >= MAX_MEM_SIZE ? MAX_MEM_SIZE : maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
 		this.logWriter = new MapFileLogWriter(dir, fileNumber, capacity);
+		this.fileNumber = fileNumber;
 	}
 
 	public boolean isEmpty() {
@@ -90,5 +93,9 @@ public class MemTable {
 	
 	public String getLogFile(){
 		return logWriter.getName();
+	}
+	
+	public long getFileNumber(){
+		return fileNumber;
 	}
 }
