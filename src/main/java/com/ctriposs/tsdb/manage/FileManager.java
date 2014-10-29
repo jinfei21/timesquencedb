@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.iterator.FileSeekInterator;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
@@ -85,13 +85,18 @@ public class FileManager {
 			for(FileMeta meta : list){
 				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
-					FileSeekInterator it = new FileSeekInterator(storage, nameManager);
+					FileSeekIterator it = new FileSeekIterator(storage, nameManager);
 					it.seek(key.getCode());
 					while(it.hasNext()){
-						if(0==internalKeyComparator.compare(key,it.key())){
+						int diff = internalKeyComparator.compare(key,it.key());
+						if(0==diff){
 							return it.value();
+						}else if(diff < 0){
+							break;
+						}else{
+							it.next();
+							
 						}
-						it.next();
 					}
 				}
 			}

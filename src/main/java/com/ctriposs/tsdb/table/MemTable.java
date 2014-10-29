@@ -17,7 +17,7 @@ public class MemTable {
 	public final static long MINUTE = 1000 * 60;
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final long maxMemTableSize;
-	private final AtomicLong used = new AtomicLong(0);
+	private final AtomicLong used = new AtomicLong(4);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;

@@ -17,7 +17,6 @@ public class NameManager {
 	public NameManager(String dir){
 	
 	}
-
 	
 	public int getCode(String name){
 		Integer code = nameMap.get(name);

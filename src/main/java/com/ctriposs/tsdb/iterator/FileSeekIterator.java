@@ -10,7 +10,7 @@ import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class FileSeekInterator implements
+public class FileSeekIterator implements
 		IInternalSeekIterator<InternalKey, byte[]> {
 
 	private final NameManager nameManager;
@@ -21,12 +21,12 @@ public class FileSeekInterator implements
 	private Entry<InternalKey, byte[]> curEntry;
 	private long seekCode = -1L;
 
-	public FileSeekInterator(IStorage storage, NameManager nameManager)
+	public FileSeekIterator(IStorage storage, NameManager nameManager)
 			throws IOException {
 		this.storage = storage;
 		byte[] bytes = new byte[4];
 		this.storage.get(0, bytes);
-		this.maxPos = ByteUtil.ToInt(bytes);
+		this.maxPos = ByteUtil.ToInt(bytes)-1;
 		this.curMeta = null;
 		this.curEntry = null;
 		this.nameManager = nameManager;

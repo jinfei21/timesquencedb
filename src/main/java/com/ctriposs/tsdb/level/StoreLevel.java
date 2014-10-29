@@ -27,7 +27,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class StoreLevel {
 
 	public final static int MAX_SIZE = 6;
-	public final static long FILE_SIZE = 256 * 1024 * 1024L;
+	public final static long FILE_SIZE = 256*1024* 1024L;
 	public final static int THREAD_COUNT = 2;
 	
 	private ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -87,6 +87,9 @@ public class StoreLevel {
 		}
 		for(Task task: tasks) {
 			value = task.getValue(key);
+			if(value != null){
+				return value;
+			}
 		}
 
 		return value;
@@ -141,8 +144,8 @@ public class StoreLevel {
 				dataOffset += entry.getValue().length;
 				i++;
 				largest =  entry.getKey();
-			}
-			storage.close();
+			}			
+			storage.close();			
 			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
 			return fileMeta;	
 		}
@@ -165,7 +168,7 @@ public class StoreLevel {
 							e.printStackTrace();
 						}						
 					}
-					
+					fileManager.delete(new File(table.getLogFile()));
 				} catch (Throwable e) {
 					//TODO 
 					e.printStackTrace();
