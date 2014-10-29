@@ -10,15 +10,14 @@ import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class MapFileLogWriter implements ILogWriter{
+public class MapFileLogWriter implements ILogWriter {
 	
 	private IStorage storage;
 	private AtomicInteger current;
 	
-	public MapFileLogWriter(String dir,long fileNumber,long capacity) throws IOException{
+	public MapFileLogWriter(String dir, long fileNumber, long capacity) throws IOException {
 		this.current = new AtomicInteger(0);
 		this.storage = new MapFileStorage(dir, System.currentTimeMillis(), FileName.logFileName(fileNumber), capacity);
-		
 	}
 
 	@Override
@@ -38,9 +37,6 @@ public class MapFileLogWriter implements ILogWriter{
 
 	@Override
 	public String getName() {
-
 		return storage.getName();
 	}
-
-	
 }
