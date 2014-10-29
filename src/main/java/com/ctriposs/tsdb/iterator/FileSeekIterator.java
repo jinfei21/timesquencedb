@@ -109,13 +109,15 @@ public class FileSeekIterator implements
 		}
 
 		if (left < right) {
-			for (int pos = curPos - 1; pos >= 0; pos--) {
+			int pos = curPos - 1;
+			for (; pos >= 0; pos--) {
 				DataMeta meta = read(pos);
 				if (meta.getCode() != code) {
-					curPos = pos + 1;
+					
 					break;
 				}
 			}
+			curPos = pos + 1;
 
 			curMeta = read(curPos);
 			InternalKey key = new InternalKey(curMeta.getCode(),
