@@ -16,11 +16,12 @@ import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class Level {
+public abstract class Level {
 
 	protected volatile boolean run = false;
 	protected static AtomicInteger fileCount = new AtomicInteger(0);
 	protected FileManager fileManager;
+
 	
 	public Level(FileManager fileManager){
 		this.fileManager = fileManager;

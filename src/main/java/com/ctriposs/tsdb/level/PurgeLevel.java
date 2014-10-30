@@ -1,22 +1,20 @@
 package com.ctriposs.tsdb.level;
 
-import com.ctriposs.tsdb.IStorage;
-import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.iterator.FileSeekIterator;
-import com.ctriposs.tsdb.manage.FileManager;
-import com.ctriposs.tsdb.storage.DataMeta;
-import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.PureFileStorage;
-import com.ctriposs.tsdb.table.InternalKeyComparator;
-import com.ctriposs.tsdb.table.MemTable;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
+
+import com.ctriposs.tsdb.IStorage;
+import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
+import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.PureFileStorage;
+import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MemTable;
 
 public class PurgeLevel implements Runnable {
 
@@ -27,7 +25,7 @@ public class PurgeLevel implements Runnable {
     private ConcurrentSkipListMap<InternalKey, byte[]> dataListMap = new ConcurrentSkipListMap<InternalKey, byte[]>(new Comparator<InternalKey>() {
         @Override
         public int compare(InternalKey o1, InternalKey o2) {
-            return o1.compare(o1, o2);
+            return o1.compareTo(o2);
         }
     });
 	public PurgeLevel(FileManager fileManager){
@@ -56,11 +54,11 @@ public class PurgeLevel implements Runnable {
                 // Delete too old files
                 fileManager.delete(start);
                 for (long l = start; l < end; l++) {
-                    List<FileMeta> fileMetaList = fileManager.getFiles(l);
+                    Queue<FileMeta> fileMetaList = fileManager.getFiles(l);
                     if (fileMetaList != null && fileMetaList.size() >= 2) {
                         // Just merge the beginning two meta files
-                        FileMeta metaOne = fileMetaList.get(0);
-                        FileMeta metaTwo = fileMetaList.get(1);
+                        FileMeta metaOne = fileMetaList.peek();
+                        FileMeta metaTwo = fileMetaList.peek();
 
                         String firstFileName = metaOne.getFile().getName();
                         String secondFileName = metaTwo.getFile().getName();

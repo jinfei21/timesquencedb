@@ -114,7 +114,6 @@ public class FileSeekIterator implements
 			for (; pos >= 0; pos--) {
 				DataMeta meta = read(pos);
 				if (meta.getCode() != code) {
-					
 					break;
 				}
 			}

@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 import com.ctriposs.tsdb.InternalKey;
 
-public class FileMeta implements Comparator<FileMeta>{
+public class FileMeta implements Comparable<FileMeta>{
 
     private final File file;
 
@@ -36,7 +36,7 @@ public class FileMeta implements Comparator<FileMeta>{
     }
 
     public boolean contains(InternalKey key) {
-        return key.compare(key, smallest) >= 0 && key.compare(key, largest) <= 0;
+        return key.compareTo( smallest) >= 0 && key.compareTo(largest) <= 0;
 
     }
 
@@ -54,8 +54,8 @@ public class FileMeta implements Comparator<FileMeta>{
 	}
 
 	@Override
-	public int compare(FileMeta o1, FileMeta o2) {
-		return (int) (o1.fileNumber - o2.fileNumber);
+	public int compareTo(FileMeta o) {
+		return (int) (fileNumber - o.fileNumber);
 	}
 	
 }
