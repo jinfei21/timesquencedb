@@ -64,7 +64,7 @@ public class DBEngine implements IDB {
 			this.internalKeyComparator = config.getInternalKeyComparator();
 		}
 		this.nameManager = new NameManager(config.getDBDir());
-		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator,nameManager);
+		this.fileManager = new FileManager(config.getDBDir(), config.getFileCapacity(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
@@ -130,9 +130,11 @@ public class DBEngine implements IDB {
 	}
 
 	@Override
-	public void delete(long afterTime)throws IOException{
+	public void delete(long afterTime) throws IOException {
 		deleteCounter.incrementAndGet();
+
 		checkTime(afterTime);
+
 		fileManager.delete(afterTime);
 	}
 	

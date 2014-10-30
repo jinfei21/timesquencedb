@@ -18,10 +18,10 @@ import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.MemTable;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class StoreLevel extends Level{
+public class StoreLevel extends Level {
 
 	public final static int MAX_SIZE = 6;
-	public final static long FILE_SIZE = 256*1024* 1024L;
+	public final static long FILE_SIZE = 256 * 1024 * 1024L;
 	public final static int THREAD_COUNT = 2;
 	
 	private ExecutorService executor = Executors.newFixedThreadPool(2);
