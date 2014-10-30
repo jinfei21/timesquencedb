@@ -118,6 +118,7 @@ public class StoreLevel extends Level {
 						}catch(IOException e){
 							//TODO
 							e.printStackTrace();
+							storeErrorCounter.incrementAndGet();
 						}						
 					}
 					fileManager.delete(new File(table.getLogFile()));

@@ -9,12 +9,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
-import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
+import com.ctriposs.tsdb.storage.IndexHead;
+import com.ctriposs.tsdb.storage.IndexMeta;
 import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.storage.PureFileStorage;
-import com.ctriposs.tsdb.util.ByteUtil;
 
 public abstract class Level {
 
@@ -38,9 +38,8 @@ public abstract class Level {
 		}
 		
 		int size = dataMap.size();
-		int dataOffset = 4 + DataMeta.META_SIZE * size;
-
-		storage.put(0, ByteUtil.toBytes(size));
+		int dataOffset = 4 + IndexMeta.META_SIZE * size;
+		
 		int i = 0;
 		InternalKey smallest = null;
 		InternalKey largest = null;
@@ -49,20 +48,20 @@ public abstract class Level {
 				smallest = entry.getKey();
 			}
 			// write meta
-			int metaOffset = 4 + DataMeta.META_SIZE * i;
-			storage.put(metaOffset + DataMeta.CODE_OFFSET, ByteUtil.toBytes(entry.getKey().getCode()));
-			storage.put(metaOffset + DataMeta.TIME_OFFSET, ByteUtil.toBytes(entry.getKey().getTime()));
-			storage.put(metaOffset + DataMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(entry.getValue().length));
-			storage.put(metaOffset + DataMeta.VALUE_OFFSET_OFFSET, ByteUtil.toBytes(dataOffset));
-			
+			int metaOffset = IndexHead.HEAD_SIZE + IndexMeta.META_SIZE * i;			
+			storage.put(metaOffset, entry.getKey().toByte(entry.getValue().length, dataOffset));
 			// write data
 			storage.put(dataOffset, entry.getValue());
 			dataOffset += entry.getValue().length;
 			i++;
 			largest =  entry.getKey();
-		}			
+		}	
+		//write head
+		IndexHead head = new IndexHead(size,smallest,largest);
+		storage.put(0, head.toByte());
 		storage.close();			
 
         return new FileMeta(fileNumber,new File(storage.getName()), smallest, largest);
 	}
+	
 }

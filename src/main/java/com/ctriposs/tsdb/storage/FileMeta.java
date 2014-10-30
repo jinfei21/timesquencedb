@@ -2,7 +2,6 @@ package com.ctriposs.tsdb.storage;
 
 
 import java.io.File;
-import java.util.Comparator;
 
 import com.ctriposs.tsdb.InternalKey;
 

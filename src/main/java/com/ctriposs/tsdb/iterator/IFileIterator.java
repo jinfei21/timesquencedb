@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import com.ctriposs.tsdb.storage.DataMeta;
+import com.ctriposs.tsdb.storage.IndexMeta;
 
 public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 
@@ -12,9 +12,9 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 
 	void seekToFirst() throws IOException;
 
-	DataMeta nextMeta() throws IOException;
+	IndexMeta nextMeta() throws IOException;
 	
-	DataMeta prevMeta() throws IOException;	
+	IndexMeta prevMeta() throws IOException;	
 	
 	K key();
 

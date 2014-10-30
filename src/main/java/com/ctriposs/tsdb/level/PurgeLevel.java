@@ -34,7 +34,7 @@ public class PurgeLevel extends Level implements Runnable {
 	public void start() {
 		if (!run) {
 			run = true;
-			new Thread(this).start();
+			//new Thread(this).start();
 		}
 	}
 
@@ -109,9 +109,7 @@ public class PurgeLevel extends Level implements Runnable {
 						// Write to file
 						FileMeta fileMeta = storeFile(l, dataListMap, fileManager.getFileNumber());
 						dataListMap.clear();
-						
-						
-						fileManager.add(l, fileMeta);
+
 						
 					}
 				}

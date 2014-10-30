@@ -5,7 +5,7 @@ import java.util.Comparator;
 
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class DataMeta implements Serializable, Comparator<DataMeta> {
+public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 
 
 	public static final int META_SIZE = (Long.SIZE + Long.SIZE  + Integer.SIZE + Integer.SIZE) / Byte.SIZE;	
@@ -23,14 +23,14 @@ public class DataMeta implements Serializable, Comparator<DataMeta> {
 	private int valueSize;
 	private int offSet;
 	
-	public DataMeta(int offSet) {
+	public IndexMeta(int offSet) {
 		this.code = 0;
 		this.time = 0;
 		this.valueSize = 0;
 		this.offSet = offSet;
 	}
 	
-	public DataMeta(byte[] bytes){
+	public IndexMeta(byte[] bytes){
 		this.code = ByteUtil.ToLong(bytes,0);
 		this.time = ByteUtil.ToLong(bytes, TIME_OFFSET);
 		this.valueSize = ByteUtil.ToInt(bytes, VALUE_SIZE_OFFSET);
@@ -54,7 +54,7 @@ public class DataMeta implements Serializable, Comparator<DataMeta> {
 	}
 
     @Override
-    public int compare(DataMeta o1, DataMeta o2) {
+    public int compare(IndexMeta o1, IndexMeta o2) {
         int diff = (int) (o1.getCode() - o1.getCode());
 
         if (diff == 0) {
