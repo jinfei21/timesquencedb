@@ -35,7 +35,7 @@ public class PurgeLevel extends Level implements Runnable {
 	public void start() {
 		if (!run) {
 			run = true;
-			new Thread(this).start();
+			//new Thread(this).start();
 		}
 	}
 

@@ -6,21 +6,20 @@ import java.util.Map.Entry;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.storage.DataMeta;
+import com.ctriposs.tsdb.storage.IndexHead;
+import com.ctriposs.tsdb.storage.IndexMeta;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class FileSeekIterator implements
-		IFileIterator<InternalKey, byte[]> {
+public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	private int curPos = -1;
 	private IStorage storage;
 	private int maxPos = 0;
-	private DataMeta curMeta;
+	private IndexMeta curMeta;
 	private Entry<InternalKey, byte[]> curEntry;
 	private long seekCode = -1L;
 
-	public FileSeekIterator(IStorage storage)
-			throws IOException {
+	public FileSeekIterator(IStorage storage)throws IOException {
 		this.storage = storage;
 		byte[] bytes = new byte[4];
 		this.storage.get(0, bytes);
@@ -109,7 +108,7 @@ public class FileSeekIterator implements
 		if (left < right) {
 			int pos = curPos - 1;
 			for (; pos >= 0; pos--) {
-				DataMeta meta = read(pos);
+				IndexMeta meta = read(pos);
 				if (meta.getCode() != code) {
 					break;
 				}
@@ -127,10 +126,10 @@ public class FileSeekIterator implements
 		}
 	}
 
-	public DataMeta read(int index) throws IOException {
-		byte[] bytes = new byte[DataMeta.META_SIZE];
-		storage.get(4 + DataMeta.META_SIZE * index, bytes);
-		return new DataMeta(bytes);
+	public IndexMeta read(int index) throws IOException {
+		byte[] bytes = new byte[IndexMeta.META_SIZE];
+		storage.get(IndexHead.HEAD_SIZE + IndexMeta.META_SIZE * index, bytes);
+		return new IndexMeta(bytes);
 	}
 
 	@Override
@@ -202,7 +201,7 @@ public class FileSeekIterator implements
 	}
 
 	@Override
-	public DataMeta nextMeta() throws IOException {
+	public IndexMeta nextMeta() throws IOException {
 		if (curPos < maxPos) {
 			curPos++;
 			return read(curPos);
@@ -211,7 +210,7 @@ public class FileSeekIterator implements
 	}
 
 	@Override
-	public DataMeta prevMeta() throws IOException {
+	public IndexMeta prevMeta() throws IOException {
 		if (curPos > 0) {
 			curPos--;
 			return read(curPos);

@@ -9,7 +9,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.ILogWriter;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.storage.DataMeta;
+import com.ctriposs.tsdb.storage.IndexHead;
+import com.ctriposs.tsdb.storage.IndexMeta;
 
 public class MemTable {
 
@@ -17,7 +18,7 @@ public class MemTable {
 	public final static long MINUTE = 1000 * 60;
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final long maxMemTableSize;
-	private final AtomicLong used = new AtomicLong(4);
+	private final AtomicLong used = new AtomicLong(IndexHead.HEAD_SIZE);
 	private Lock lock = new ReentrantLock();
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
@@ -47,7 +48,7 @@ public class MemTable {
 	public boolean add(InternalKey key, byte value[]) throws IOException {
 		boolean result = true;
 
-		int length = value.length + DataMeta.META_SIZE;
+		int length = value.length + IndexMeta.META_SIZE;
 		if (used.addAndGet(length) > maxMemTableSize) {
 			result = false;
 		} else {
