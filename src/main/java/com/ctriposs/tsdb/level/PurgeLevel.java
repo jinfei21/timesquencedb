@@ -1,23 +1,16 @@
 package com.ctriposs.tsdb.level;
 
+import java.io.IOException;
+import java.util.Comparator;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentSkipListMap;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
-import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.storage.PureFileStorage;
-import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 public class PurgeLevel extends Level implements Runnable {
 
@@ -26,7 +19,7 @@ public class PurgeLevel extends Level implements Runnable {
     private ConcurrentSkipListMap<InternalKey, byte[]> dataListMap = new ConcurrentSkipListMap<InternalKey, byte[]>(new Comparator<InternalKey>() {
         @Override
         public int compare(InternalKey o1, InternalKey o2) {
-            return o1.compare(o1, o2);
+            return o1.compareTo(o2);
         }
     });
 
@@ -76,8 +69,8 @@ public class PurgeLevel extends Level implements Runnable {
                         iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
                     }
 
-                    FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
-                    FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
+                    FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne);
+                    FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo);
 
                     iteratorOne.seekToFirst();
                     iteratorTwo.seekToFirst();
