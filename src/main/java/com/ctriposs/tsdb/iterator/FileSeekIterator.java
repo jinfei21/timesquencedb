@@ -75,7 +75,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	@Override
 	public void seekToFirst() throws IOException {
 		curPos = 0;
-		if(curPos < maxPos){
+		if(curPos < maxPos) {
 			curMeta = read(curPos);
 			InternalKey key = new InternalKey(curMeta.getCode(),
 					curMeta.getTime());

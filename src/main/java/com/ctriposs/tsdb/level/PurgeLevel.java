@@ -16,6 +16,7 @@ import com.ctriposs.tsdb.util.FileUtil;
 public class PurgeLevel extends Level implements Runnable {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
+    public final static long ONE_HOUR = 1000 * 60 * 60L;
 
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
@@ -50,7 +51,7 @@ public class PurgeLevel extends Level implements Runnable {
 			try {
 				long start = (System.currentTimeMillis() - MAX_PERIOD)
 						/ MemTable.MINUTE * MemTable.MINUTE;
-				long end = System.currentTimeMillis() / MemTable.MINUTE
+				long end = (System.currentTimeMillis() - ONE_HOUR) / MemTable.MINUTE
 						* MemTable.MINUTE;
 
 				// Delete too old files
@@ -125,9 +126,9 @@ public class PurgeLevel extends Level implements Runnable {
 			} catch (Throwable e) {
 				e.printStackTrace();
 				purgeErrorCounter.incrementAndGet();
-			}finally{
+			} finally {
 				try {
-					Thread.sleep(5*MemTable.MINUTE);
+					Thread.sleep(5 * MemTable.MINUTE);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

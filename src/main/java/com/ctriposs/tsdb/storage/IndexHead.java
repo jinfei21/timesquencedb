@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.util.ByteUtil;
 
-public class IndexHead implements Serializable{
+public class IndexHead implements Serializable {
 	
 	public static final int HEAD_SIZE = 4 + 16 + 16;
 	
