@@ -24,13 +24,12 @@ public class PurgeLevel implements Runnable {
 
 	private FileManager fileManager;
 	private volatile boolean run = false;
-	private ConcurrentSkipListMap<DataMeta, FileMeta> dataFileListMap = new ConcurrentSkipListMap<DataMeta, FileMeta>(new Comparator<DataMeta>() {
+    private ConcurrentSkipListMap<InternalKey, byte[]> dataListMap = new ConcurrentSkipListMap<InternalKey, byte[]>(new Comparator<InternalKey>() {
         @Override
-        public int compare(DataMeta o1, DataMeta o2) {
+        public int compare(InternalKey o1, InternalKey o2) {
             return o1.compare(o1, o2);
         }
     });
-
 	public PurgeLevel(FileManager fileManager){
 		this.fileManager = fileManager;
 	}
@@ -69,17 +68,11 @@ public class PurgeLevel implements Runnable {
                         long numberTwo = Long.valueOf(secondFileName.split("-")[2]);
                         IStorage iStorageOne = null;
                         IStorage iStorageTwo = null;
-                        FileMeta smallOne = null;
-                        FileMeta bigOne = null;
 
                         if (numberOne < numberTwo) {
-                            smallOne = metaOne;
-                            bigOne = metaTwo;
                             iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
                             iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
                         } else {
-                            smallOne = metaTwo;
-                            bigOne = metaOne;
                             iStorageOne = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
                             iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
                         }
@@ -87,14 +80,20 @@ public class PurgeLevel implements Runnable {
                         FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
                         FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
 
-                        IStorage iStorage = new PureFileStorage(fileManager.getStoreDir(), l, FileName.dataFileName(fileManager.getFileNumber()), fileManager.getFileCapacity());
-
                         iteratorOne.seekToFirst();
                         iteratorTwo.seekToFirst();
 
                         while (iteratorOne.hasNext()) {
-
+                            dataListMap.put(iteratorOne.key(), iteratorOne.value());
+                            iteratorOne.next();
                         }
+
+                        while (iteratorTwo.hasNext()) {
+                            dataListMap.put(iteratorTwo.key(), iteratorTwo.value());
+                            iteratorTwo.next();
+                        }
+
+                        // Write to file
                     }
                 }
             } catch (IOException e) {
