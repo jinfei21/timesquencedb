@@ -19,7 +19,7 @@ import com.ctriposs.tsdb.util.ByteUtil;
 public class Level {
 
 	protected volatile boolean run = false;
-	protected AtomicInteger fileCount = new AtomicInteger(0);
+	protected static AtomicInteger fileCount = new AtomicInteger(0);
 	protected FileManager fileManager;
 	
 	public Level(FileManager fileManager){
