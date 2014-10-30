@@ -27,9 +27,9 @@ public class Level {
 		
 	}
 	
-	public FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap,long fileNumber) throws IOException {
+	protected FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap, long fileNumber) throws IOException {
 		
-		IStorage storage = null;
+		IStorage storage;
 		if(fileCount.get() < 8) {
 			storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber), fileManager.getFileCapacity());
 		} else {
@@ -47,21 +47,21 @@ public class Level {
 			if (i == 0) {
 				smallest = entry.getKey();
 			}
-			//write meta
+			// write meta
 			int metaOffset = 4 + DataMeta.META_SIZE * i;
 			storage.put(metaOffset + DataMeta.CODE_OFFSET, ByteUtil.toBytes(entry.getKey().getCode()));
 			storage.put(metaOffset + DataMeta.TIME_OFFSET, ByteUtil.toBytes(entry.getKey().getTime()));
 			storage.put(metaOffset + DataMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(entry.getValue().length));
 			storage.put(metaOffset + DataMeta.VALUE_OFFSET_OFFSET, ByteUtil.toBytes(dataOffset));
 			
-			//write data
+			// write data
 			storage.put(dataOffset, entry.getValue());
 			dataOffset += entry.getValue().length;
 			i++;
 			largest =  entry.getKey();
 		}			
 		storage.close();			
-		FileMeta fileMeta = new FileMeta(fileNumber,new File(storage.getName()), smallest, largest);
-		return fileMeta;	
+
+        return new FileMeta(fileNumber,new File(storage.getName()), smallest, largest);
 	}
 }

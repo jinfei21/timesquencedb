@@ -25,14 +25,12 @@ public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
 	public final static int MAX_FILES = 30; 
 
-	private ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
-
-																			@Override
-																			public int compare(Long o1, Long o2) {
-																				
-																				return (int)(o1.longValue() - o2.longValue());
-																			}
-																		});
+    private ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
+        @Override
+        public int compare(Long o1, Long o2) {
+            return (int) (o1 - o2);
+        }
+    });
 	
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();

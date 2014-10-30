@@ -15,23 +15,23 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-public class PurgeLevel implements Runnable {
+public class PurgeLevel extends Level implements Runnable {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
 
-	private FileManager fileManager;
-	private volatile boolean run = false;
     private ConcurrentSkipListMap<InternalKey, byte[]> dataListMap = new ConcurrentSkipListMap<InternalKey, byte[]>(new Comparator<InternalKey>() {
         @Override
         public int compare(InternalKey o1, InternalKey o2) {
             return o1.compare(o1, o2);
         }
     });
-	public PurgeLevel(FileManager fileManager){
-		this.fileManager = fileManager;
+
+	public PurgeLevel(FileManager fileManager) {
+        super(fileManager);
 	}
 
 	public void start(){
@@ -48,85 +48,58 @@ public class PurgeLevel implements Runnable {
 	@Override
 	public void run() {
 
-		while (run) {
-            try {
-                long start = (System.currentTimeMillis() - MAX_PERIOD)/MemTable.MINUTE*MemTable.MINUTE;
-                long end = System.currentTimeMillis()/MemTable.MINUTE*MemTable.MINUTE;
+		while (run) try {
+            long start = (System.currentTimeMillis() - MAX_PERIOD) / MemTable.MINUTE * MemTable.MINUTE;
+            long end = System.currentTimeMillis() / MemTable.MINUTE * MemTable.MINUTE;
 
-                // Delete too old files
-                fileManager.delete(start);
-                for (long l = start; l < end; l++) {
-                    List<FileMeta> fileMetaList = fileManager.getFiles(l);
-                    if (fileMetaList != null && fileMetaList.size() >= 2) {
-                        // Just merge the beginning two meta files
-                        FileMeta metaOne = fileMetaList.get(0);
-                        FileMeta metaTwo = fileMetaList.get(1);
+            // Delete too old files
+            fileManager.delete(start);
+            for (long l = start; l < end; l++) {
+                Queue<FileMeta> fileMetaQueue = fileManager.getFiles(l);
+                if (fileMetaQueue != null && fileMetaQueue.size() >= 2) {
+                    // Just merge the beginning two meta files
+                    FileMeta metaOne = fileMetaQueue.poll();
+                    FileMeta metaTwo = fileMetaQueue.poll();
 
-                        String firstFileName = metaOne.getFile().getName();
-                        String secondFileName = metaTwo.getFile().getName();
-                        long numberOne = Long.valueOf(firstFileName.split("-")[1]);
-                        long numberTwo = Long.valueOf(secondFileName.split("-")[2]);
-                        IStorage iStorageOne = null;
-                        IStorage iStorageTwo = null;
+                    String firstFileName = metaOne.getFile().getName();
+                    String secondFileName = metaTwo.getFile().getName();
+                    long numberOne = Long.valueOf(firstFileName.split("-")[1]);
+                    long numberTwo = Long.valueOf(secondFileName.split("-")[2]);
+                    IStorage iStorageOne;
+                    IStorage iStorageTwo;
 
-                        if (numberOne < numberTwo) {
-                            iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
-                            iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
-                        } else {
-                            iStorageOne = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
-                            iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
-                        }
-
-                        FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
-                        FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
-
-                        iteratorOne.seekToFirst();
-                        iteratorTwo.seekToFirst();
-
-                        while (iteratorOne.hasNext()) {
-                            dataListMap.put(iteratorOne.key(), iteratorOne.value());
-                            iteratorOne.next();
-                        }
-
-                        while (iteratorTwo.hasNext()) {
-                            dataListMap.put(iteratorTwo.key(), iteratorTwo.value());
-                            iteratorTwo.next();
-                        }
-
-                        // Write to file
+                    if (numberOne < numberTwo) {
+                        iStorageOne = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
+                        iStorageTwo = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+                    } else {
+                        iStorageOne = new PureFileStorage(metaTwo.getFile(), metaTwo.getFile().length());
+                        iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
                     }
-                }
-            } catch (IOException e) {
 
+                    FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
+                    FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
+
+                    iteratorOne.seekToFirst();
+                    iteratorTwo.seekToFirst();
+
+                    while (iteratorOne.hasNext()) {
+                        dataListMap.put(iteratorOne.key(), iteratorOne.value());
+                        iteratorOne.next();
+                    }
+
+                    while (iteratorTwo.hasNext()) {
+                        dataListMap.put(iteratorTwo.key(), iteratorTwo.value());
+                        iteratorTwo.next();
+                    }
+
+                    // Write to file
+                    storeFile(l, dataListMap, fileManager.getFileNumber());
+                    dataListMap.clear();
+                }
             }
+        } catch (IOException e) {
+
         }
 		
 	}
-
-    private void mergeList(List<FileMeta> fileMetaList) {
-        // first sort the list
-        InternalKeyComparator keyComparator = new InternalKeyComparator();
-        Arrays.sort(fileMetaList.toArray(new FileMeta[]{}), new FileMetaComparator(keyComparator));
-
-        for (int i = 0; i < fileMetaList.size() - 1; i++) {
-            int j = i + 1;
-            if (keyComparator.compare(fileMetaList.get(j).getSmallest(), fileMetaList.get(i).getLargest()) > 0) {
-
-            }
-        }
-    }
-
-    private static class FileMetaComparator implements Comparator<FileMeta> {
-
-        private final InternalKeyComparator internalKeyComparator;
-
-        public FileMetaComparator(InternalKeyComparator keyComparator) {
-            this.internalKeyComparator = keyComparator;
-        }
-
-        @Override
-        public int compare(FileMeta m1, FileMeta m2) {
-            return this.internalKeyComparator.compare(m1.getSmallest(), m2.getSmallest());
-        }
-    }
 }
