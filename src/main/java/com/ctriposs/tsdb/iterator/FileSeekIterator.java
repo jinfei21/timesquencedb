@@ -6,14 +6,12 @@ import java.util.Map.Entry;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.util.ByteUtil;
 
 public class FileSeekIterator implements
-		IInternalSeekIterator<InternalKey, byte[]> {
+		IFileIterator<InternalKey, byte[]> {
 
-	private final NameManager nameManager;
 	private int curPos = -1;
 	private IStorage storage;
 	private int maxPos = 0;
@@ -21,7 +19,7 @@ public class FileSeekIterator implements
 	private Entry<InternalKey, byte[]> curEntry;
 	private long seekCode = -1L;
 
-	public FileSeekIterator(IStorage storage, NameManager nameManager)
+	public FileSeekIterator(IStorage storage)
 			throws IOException {
 		this.storage = storage;
 		byte[] bytes = new byte[4];
@@ -29,7 +27,6 @@ public class FileSeekIterator implements
 		this.maxPos = ByteUtil.ToInt(bytes) - 1;
 		this.curMeta = null;
 		this.curEntry = null;
-		this.nameManager = nameManager;
 	}
 
 	@Override
@@ -137,22 +134,6 @@ public class FileSeekIterator implements
 	}
 
 	@Override
-	public String table() {
-		if (curEntry != null) {
-			nameManager.getName(curEntry.getKey().getTableCode());
-		}
-		return null;
-	}
-
-	@Override
-	public String column() {
-		if (curEntry != null) {
-			nameManager.getName(curEntry.getKey().getColumnCode());
-		}
-		return null;
-	}
-
-	@Override
 	public long time() {
 		if (curEntry != null) {
 			return curEntry.getKey().getTime();
@@ -217,6 +198,24 @@ public class FileSeekIterator implements
 			return curEntry.getKey();
 		}
 
+		return null;
+	}
+
+	@Override
+	public DataMeta nextMeta() throws IOException {
+		if (curPos < maxPos) {
+			curPos++;
+			return read(curPos);
+		}
+		return null;
+	}
+
+	@Override
+	public DataMeta prevMeta() throws IOException {
+		if (curPos > 0) {
+			curPos--;
+			return read(curPos);
+		}
 		return null;
 	}
 

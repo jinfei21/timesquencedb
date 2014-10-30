@@ -19,11 +19,11 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private FileManager fileManager;
 	private NameManager nameManager;
-	private List<IInternalSeekIterator<InternalKey, byte[]>> iterators;
+	private List<IFileIterator<InternalKey, byte[]>> iterators;
 	private Direction direction;
 	private InternalKeyComparator internalKeyComparator;
 	private Entry<InternalKey, byte[]> curEntry;
-	private IInternalSeekIterator<InternalKey, byte[]> curIterator;
+	private IFileIterator<InternalKey, byte[]> curIterator;
 	private long curSeekTime;
 	private InternalKey seekKey;
 	
@@ -41,7 +41,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public boolean hasNext() {
 		boolean result = false;
 		if(iterators != null){
-			for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
+			for (IFileIterator<InternalKey, byte[]> it : iterators) {
 				if(it.hasNext()){
 					result = true; 
 				}
@@ -54,7 +54,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				try {
 					iterators = getNextIterators(curSeekTime);
 					if(null != iterators){
-						for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+						for(IFileIterator<InternalKey, byte[]> it:iterators){
 							it.seek(seekKey.getCode());
 						}		
 						findSmallest();
@@ -74,7 +74,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
-			for (IInternalSeekIterator<InternalKey, byte[]> it : iterators) {
+			for (IFileIterator<InternalKey, byte[]> it : iterators) {
 
 				if (it != curIterator) {
 					try {
@@ -98,7 +98,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if(direction != Direction.reverse){
-			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(curIterator != it){
 					try {
 						if(it.hasNext()){
@@ -134,7 +134,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		iterators = getNextIterators(format(time));
 		
 		if(null != iterators){
-			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				it.seek(seekKey.getCode());
 			}		
 			findSmallest();
@@ -144,8 +144,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findSmallest(){
 		if(null != iterators){
-			IInternalSeekIterator<InternalKey, byte[]> smallest = null;
-			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+			IFileIterator<InternalKey, byte[]> smallest = null;
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(it.hasNext()){
 					if(smallest == null){
 						smallest = it;
@@ -160,8 +160,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findLargest(){
 		if(null != iterators){
-			IInternalSeekIterator<InternalKey, byte[]> largest = null;
-			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+			IFileIterator<InternalKey, byte[]> largest = null;
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(it.hasNext()){
 					if(largest == null){
 						largest = it;
@@ -174,16 +174,16 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-	private List<IInternalSeekIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException{
+	private List<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException{
 		if(time > System.currentTimeMillis()){
 			return null;
 		}
 		curSeekTime = time;
 		Queue<FileMeta> metas = fileManager.getFiles(time);
 		if(metas != null){
-			List<IInternalSeekIterator<InternalKey, byte[]>> list = new ArrayList<IInternalSeekIterator<InternalKey, byte[]>>();
+			List<IFileIterator<InternalKey, byte[]>> list = new ArrayList<IFileIterator<InternalKey, byte[]>>();
 			for(FileMeta meta:metas){
-				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), meta.getFile().length()), nameManager));
+				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), meta.getFile().length())));
 			}
 			return list;
 		}else{
@@ -238,7 +238,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public void close() throws IOException{
 		
 		if(null != iterators){
-			for(IInternalSeekIterator<InternalKey, byte[]> it:iterators){
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				it.close();
 			}
 		}

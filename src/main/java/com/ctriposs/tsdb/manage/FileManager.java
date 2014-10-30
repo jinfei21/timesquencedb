@@ -89,7 +89,7 @@ public class FileManager {
 			for(FileMeta meta : list) {
 				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
-					FileSeekIterator it = new FileSeekIterator(storage, nameManager);
+					FileSeekIterator it = new FileSeekIterator(storage);
 					it.seek(key.getCode());
 
 					while(it.hasNext()){

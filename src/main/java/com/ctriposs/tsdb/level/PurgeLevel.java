@@ -75,8 +75,8 @@ public class PurgeLevel implements Runnable {
                             iStorageTwo = new PureFileStorage(metaOne.getFile(), metaOne.getFile().length());
                         }
 
-                        FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne, fileManager.getNameManager());
-                        FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo, fileManager.getNameManager());
+                        FileSeekIterator iteratorOne = new FileSeekIterator(iStorageOne);
+                        FileSeekIterator iteratorTwo = new FileSeekIterator(iStorageTwo);
 
                         iteratorOne.seekToFirst();
                         iteratorTwo.seekToFirst();
