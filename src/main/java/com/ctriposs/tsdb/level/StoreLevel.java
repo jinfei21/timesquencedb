@@ -9,22 +9,16 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
-import com.ctriposs.tsdb.storage.DataMeta;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.MapFileStorage;
-import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.MemTable;
-import com.ctriposs.tsdb.util.ByteUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class StoreLevel {
+public class StoreLevel extends Level{
 
 	public final static int MAX_SIZE = 6;
 	public final static long FILE_SIZE = 256*1024* 1024L;
@@ -32,17 +26,13 @@ public class StoreLevel {
 	
 	private ExecutorService executor = Executors.newFixedThreadPool(2);
 	private Task[] tasks;
-	private volatile boolean run = false;
-	private FileManager fileManager;
 	private ArrayBlockingQueue<MemTable> memQueue;
-	
-	private AtomicInteger fileCount = new AtomicInteger(0);
 	
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
 	public StoreLevel(FileManager fileManager, int threads, int memCount) {
-		
+		super(fileManager);
 		this.executor = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder()
 															 .setNameFormat("Level0Merger-%d")
 															 .setDaemon(true)
@@ -53,7 +43,6 @@ public class StoreLevel {
 			tasks[i] = new Task(i);
 		}
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);
-		this.fileManager = fileManager;
 	}
 
 	public void addMemTable(MemTable memTable) throws Exception {
@@ -111,48 +100,6 @@ public class StoreLevel {
 				return null;
 			}
 		}
-		
-		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap,long fileNumber) throws IOException {
-			
-			IStorage storage = null;
-			if(fileCount.get() < 8) {
-				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber), fileManager.getFileCapacity());
-			} else {
-				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber), fileManager.getFileCapacity());
-			}
-			
-			int size = dataMap.size();
-			int dataOffset = 4 + DataMeta.META_SIZE * size;
-
-			storage.put(0, ByteUtil.toBytes(size));
-			int i = 0;
-			InternalKey smallest = null;
-			InternalKey largest = null;
-			for(Entry<InternalKey, byte[]> entry : dataMap.entrySet()){
-				if (i == 0) {
-					smallest = entry.getKey();
-				}
-				//write meta
-				int metaOffset = 4 + DataMeta.META_SIZE * i;
-				storage.put(metaOffset + DataMeta.CODE_OFFSET, ByteUtil.toBytes(entry.getKey().getCode()));
-				storage.put(metaOffset + DataMeta.TIME_OFFSET, ByteUtil.toBytes(entry.getKey().getTime()));
-				storage.put(metaOffset + DataMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(entry.getValue().length));
-				storage.put(metaOffset + DataMeta.VALUE_OFFSET_OFFSET, ByteUtil.toBytes(dataOffset));
-				
-				//write data
-				storage.put(dataOffset, entry.getValue());
-				dataOffset += entry.getValue().length;
-				i++;
-				largest =  entry.getKey();
-			}			
-			storage.close();			
-			FileMeta fileMeta = new FileMeta(new File(storage.getName()), smallest, largest);
-			return fileMeta;	
-		}
-
-        public FileMeta storeFile(ConcurrentSkipListMap<DataMeta, FileMeta> dataFileMeta) {
-            return null;
-        }
 
 		@Override
 		public void run() {

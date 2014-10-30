@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Vector;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,7 +25,7 @@ public class FileManager {
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
 	public final static int MAX_FILES = 30; 
 
-	private ConcurrentSkipListMap<Long, List<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, List<FileMeta>>(new Comparator<Long>() {
+	private ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
 
 																			@Override
 																			public int compare(Long o1, Long o2) {
@@ -50,13 +51,13 @@ public class FileManager {
 	}
 	
 	public void add(long time, FileMeta file) {
-		List<FileMeta> list = timeFileMap.get(time);
+		Queue<FileMeta> list = timeFileMap.get(time);
 		if(list == null) {
 			try{
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new Vector<FileMeta>();
+					list = new PriorityBlockingQueue<FileMeta>();
 					timeFileMap.put(time, list);
 				}
 			} finally {
@@ -66,11 +67,11 @@ public class FileManager {
 		list.add(file);
 	}
 	
-	public void put(long time, List<FileMeta> newList) {
+	public void put(long time, Queue<FileMeta> newList) {
 		timeFileMap.put(time, newList);
 	}
 	
-	public List<FileMeta> getFiles(long time){
+	public Queue<FileMeta> getFiles(long time){
 		return timeFileMap.get(time);
 	}
 	
@@ -84,7 +85,7 @@ public class FileManager {
 	
 	public byte[] getValue(InternalKey key) throws IOException{
 		long ts = key.getTime();
-		List<FileMeta> list = getFiles(format(ts));
+		Queue<FileMeta> list = getFiles(format(ts));
 		if(list != null) {
 			for(FileMeta meta : list) {
 				if(meta.contains(key)){
@@ -112,9 +113,9 @@ public class FileManager {
 	
 	public void delete(long afterTime) throws IOException {
 		
-		for(Entry<Long, List<FileMeta>> entry : timeFileMap.entrySet()) {
+		for(Entry<Long, Queue<FileMeta>> entry : timeFileMap.entrySet()) {
 			if(entry.getKey() < afterTime) {
-				List<FileMeta> list = entry.getValue();
+				Queue<FileMeta> list = entry.getValue();
 				for(FileMeta meta : list){
 					FileUtil.forceDelete(meta.getFile());
 				}

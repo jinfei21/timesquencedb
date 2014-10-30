@@ -76,7 +76,7 @@ public class DBEngine implements IDB {
 	
 
 	private void checkTime(long time){
-		long threshold = time -System.currentTimeMillis();
+		long threshold = System.currentTimeMillis() - time;
 		if(threshold > config.getMaxPeriod()) {
 			throw new IllegalArgumentException("time is to old!");
 		}

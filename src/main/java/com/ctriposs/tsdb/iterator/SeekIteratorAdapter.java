@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
@@ -178,7 +179,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return null;
 		}
 		curSeekTime = time;
-		List<FileMeta> metas = fileManager.getFiles(time);
+		Queue<FileMeta> metas = fileManager.getFiles(time);
 		if(metas != null){
 			List<IInternalSeekIterator<InternalKey, byte[]>> list = new ArrayList<IInternalSeekIterator<InternalKey, byte[]>>();
 			for(FileMeta meta:metas){

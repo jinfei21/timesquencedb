@@ -2,21 +2,25 @@ package com.ctriposs.tsdb.storage;
 
 
 import java.io.File;
+import java.util.Comparator;
 
 import com.ctriposs.tsdb.InternalKey;
 
-public class FileMeta {
+public class FileMeta implements Comparator<FileMeta>{
 
     private final File file;
 
     private final InternalKey smallest;
 
     private final InternalKey largest;
+    
+    private final long fileNumber;
 
-	public FileMeta(File file, InternalKey smallest, InternalKey largest) {
+	public FileMeta(long fileNumber,File file, InternalKey smallest, InternalKey largest) {
         this.file = file;
         this.smallest = smallest;
         this.largest = largest;
+        this.fileNumber = fileNumber;
 	}
 
     public InternalKey getSmallest() {
@@ -47,6 +51,11 @@ public class FileMeta {
 		sb.append('}');
 
 		return sb.toString();
+	}
+
+	@Override
+	public int compare(FileMeta o1, FileMeta o2) {
+		return (int) (o1.fileNumber - o2.fileNumber);
 	}
 	
 }
