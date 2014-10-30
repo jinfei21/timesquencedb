@@ -53,18 +53,17 @@ public class DBEngine implements IDB {
 
     /** The delete counter. */
     private AtomicLong deleteCounter = new AtomicLong();
-	
+
     
-    
-	public DBEngine(DBConfig config) throws IOException{
+	public DBEngine(DBConfig config) throws IOException {
 		this.config = config;
-		if(config.getInternalKeyComparator() == null){
+		if(config.getInternalKeyComparator() == null) {
 			this.internalKeyComparator = new InternalKeyComparator();
-		}else{
+		} else {
 			this.internalKeyComparator = config.getInternalKeyComparator();
 		}
 		this.nameManager = new NameManager(config.getDBDir());
-		this.fileManager = new FileManager(config.getDBDir(),config.getFileCapacity(),internalKeyComparator,nameManager);
+		this.fileManager = new FileManager(config.getDBDir(), config.getFileCapacity(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
@@ -75,15 +74,15 @@ public class DBEngine implements IDB {
 	}
 	
 
-	private void checkTime(long time){
-		long threshold = time -System.currentTimeMillis();
+	private void checkTime(long time) {
+		long threshold = System.currentTimeMillis() - time;
 		if(threshold > config.getMaxPeriod()) {
 			throw new IllegalArgumentException("time is to old!");
 		}
 	}
 
 	@Override
-	public void put(String tableName, String colName, long time, byte[] value) throws IOException{
+	public void put(String tableName, String colName, long time, byte[] value) throws IOException {
 		
 		putCounter.incrementAndGet();
 		
@@ -98,7 +97,7 @@ public class DBEngine implements IDB {
 					try {
 						memTable.close();
 						storeLevel.addMemTable(memTable);
-						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(),internalKeyComparator);
+						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 						memTable.add(key, value);					
 					} catch (Exception e) {
 						throw new IOException(e);
@@ -115,6 +114,7 @@ public class DBEngine implements IDB {
 	@Override
 	public byte[] get(String tableName, String colName, long time) throws IOException {
 		getCounter.incrementAndGet();
+
 		checkTime(time);
 		
 		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
