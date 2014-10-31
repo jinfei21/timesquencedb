@@ -54,8 +54,6 @@ public class DBEngine implements IDB {
     /** The delete counter. */
     private AtomicLong deleteCounter = new AtomicLong();
 	
-    
-    
 	public DBEngine(DBConfig config) throws IOException{
 		this.config = config;
 		if(config.getInternalKeyComparator() == null){
@@ -73,7 +71,6 @@ public class DBEngine implements IDB {
 		this.storeLevel.start();
 		this.purgeLevel.start();
 	}
-	
 
 	private void checkTime(long time){
 		long threshold = System.currentTimeMillis() - time;
@@ -109,8 +106,6 @@ public class DBEngine implements IDB {
 			}
 		}
 	}
-	
-	
 
 	@Override
 	public byte[] get(String tableName, String colName, long time) throws IOException {
@@ -140,8 +135,7 @@ public class DBEngine implements IDB {
 	
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
-		
-		return new SeekIteratorAdapter(fileManager,nameManager,internalKeyComparator);
+		return new SeekIteratorAdapter(fileManager, nameManager, internalKeyComparator);
 	}
 
 	@Override
