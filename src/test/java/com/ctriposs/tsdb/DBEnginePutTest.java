@@ -27,32 +27,33 @@ public class DBEnginePutTest {
         Map<Long,String> map = new LinkedHashMap<Long,String>();
         
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-        	int n = random.nextInt(7);
+        	String n = String.valueOf(random.nextInt(300));
 
         	long l = System.currentTimeMillis();
         	String d = data+i;
-        	engine.put(str[n], str[n], l, d.getBytes());
-        	map.put(l,str[n] + "-" + d);
+        	engine.put(n, n, l, d.getBytes());
+        	map.put(l,n + "-" + d);
         }
-        
+        int total=0;
+        int miss = 0;
+        int error = 0;
         for(Entry<Long,String> entry:map.entrySet()){
         	String d[] = entry.getValue().split("-");
-        	
+        	total++;
         	byte[] s = engine.get(d[0],d[0],entry.getKey());
         	if(s != null){
         		String dd = new String(s);
         		if(d[1].equals(dd)){
         			System.out.println("OK");
         		}else{
-        			System.out.print("error "+entry.getValue()+"---");
-        			System.out.print(d[1]+"--");
-        			System.out.println(dd);
+        			System.out.print(++error+"error "+entry.getValue());
         		}
         	}else{
-        		System.out.println("not found "+entry.getValue()+"-"+entry.getKey());
+        		System.out.println(++miss+"not found "+entry.getValue()+"-"+entry.getKey());
         	}
         }
 
+        System.out.println("total:"+total+"miss:"+miss+"error:"+error);
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
                 (int) (INIT_COUNT * 2 * 1e6 / duration));

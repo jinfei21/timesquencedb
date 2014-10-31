@@ -147,13 +147,4 @@ public class ByteUtil {
         return left.length - right.length;
     }
     
-    public static void main(String args[]){
-    	short a = 111;
-    	short b = 222;
-    	
-    	int n = ByteUtil.ToInt(a, b);
-    	byte[] bb = ByteUtil.toBytes(n);
-    	System.out.println(ByteUtil.ToShort(bb, 0));
-    	System.out.println(ByteUtil.ToShort(bb, 2));
-    }
 }
