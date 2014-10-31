@@ -67,7 +67,11 @@ public class FileManager {
 	public void put(long time, Queue<FileMeta> newList) {
 		timeFileMap.put(time, newList);
 	}
-	
+
+    public Queue<FileMeta> copy(Queue<FileMeta> oldList) {
+        return new PriorityBlockingQueue<FileMeta>(oldList);
+    }
+
 	public Queue<FileMeta> getFiles(long time){
 		return timeFileMap.get(time);
 	}
