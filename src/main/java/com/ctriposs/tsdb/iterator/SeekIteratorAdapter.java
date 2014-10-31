@@ -27,7 +27,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private long curSeekTime;
 	private InternalKey seekKey;
 	
-	public SeekIteratorAdapter(FileManager fileManager,NameManager nameManager,InternalKeyComparator internalKeyComparator){
+	public SeekIteratorAdapter(FileManager fileManager, NameManager nameManager, InternalKeyComparator internalKeyComparator) {
 		this.fileManager = fileManager;
 		this.nameManager = nameManager;
 		this.curEntry = null;
@@ -39,18 +39,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 	@Override
 	public boolean hasNext() {
+
 		boolean result = false;
-		if(iterators != null){
+
+		if(iterators != null) {
 			for (IFileIterator<InternalKey, byte[]> it : iterators) {
-				if(it.hasNext()){
-					result = true; 
+				if(it.hasNext()) {
+					result = true;
+                    break;
 				}
 			}
 		}
 		
-		if(!result){
+		if(!result) {
 			curSeekTime += MemTable.MINUTE;
-			if(curSeekTime < System.currentTimeMillis()){
+			if(curSeekTime < System.currentTimeMillis()) {
 				try {
 					iterators = getNextIterators(curSeekTime);
 					if(null != iterators){
@@ -68,6 +71,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				result = false;
 			}
 		}
+
 		return result;
 	}
 
@@ -174,20 +178,22 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-	private List<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException{
+	private List<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException {
+
 		if(time > System.currentTimeMillis()){
 			return null;
 		}
+
 		curSeekTime = time;
-		Queue<FileMeta> metas = fileManager.getFiles(time);
-		if(metas != null){
+		Queue<FileMeta> metaQueue = fileManager.getFiles(time);
+		if(metaQueue != null) {
 			List<IFileIterator<InternalKey, byte[]>> list = new ArrayList<IFileIterator<InternalKey, byte[]>>();
-			for(FileMeta meta:metas){
+			for(FileMeta meta : metaQueue) {
 				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), meta.getFile().length())));
 			}
 			return list;
-		}else{
-			return getNextIterators(time+MemTable.MINUTE);
+		} else {
+			return getNextIterators(time + MemTable.MINUTE);
 		}
 	}
 	

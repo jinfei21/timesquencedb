@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
-	void seek(String table,String column,long time)throws IOException;
+	void seek(String table, String column, long time) throws IOException;
 	
 	String table();
 	
@@ -16,11 +16,11 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
 	long time();
 	
-	byte[] value()throws IOException;
+	byte[] value() throws IOException;
 	
 	boolean valid();
 	
 	Entry<K,V> prev();
 
-	void close()throws IOException; 
+	void close() throws IOException;
 }

@@ -135,8 +135,7 @@ public class DBEngine implements IDB {
 	
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
-		
-		return new SeekIteratorAdapter(fileManager,nameManager,internalKeyComparator);
+		return new SeekIteratorAdapter(fileManager, nameManager, internalKeyComparator);
 	}
 
 	@Override
