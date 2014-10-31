@@ -47,7 +47,9 @@ public class IndexHead implements Serializable {
 	
 	public boolean contain(long code){
 		boolean result = false;
-		
+		if(code >= smallest.getCode()&&code <= largest.getCode()){
+			result = true;
+		}
 		
 		return result;
 	}

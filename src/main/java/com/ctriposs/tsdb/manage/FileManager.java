@@ -95,14 +95,12 @@ public class FileManager {
 					it.seek(key.getCode());
 
 					while(it.hasNext()){
+						it.next();
 						int diff = internalKeyComparator.compare(key,it.key());
 						if(0==diff){
 							return it.value();
 						}else if(diff < 0){
 							break;
-						}else{
-							it.next();
-							
 						}
 					}
 				}

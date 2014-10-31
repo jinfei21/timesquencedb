@@ -28,9 +28,9 @@ public class IndexBlock {
 	
 		boolean result = false;
 		int left = 0;
-		int right = maxPos - 1;
+		int right = maxPos;
 		while (left < right) {
-			int mid = (left + right + 1) / 2;
+			int mid = (left + right) / 2;
 			if (code < metas[mid].getCode()) {
 				right = mid - 1;
 			} else if (code > metas[mid].getCode()) {

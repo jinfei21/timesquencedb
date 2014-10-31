@@ -18,7 +18,7 @@ public class DBEnginePutTest {
         DBConfig config = new DBConfig(TEST_DIR);
         engine = new DBEngine(config);
         
-        String[] str = new String[]{"a","b","c"};
+        String[] str = new String[]{"a","b","c","d","e","f","g"};
         Random random = new Random();
         long start = System.nanoTime();
         
@@ -27,7 +27,7 @@ public class DBEnginePutTest {
         Map<Long,String> map = new LinkedHashMap<Long,String>();
         
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
-        	int n = random.nextInt(3);
+        	int n = random.nextInt(7);
 
         	long l = System.currentTimeMillis();
         	String d = data+i;

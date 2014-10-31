@@ -12,7 +12,6 @@ import com.ctriposs.tsdb.storage.IndexMeta;
 
 public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
-
 	private IStorage storage;
 	private int maxBlockIndex = 0;
 	private int curBlockIndex = 0;
@@ -27,7 +26,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.storage.get(0, bytes);
 		this.head = new IndexHead(bytes);
 		this.maxBlockIndex = (head.getCount()+IndexBlock.MAX_BLOCK_META_COUNT)/IndexBlock.MAX_BLOCK_META_COUNT - 1;
-		this.curBlockIndex = -1;
+		this.curBlockIndex = 0;
 		this.curEntry = null;
 		this.curBlock = null;
 	}
@@ -109,7 +108,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	
 	private void nextBlock() throws IOException{
 		curBlockIndex++;
-		byte[] bytes = null;
 		int count = 0;
 		if(curBlockIndex == maxBlockIndex){
 			count = head.getCount() - curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT;
@@ -119,15 +117,13 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			curBlock = null;
 			return;
 		}
-		bytes = new byte[count*IndexMeta.META_SIZE];
+		byte[] bytes = new byte[count*IndexMeta.META_SIZE];
 		storage.get(IndexHead.HEAD_SIZE+curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT*IndexMeta.META_SIZE, bytes);
 		curBlock = new IndexBlock(bytes, count);
-
 	}
 
 	private void prevBlock() throws IOException{
 		curBlockIndex--;
-		byte[] bytes = null;
 		int count = 0;
 		if(curBlockIndex == maxBlockIndex){
 			count = head.getCount() - curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT;
@@ -137,9 +133,10 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			curBlock = null;
 			return;			
 		}
-		bytes = new byte[count*IndexMeta.META_SIZE];
+		byte[] bytes = new byte[count*IndexMeta.META_SIZE];
 		storage.get(IndexHead.HEAD_SIZE+curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT*IndexMeta.META_SIZE, bytes);
 		curBlock = new IndexBlock(bytes, count);
+
 	}
 	
 	private void readEntry(IndexMeta meta,boolean isNext) throws IOException {
@@ -159,31 +156,27 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			}
 		}
 		curEntry = null;
+		curBlock = null;
 	}
 
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		
-		if(curBlock != null){
-			try {
-				readEntry(curBlock.nextMeta(),true);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}else{
+		if(curBlock == null){
 			try {
 				nextBlock();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			if(curBlock != null){
-				try {
-					readEntry(curBlock.nextMeta(),true);
-				} catch (IOException e) {
-				}
-			}else{
-				curEntry = null;
+		}
+		
+		if(curBlock != null){
+			try {
+				readEntry(curBlock.nextMeta(),true);
+			} catch (IOException e) {
 			}
+		}else{
+			curEntry = null;
 		}
 		return curEntry;
 	}
@@ -216,26 +209,21 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
-		if(curBlock != null){
-			try {
-				readEntry(curBlock.prevMeta(),false);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}else{
+		if(curBlock == null){
 			try {
 				prevBlock();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			if(curBlock != null){
-				try {
-					readEntry(curBlock.prevMeta(),false);
-				} catch (IOException e) {
-				}
-			}else{
-				curEntry = null;
+
+		}
+		if(curBlock != null){
+			try {
+				readEntry(curBlock.prevMeta(),false);
+			} catch (IOException e) {
 			}
+		}else{
+			curEntry = null;
 		}
 		return curEntry;
 	}
