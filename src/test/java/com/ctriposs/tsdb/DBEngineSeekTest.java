@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class DBEngineSeekTest {
 
-    private static final String TEST_DIR = "d:\\tsdb_test\\put_test";
+    private static final String TEST_DIR = "d:\\tsdb_test\\seek_test";
     private static final int INIT_COUNT = 10*1000*1000;
     private static DBEngine engine;
 
@@ -34,20 +34,26 @@ public class DBEngineSeekTest {
             map.put(l,str[n] + "-" + d);
         }
 
-        for(Map.Entry<Long,String> entry:map.entrySet()){
+        ISeekIterator<InternalKey, byte[]> iterator = engine.iterator();
+
+        for(Map.Entry<Long,String> entry : map.entrySet()){
             String d[] = entry.getValue().split("-");
 
-            byte[] s = engine.get(d[0],d[0],entry.getKey());
-            if(s != null){
-                String dd = new String(s);
-                if(d[1].equals(dd)){
-                    System.out.println("OK");
-                }else{
-                    System.out.print("error "+entry.getValue()+"---");
-                    System.out.print(d[1]+"--");
-                    System.out.println(dd);
-                }
-            }else{
+            iterator.seek(d[0], d[0], entry.getKey());
+
+            if (iterator.hasNext()) {
+                do {
+                    Map.Entry<InternalKey, byte[]> e = iterator.next();
+                    String ss = new String(e.getValue());
+                    if (d[1].equals(ss)) {
+                        System.out.println("OK");
+                    } else {
+                        System.out.print("error "+entry.getValue()+"---");
+                        System.out.print(d[1]+"--");
+                        System.out.println(ss);
+                    }
+                } while (iterator.hasNext());
+            } else {
                 System.out.println("not found "+entry.getValue()+"-"+entry.getKey());
             }
         }
