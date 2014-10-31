@@ -61,8 +61,6 @@ public class InternalKey implements Comparable<InternalKey> {
 		return false;
 	}
 
-
-
 	@Override
 	public int compareTo(InternalKey o) {
 		int diff = (int) (code - o.getCode());

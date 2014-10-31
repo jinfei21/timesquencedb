@@ -36,8 +36,19 @@ public class IndexHead implements Serializable{
 		System.arraycopy(ByteUtil.toBytes(count), 0, bytes, COUNT_OFFSET, 4);
 		System.arraycopy(ByteUtil.toBytes(smallest.getCode()), 0, bytes, MIN_CODE_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(smallest.getTime()), 0, bytes, MIN_TIME_OFFSET, 8);
-		System.arraycopy(ByteUtil.toBytes(largest.getCode()), 0, bytes, MIN_CODE_OFFSET, 8);
-		System.arraycopy(ByteUtil.toBytes(largest.getTime()), 0, bytes, MIN_TIME_OFFSET, 8);	
+		System.arraycopy(ByteUtil.toBytes(largest.getCode()), 0, bytes, MAX_CODE_OFFSET, 8);
+		System.arraycopy(ByteUtil.toBytes(largest.getTime()), 0, bytes, MAX_TIME_OFFSET, 8);	
 		return bytes;
+	}
+	
+	public int getCount(){
+		return count;
+	}
+	
+	public boolean contain(long code){
+		boolean result = false;
+		
+		
+		return result;
 	}
 }

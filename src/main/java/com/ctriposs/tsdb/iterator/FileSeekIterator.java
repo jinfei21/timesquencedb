@@ -6,130 +6,186 @@ import java.util.Map.Entry;
 import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.storage.IndexBlock;
 import com.ctriposs.tsdb.storage.IndexHead;
 import com.ctriposs.tsdb.storage.IndexMeta;
-import com.ctriposs.tsdb.util.ByteUtil;
 
 public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
-	private int curPos = -1;
+
 	private IStorage storage;
-	private int maxPos = 0;
-	private IndexMeta curMeta;
+	private int maxBlockIndex = 0;
+	private int curBlockIndex = 0;
 	private Entry<InternalKey, byte[]> curEntry;
 	private long seekCode = -1L;
-
+	private IndexBlock curBlock;
+	private IndexHead head;
+	
 	public FileSeekIterator(IStorage storage)throws IOException {
 		this.storage = storage;
-		byte[] bytes = new byte[4];
+		byte[] bytes = new byte[IndexHead.HEAD_SIZE];
 		this.storage.get(0, bytes);
-		this.maxPos = ByteUtil.ToInt(bytes) - 1;
-		this.curMeta = null;
+		this.head = new IndexHead(bytes);
+		this.maxBlockIndex = (head.getCount()+IndexBlock.MAX_BLOCK_META_COUNT)/IndexBlock.MAX_BLOCK_META_COUNT - 1;
+		this.curBlockIndex = -1;
 		this.curEntry = null;
+		this.curBlock = null;
 	}
 
 	@Override
 	public boolean hasNext() {
-		if (curPos < maxPos) {
-			return true;
+		if (curBlockIndex <= maxBlockIndex) {
+			if(curBlock != null){
+				if (!curBlock.hashNext()){
+					try {
+						nextBlock();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					if(curBlock != null){
+						return true;
+					}else{
+						return false;
+					}				
+				}else{
+					return true;
+				}
+			}else{
+				try {
+					nextBlock();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				if(curBlock != null){
+					return true;
+				}else{
+					return false;
+				}
+			}
 		} else {
 			return false;
 		}
 	}
-
-	@Override
-	public Entry<InternalKey, byte[]> next() {
-		if (curPos < maxPos) {
-			curPos++;
-			try {
-				curMeta = read(curPos);
-				if (curMeta.getCode() == seekCode || seekCode == -1) {
-
-					InternalKey key = new InternalKey(curMeta.getCode(),
-							curMeta.getTime());
-					byte[] value = new byte[curMeta.getValueSize()];
-					storage.get(curMeta.getOffSet(), value);
-					curEntry = new InternalEntry(key, value);
-				} else {
-					curEntry = null;
-					curPos = maxPos;
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				curEntry = null;
-			}
-
-		} else {
-			curEntry = null;
-		}
-
-		return curEntry;
-	}
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("unsupport remove operation!");
-	}
 	
-
 	@Override
 	public void seekToFirst() throws IOException {
-		curPos = 0;
-		if(curPos < maxPos){
-			curMeta = read(curPos);
-			InternalKey key = new InternalKey(curMeta.getCode(),
-					curMeta.getTime());
-			byte[] value = new byte[curMeta.getValueSize()];
-			storage.get(curMeta.getOffSet(), value);
-			curEntry = new InternalEntry(key, value);
+		curBlockIndex = 0;
+		byte[] bytes = null;
+		int count = 0;
+		if(curBlockIndex == maxBlockIndex){
+			count = head.getCount() - curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT;
+
+		}else{
+			count = IndexBlock.MAX_BLOCK_META_COUNT;		
 		}
+		bytes = new byte[count*IndexMeta.META_SIZE];
+		storage.get(IndexHead.HEAD_SIZE+curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT*IndexMeta.META_SIZE, bytes);
+		curBlock = new IndexBlock(bytes, count);
+		readEntry(curBlock.curMeta(),true);
 	}
 
 
 	@Override
 	public void seek(long code) throws IOException {
-
-		int left = 0;
-		int right = maxPos - 1;
-		seekCode = code;
-		while (left < right) {
-			int mid = (left + right + 1) / 2;
-			curMeta = read(mid);
-			if (code < curMeta.getCode()) {
-				right = mid - 1;
-			} else if (code > curMeta.getCode()) {
-				left = mid + 1;
-			} else {
-				curPos = mid;
-				break;
-			}
-		}
-
-		if (left < right) {
-			int pos = curPos - 1;
-			for (; pos >= 0; pos--) {
-				IndexMeta meta = read(pos);
-				if (meta.getCode() != code) {
+		curBlockIndex = -1;
+		this.seekCode = code;
+		nextBlock();
+		if(curBlock != null){
+			while(!curBlock.seekCode(code)){
+				nextBlock();
+				if(curBlock==null){
+					curBlockIndex  = maxBlockIndex + 1;
 					break;
 				}
 			}
-			curPos = pos + 1;
-
-			curMeta = read(curPos);
-			InternalKey key = new InternalKey(curMeta.getCode(),
-					curMeta.getTime());
-			byte[] value = new byte[curMeta.getValueSize()];
-			storage.get(curMeta.getOffSet(), value);
-			curEntry = new InternalEntry(key, value);
-		} else {
-			curPos = maxPos + 1;
+			if(curBlock != null){
+				readEntry(curBlock.curMeta(),true);
+			}
+		}else{
+			curBlockIndex  = maxBlockIndex + 1;
 		}
+	
+	}
+	
+	private void nextBlock() throws IOException{
+		curBlockIndex++;
+		byte[] bytes = null;
+		int count = 0;
+		if(curBlockIndex == maxBlockIndex){
+			count = head.getCount() - curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT;
+		}else if(curBlockIndex < maxBlockIndex){
+			count = IndexBlock.MAX_BLOCK_META_COUNT;			
+		}else{
+			curBlock = null;
+			return;
+		}
+		bytes = new byte[count*IndexMeta.META_SIZE];
+		storage.get(IndexHead.HEAD_SIZE+curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT*IndexMeta.META_SIZE, bytes);
+		curBlock = new IndexBlock(bytes, count);
+
 	}
 
-	public IndexMeta read(int index) throws IOException {
-		byte[] bytes = new byte[IndexMeta.META_SIZE];
-		storage.get(IndexHead.HEAD_SIZE + IndexMeta.META_SIZE * index, bytes);
-		return new IndexMeta(bytes);
+	private void prevBlock() throws IOException{
+		curBlockIndex--;
+		byte[] bytes = null;
+		int count = 0;
+		if(curBlockIndex == maxBlockIndex){
+			count = head.getCount() - curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT;
+		}else if(curBlockIndex >= 0){
+			count = IndexBlock.MAX_BLOCK_META_COUNT;
+		}else{
+			curBlock = null;
+			return;			
+		}
+		bytes = new byte[count*IndexMeta.META_SIZE];
+		storage.get(IndexHead.HEAD_SIZE+curBlockIndex*IndexBlock.MAX_BLOCK_META_COUNT*IndexMeta.META_SIZE, bytes);
+		curBlock = new IndexBlock(bytes, count);
+	}
+	
+	private void readEntry(IndexMeta meta,boolean isNext) throws IOException {
+		if(meta!=null){
+			if(meta.getCode() == seekCode || seekCode == -1){
+				InternalKey key = new InternalKey(meta.getCode(), meta.getTime());
+				byte[] value = new byte[meta.getValueSize()];
+				storage.get(meta.getValueOffSet(), value);
+				curEntry = new InternalEntry(key, value);
+				return;
+			}else{
+				if(isNext){
+					curBlockIndex  = maxBlockIndex + 1;
+				}else{
+					curBlockIndex = -1;
+				}
+			}
+		}
+		curEntry = null;
+	}
+
+	@Override
+	public Entry<InternalKey, byte[]> next() {
+		
+		if(curBlock != null){
+			try {
+				readEntry(curBlock.nextMeta(),true);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}else{
+			try {
+				nextBlock();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			if(curBlock != null){
+				try {
+					readEntry(curBlock.nextMeta(),true);
+				} catch (IOException e) {
+				}
+			}else{
+				curEntry = null;
+			}
+		}
+		return curEntry;
 	}
 
 	@Override
@@ -156,32 +212,30 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			return true;
 		}
 	}
+	
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
-		if (curPos > 0) {
-			curPos--;
+		if(curBlock != null){
 			try {
-				curMeta = read(curPos);
-				if (curMeta.getCode() == seekCode||seekCode == -1) {
-					InternalKey key = new InternalKey(curMeta.getCode(),
-							curMeta.getTime());
-					byte[] value = new byte[curMeta.getValueSize()];
-					storage.get(curMeta.getOffSet(), value);
-					curEntry = new InternalEntry(key, value);
-
-				} else {
-					curEntry = null;
-					curPos = -1;
-				}
-
+				readEntry(curBlock.prevMeta(),false);
 			} catch (IOException e) {
-				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		}else{
+			try {
+				prevBlock();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			if(curBlock != null){
+				try {
+					readEntry(curBlock.prevMeta(),false);
+				} catch (IOException e) {
+				}
+			}else{
 				curEntry = null;
 			}
-
-		} else {
-			curEntry = null;
 		}
 		return curEntry;
 	}
@@ -196,26 +250,38 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		if (curEntry != null) {
 			return curEntry.getKey();
 		}
-
 		return null;
 	}
 
 	@Override
 	public IndexMeta nextMeta() throws IOException {
-		if (curPos < maxPos) {
-			curPos++;
-			return read(curPos);
+		if (curBlock != null) {
+			return curBlock.nextMeta();
+		}else{
+			nextBlock();
+			if(curBlock != null){
+				return curBlock.nextMeta();		
+			}
 		}
 		return null;
 	}
 
 	@Override
 	public IndexMeta prevMeta() throws IOException {
-		if (curPos > 0) {
-			curPos--;
-			return read(curPos);
+		if (curBlock != null) {
+			return curBlock.prevMeta();
+		}else{
+			prevBlock();
+			if(curBlock != null){
+				return curBlock.prevMeta();		
+			}
 		}
 		return null;
+	}
+
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
 
 }

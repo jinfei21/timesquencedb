@@ -7,9 +7,8 @@ import com.ctriposs.tsdb.util.ByteUtil;
 
 public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 
+	public static final int META_SIZE = (Long.SIZE + Long.SIZE + Integer.SIZE + Integer.SIZE) / Byte.SIZE;
 
-	public static final int META_SIZE = (Long.SIZE + Long.SIZE  + Integer.SIZE + Integer.SIZE) / Byte.SIZE;	
-	
 	public static final int CODE_OFFSET = 0;
 	public static final int TIME_OFFSET = 8;
 	public static final int VALUE_SIZE_OFFSET = 16;
@@ -21,28 +20,32 @@ public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 	private long code;
 	private long time;
 	private int valueSize;
-	private int offSet;
-	
-	public IndexMeta(int offSet) {
+	private int valueOffSet;
+
+	public IndexMeta(int valueOffSet) {
 		this.code = 0;
 		this.time = 0;
 		this.valueSize = 0;
-		this.offSet = offSet;
+		this.valueOffSet = valueOffSet;
 	}
-	
-	public IndexMeta(byte[] bytes){
-		this.code = ByteUtil.ToLong(bytes,0);
-		this.time = ByteUtil.ToLong(bytes, TIME_OFFSET);
-		this.valueSize = ByteUtil.ToInt(bytes, VALUE_SIZE_OFFSET);
-		this.offSet = ByteUtil.ToInt(bytes, VALUE_OFFSET_OFFSET);
+
+	public IndexMeta(byte[] bytes) {
+		this(bytes, 0);
+	}
+
+	public IndexMeta(byte[] bytes, int offSet) {
+		this.code = ByteUtil.ToLong(bytes, offSet + CODE_OFFSET);
+		this.time = ByteUtil.ToLong(bytes, offSet + TIME_OFFSET);
+		this.valueSize = ByteUtil.ToInt(bytes, offSet + VALUE_SIZE_OFFSET);
+		this.valueOffSet = ByteUtil.ToInt(bytes, offSet + VALUE_OFFSET_OFFSET);
 	}
 
 	public int getValueSize() {
 		return valueSize;
 	}
 
-	public int getOffSet() {
-		return offSet;
+	public int getValueOffSet() {
+		return valueOffSet;
 	}
 
 	public long getCode() {
@@ -53,13 +56,13 @@ public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 		return time;
 	}
 
-    @Override
-    public int compare(IndexMeta o1, IndexMeta o2) {
-        int diff = (int) (o1.getCode() - o1.getCode());
+	@Override
+	public int compare(IndexMeta o1, IndexMeta o2) {
+		int diff = (int) (o1.getCode() - o1.getCode());
 
-        if (diff == 0) {
-            diff = (int) (o1.getTime() - o2.getTime());
-        }
-        return diff;
-    }
+		if (diff == 0) {
+			diff = (int) (o1.getTime() - o2.getTime());
+		}
+		return diff;
+	}
 }
