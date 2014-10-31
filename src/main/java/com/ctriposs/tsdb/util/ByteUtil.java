@@ -67,7 +67,23 @@ public class ByteUtil {
     }
 
 	public static short ToShort(byte[] bytes) {
-		return (short) (bytes[1] & 0xff | (bytes[0] & 0xff) << 8);
+		return (short) (bytes[1] & 0xff 
+				       | (bytes[0] & 0xff) << 8);
+	}
+	
+	public static short ToShort(byte[] bytes,int offset){
+		return (short) (bytes[offset+1] & 0xff 
+				     | (bytes[offset] & 0xff) << 8);
+	}
+	
+	public static int ToInt(short n1,short n2){
+		byte[] bytes = new byte[4];
+		bytes[1] = (byte) (n1 & 0xff);
+		bytes[0] = (byte) ((n1 >> 8) & 0xff);
+		bytes[3] = (byte) (n2 & 0xff);
+		bytes[2] = (byte) ((n2 >> 8) & 0xff);
+
+		return ToInt(bytes);
 	}
 
 	public static int ToInt(byte bytes[]) {
@@ -81,11 +97,11 @@ public class ByteUtil {
 		return (bytes[offset+3] & 0xff 
 				| (bytes[offset+2] & 0xff) << 8
 				| (bytes[offset+1] & 0xff) << 16 
-				| (bytes[offset+0] & 0xff) << 24);
+				| (bytes[offset] & 0xff) << 24);
 	}
 	
 	public static long ToLong(byte[] bytes,int offset){
-		return ((((long) bytes[offset+0] & 0xff) << 56)
+		return ((((long) bytes[offset] & 0xff) << 56)
 				| (((long) bytes[offset+1] & 0xff) << 48)
 				| (((long) bytes[offset+2] & 0xff) << 40)
 				| (((long) bytes[offset+3] & 0xff) << 32)
@@ -129,5 +145,15 @@ public class ByteUtil {
             }
         }
         return left.length - right.length;
+    }
+    
+    public static void main(String args[]){
+    	short a = 111;
+    	short b = 222;
+    	
+    	int n = ByteUtil.ToInt(a, b);
+    	byte[] bb = ByteUtil.toBytes(n);
+    	System.out.println(ByteUtil.ToShort(bb, 0));
+    	System.out.println(ByteUtil.ToShort(bb, 2));
     }
 }

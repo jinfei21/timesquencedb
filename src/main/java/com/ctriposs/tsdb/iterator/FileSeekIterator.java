@@ -16,7 +16,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	private int maxBlockIndex = 0;
 	private int curBlockIndex = 0;
 	private Entry<InternalKey, byte[]> curEntry;
-	private long seekCode = -1L;
 	private IndexBlock curBlock;
 	private IndexHead head;
 	
@@ -26,7 +25,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.storage.get(0, bytes);
 		this.head = new IndexHead(bytes);
 		this.maxBlockIndex = (head.getCount()+IndexBlock.MAX_BLOCK_META_COUNT)/IndexBlock.MAX_BLOCK_META_COUNT - 1;
-		this.curBlockIndex = 0;
+		this.curBlockIndex = -1;
 		this.curEntry = null;
 		this.curBlock = null;
 	}
@@ -85,20 +84,23 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 
 	@Override
-	public void seek(long code) throws IOException {
-		curBlockIndex = -1;
-		this.seekCode = code;
-		nextBlock();
-		if(curBlock != null){
-			while(!curBlock.seekCode(code)){
-				nextBlock();
-				if(curBlock==null){
-					curBlockIndex  = maxBlockIndex + 1;
-					break;
-				}
-			}
+	public void seek(int code) throws IOException {
+		if(head.contain(code)){
+			curBlockIndex = -1;
+			nextBlock();
 			if(curBlock != null){
-				readEntry(curBlock.curMeta(),true);
+				while(!curBlock.seekCode(code)){
+					nextBlock();
+					if(curBlock==null){
+						curBlockIndex  = maxBlockIndex + 1;
+						break;
+					}
+				}
+				if(curBlock != null){
+					readEntry(curBlock.curMeta(),true);
+				}
+			}else{
+				curBlockIndex  = maxBlockIndex + 1;
 			}
 		}else{
 			curBlockIndex  = maxBlockIndex + 1;
@@ -139,24 +141,23 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	}
 	
-	private void readEntry(IndexMeta meta,boolean isNext) throws IOException {
-		if(meta!=null){
-			if(meta.getCode() == seekCode || seekCode == -1){
-				InternalKey key = new InternalKey(meta.getCode(), meta.getTime());
-				byte[] value = new byte[meta.getValueSize()];
-				storage.get(meta.getValueOffSet(), value);
-				curEntry = new InternalEntry(key, value);
-				return;
-			}else{
-				if(isNext){
-					curBlockIndex  = maxBlockIndex + 1;
-				}else{
-					curBlockIndex = -1;
-				}
+	private void readEntry(IndexMeta meta, boolean isNext) throws IOException {
+		if (meta != null) {
+
+			InternalKey key = new InternalKey(meta.getCode(), meta.getTime());
+			byte[] value = new byte[meta.getValueSize()];
+			storage.get(meta.getValueOffSet(), value);
+			curEntry = new InternalEntry(key, value);
+		} else {
+			if (isNext) {
+				curBlockIndex = maxBlockIndex + 1;
+			} else {
+				curBlockIndex = -1;
 			}
+			curEntry = null;
+			curBlock = null;
 		}
-		curEntry = null;
-		curBlock = null;
+
 	}
 
 	@Override
@@ -215,7 +216,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-
 		}
 		if(curBlock != null){
 			try {

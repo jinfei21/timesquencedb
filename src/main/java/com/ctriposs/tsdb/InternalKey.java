@@ -6,15 +6,15 @@ import com.ctriposs.tsdb.util.ByteUtil;
 
 public class InternalKey implements Comparable<InternalKey> {
 
-	private long code;
+	private int code;
 	private long time;
 	
-	public InternalKey(int tableCode, int columnCode, long time) {
-		this.code = ByteUtil.ToLong(tableCode, columnCode);
+	public InternalKey(short tableCode, short columnCode, long time) {
+		this.code = ByteUtil.ToInt(tableCode, columnCode);
 		this.time = time;
 	}
 	
-	public InternalKey(long code,long time) {
+	public InternalKey(int code,long time) {
 		this.code = code;
 		this.time = time;
 	}
@@ -27,23 +27,23 @@ public class InternalKey implements Comparable<InternalKey> {
 		this.time = time;
 	}
 
-	public int getTableCode() {
+	public short getTableCode() {
 		byte[] bytes = ByteUtil.toBytes(code);				
-		return ByteUtil.ToInt(bytes, 0);
+		return ByteUtil.ToShort(bytes, 0);
 	}
 
-	public int getColumnCode() {
+	public short getColumnCode() {
 		byte[] bytes = ByteUtil.toBytes(code);		
-		return ByteUtil.ToInt(bytes, 4);
+		return ByteUtil.ToShort(bytes, 2);
 	}
 
-	public long getCode(){
+	public int getCode(){
 		return this.code;
 	}
 	
 	public byte[] toByte(int valuesize,int valueoffset){
 		byte[] bytes = new byte[IndexMeta.META_SIZE];
-		System.arraycopy(ByteUtil.toBytes(code), 0, bytes, IndexMeta.CODE_OFFSET, 8);
+		System.arraycopy(ByteUtil.toBytes(code), 0, bytes, IndexMeta.CODE_OFFSET, 4);
 		System.arraycopy(ByteUtil.toBytes(time), 0, bytes, IndexMeta.TIME_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(valuesize), 0, bytes, IndexMeta.VALUE_SIZE_OFFSET, 4);
 		System.arraycopy(ByteUtil.toBytes(valueoffset), 0, bytes, IndexMeta.VALUE_OFFSET_OFFSET, 4);

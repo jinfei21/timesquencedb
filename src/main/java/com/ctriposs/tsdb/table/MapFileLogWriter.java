@@ -27,12 +27,11 @@ public class MapFileLogWriter implements ILogWriter {
 
 	@Override
 	public void add(long code, long time, byte[] value) throws IOException {
-		int metaOffset = current.get();
+		int metaOffset = current.getAndAdd(IndexMeta.META_SIZE + value.length);
 		storage.put(metaOffset + IndexMeta.CODE_OFFSET, ByteUtil.toBytes(code));
 		storage.put(metaOffset + IndexMeta.TIME_OFFSET, ByteUtil.toBytes(time));
 		storage.put(metaOffset + IndexMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(value.length));
 		storage.put(metaOffset + IndexMeta.VALUE_OFFSET_OFFSET, value);
-		current.addAndGet(20 + value.length);
 	}
 
 	@Override

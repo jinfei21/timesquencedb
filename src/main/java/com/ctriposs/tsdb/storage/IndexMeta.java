@@ -7,17 +7,17 @@ import com.ctriposs.tsdb.util.ByteUtil;
 
 public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 
-	public static final int META_SIZE = (Long.SIZE + Long.SIZE + Integer.SIZE + Integer.SIZE) / Byte.SIZE;
+	public static final int META_SIZE = (Integer.SIZE + Long.SIZE + Integer.SIZE + Integer.SIZE) / Byte.SIZE;
 
 	public static final int CODE_OFFSET = 0;
-	public static final int TIME_OFFSET = 8;
-	public static final int VALUE_SIZE_OFFSET = 16;
-	public static final int VALUE_OFFSET_OFFSET = 20;
+	public static final int TIME_OFFSET = 4;
+	public static final int VALUE_SIZE_OFFSET = 12;
+	public static final int VALUE_OFFSET_OFFSET = 16;
 
 	public static final long TTL_NEVER_EXPIRE = -1L;
 	public static final long TTL_DELETE = 0L;
 
-	private long code;
+	private int code;
 	private long time;
 	private int valueSize;
 	private int valueOffSet;
@@ -34,7 +34,7 @@ public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 	}
 
 	public IndexMeta(byte[] bytes, int offSet) {
-		this.code = ByteUtil.ToLong(bytes, offSet + CODE_OFFSET);
+		this.code = ByteUtil.ToInt(bytes, offSet + CODE_OFFSET);
 		this.time = ByteUtil.ToLong(bytes, offSet + TIME_OFFSET);
 		this.valueSize = ByteUtil.ToInt(bytes, offSet + VALUE_SIZE_OFFSET);
 		this.valueOffSet = ByteUtil.ToInt(bytes, offSet + VALUE_OFFSET_OFFSET);
@@ -48,7 +48,7 @@ public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 		return valueOffSet;
 	}
 
-	public long getCode() {
+	public int getCode() {
 		return code;
 	}
 
@@ -58,7 +58,7 @@ public class IndexMeta implements Serializable, Comparator<IndexMeta> {
 
 	@Override
 	public int compare(IndexMeta o1, IndexMeta o2) {
-		int diff = (int) (o1.getCode() - o1.getCode());
+		int diff = o1.getCode() - o1.getCode();
 
 		if (diff == 0) {
 			diff = (int) (o1.getTime() - o2.getTime());

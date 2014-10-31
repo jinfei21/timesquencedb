@@ -38,7 +38,7 @@ public abstract class Level {
 		}
 		
 		int size = dataMap.size();
-		int dataOffset = 4 + IndexMeta.META_SIZE * size;
+		int dataOffset = IndexHead.HEAD_SIZE + IndexMeta.META_SIZE * size;
 		
 		int i = 0;
 		InternalKey smallest = null;

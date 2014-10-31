@@ -8,7 +8,7 @@ import com.ctriposs.tsdb.storage.IndexMeta;
 
 public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 
-	void seek(long code) throws IOException;
+	void seek(int code) throws IOException;
 
 	void seekToFirst() throws IOException;
 

@@ -8,8 +8,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class NameManager {
 
-	private Map<String,Integer> nameMap = new ConcurrentHashMap<String,Integer>();
-	private Map<Integer,String> codeMap = new ConcurrentHashMap<Integer,String>();
+	private Map<String,Short> nameMap = new ConcurrentHashMap<String,Short>();
+	private Map<Short,String> codeMap = new ConcurrentHashMap<Short,String>();
 	private Lock lock = new ReentrantLock();
 	private AtomicInteger maxCode = new AtomicInteger(1);
 
@@ -18,14 +18,14 @@ public class NameManager {
 	
 	}
 	
-	public int getCode(String name){
-		Integer code = nameMap.get(name);
+	public short getCode(String name){
+		Short code = nameMap.get(name);
 		if(code==null){
 			try{
 				lock.lock();
 				code = nameMap.get(name);
 				if(code==null){
-					code = maxCode.incrementAndGet();
+					code = (short) maxCode.incrementAndGet();
 					nameMap.put(name, code);
 					codeMap.put(code, name);
 				}
@@ -36,7 +36,7 @@ public class NameManager {
 		return code;
 	}
 	
-	public String getName(int code){
+	public String getName(short code){
 		return codeMap.get(code);
 	}
 }

@@ -146,7 +146,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(null != iterators){
 			IFileIterator<InternalKey, byte[]> smallest = null;
 			for(IFileIterator<InternalKey, byte[]> it:iterators){
-				if(it.hasNext()){
+				if(it.valid()){
 					if(smallest == null){
 						smallest = it;
 					}else if(internalKeyComparator.compare(smallest.key(), it.key())>0){
@@ -162,7 +162,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(null != iterators){
 			IFileIterator<InternalKey, byte[]> largest = null;
 			for(IFileIterator<InternalKey, byte[]> it:iterators){
-				if(it.hasNext()){
+				if(it.valid()){
 					if(largest == null){
 						largest = it;
 					}else if(internalKeyComparator.compare(largest.key(), it.key())<0){
