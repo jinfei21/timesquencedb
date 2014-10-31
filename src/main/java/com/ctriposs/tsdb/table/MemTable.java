@@ -16,6 +16,7 @@ public class MemTable {
 
 	public final static long MAX_MEM_SIZE = 256 * 1024 * 1024L;
 	public final static long MINUTE = 1000 * 60;
+
 	private final ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> table;
 	private final long maxMemTableSize;
 	private final AtomicLong used = new AtomicLong(IndexHead.HEAD_SIZE);
@@ -23,7 +24,6 @@ public class MemTable {
 	private InternalKeyComparator internalKeyComparator;
 	private ILogWriter logWriter;
 	private long fileNumber;
-	
 	
 	public MemTable(String dir, long fileNumber, long capacity, long maxMemTableSize, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
