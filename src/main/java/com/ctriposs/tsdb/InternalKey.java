@@ -1,6 +1,6 @@
 package com.ctriposs.tsdb;
 
-import com.ctriposs.tsdb.storage.IndexMeta;
+import com.ctriposs.tsdb.storage.TimeItem;
 import com.ctriposs.tsdb.util.ByteUtil;
 
 
@@ -41,14 +41,16 @@ public class InternalKey implements Comparable<InternalKey> {
 		return this.code;
 	}
 	
-	public byte[] toByte(int valuesize,int valueoffset){
-		byte[] bytes = new byte[IndexMeta.META_SIZE];
-		System.arraycopy(ByteUtil.toBytes(code), 0, bytes, IndexMeta.CODE_OFFSET, 4);
-		System.arraycopy(ByteUtil.toBytes(time), 0, bytes, IndexMeta.TIME_OFFSET, 8);
-		System.arraycopy(ByteUtil.toBytes(valuesize), 0, bytes, IndexMeta.VALUE_SIZE_OFFSET, 4);
-		System.arraycopy(ByteUtil.toBytes(valueoffset), 0, bytes, IndexMeta.VALUE_OFFSET_OFFSET, 4);
+
+	public byte[] toTimeItemByte(int valueSize,long valueOffset){
+		byte[] bytes = new byte[TimeItem.TIME_ITEM_SIZE];
+		System.arraycopy(ByteUtil.toBytes(time), 0, bytes, TimeItem.TIME_OFFSET, 8);
+		System.arraycopy(ByteUtil.toBytes(valueSize), 0, bytes, TimeItem.VALUE_SIZE_OFFSET, 4);
+		System.arraycopy(ByteUtil.toBytes(valueOffset), 0, bytes, TimeItem.VALUE_OFFSET_OFFSET, 8);
 		return bytes;
 	}
+	
+
 	
 	@Override
 	public boolean equals(Object o){
@@ -63,9 +65,9 @@ public class InternalKey implements Comparable<InternalKey> {
 
 	@Override
 	public int compareTo(InternalKey o) {
-		int diff = (int) (code - o.getCode());
+		int diff = (int) (code - o.code);
 		if(diff == 0){
-			diff = (int) (time - o.getTime());
+			diff = (int) (time - o.time);
 		}
 		return diff;
 	}

@@ -1,12 +1,10 @@
-package com.ctriposs.tsdb.storage;
+package com.ctriposs.tsdb.common;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-
-import com.ctriposs.tsdb.IStorage;
 
 public class PureFileStorage implements IStorage {
 
@@ -33,12 +31,12 @@ public class PureFileStorage implements IStorage {
 	}
 	
 	@Override
-	public void get(int position, byte[] dest) throws IOException {
+	public void get(long position, byte[] dest) throws IOException {
 		fileChannel.read(ByteBuffer.wrap(dest), position);
 	}
 
 	@Override
-	public void put(int position, byte[] source) throws IOException {
+	public void put(long position, byte[] source) throws IOException {
         ByteBuffer byteBuffer = ByteBuffer.wrap(source);
 
         while (byteBuffer.hasRemaining()) {
@@ -48,7 +46,7 @@ public class PureFileStorage implements IStorage {
 	}
 	
 	@Override
-	public void put(int position, ByteBuffer source) throws IOException {
+	public void put(long position, ByteBuffer source) throws IOException {
 
         while (source.hasRemaining()) {
             int len = fileChannel.write(source, position);

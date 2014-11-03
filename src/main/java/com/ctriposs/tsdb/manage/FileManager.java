@@ -11,11 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IStorage;
+import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
@@ -39,7 +39,7 @@ public class FileManager {
 	private AtomicLong maxFileNumber = new AtomicLong(0L); 
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
-	
+   
 	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator,NameManager nameManager){
 		this.dir = dir;
 		this.fileCapacity = fileCapacity;
@@ -92,7 +92,7 @@ public class FileManager {
 				if(meta.contains(key)){
 					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
 					FileSeekIterator it = new FileSeekIterator(storage);
-					it.seek(key.getCode());
+					it.seekToFirst(key.getCode());
 
 					while(it.hasNext()){
 						it.next();

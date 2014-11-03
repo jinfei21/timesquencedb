@@ -12,12 +12,8 @@ public class FileName {
 		return makeFileName(number,"name");
 	}
 	
-	public static String metaFileName(long number){
-		return makeFileName(number,"meta");
-	}
-	
-	public static String dataFileName(long number){
-		return makeFileName(number,"dat");
+	public static String dataFileName(long number,int level){
+		return makeFileName(number,"dat-"+level);
 	}
 	
 	private static String makeFileName(long number,String suffix){

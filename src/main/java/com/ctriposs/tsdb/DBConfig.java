@@ -2,20 +2,21 @@ package com.ctriposs.tsdb;
 
 import java.io.File;
 
-import com.ctriposs.tsdb.level.PurgeLevel;
-import com.ctriposs.tsdb.level.StoreLevel;
+import com.ctriposs.tsdb.level.CompactStoreLevel;
+import com.ctriposs.tsdb.level.MemTableStoreLevel;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 import com.google.common.base.Preconditions;
 
 public class DBConfig {
-
-	private int maxMemTable = StoreLevel.MAX_SIZE;
-	private int storeThread = StoreLevel.THREAD_COUNT;
+	public static final int BLOCK_MAX_COUNT = 200;
+	
+	private int maxMemTable = MemTableStoreLevel.MAX_SIZE;
+	private int storeThread = MemTableStoreLevel.THREAD_COUNT;
     private long maxMemTableSize = MemTable.MAX_MEM_SIZE;
-    private long maxPeriod = PurgeLevel.MAX_PERIOD;
-    private long fileCapacity = StoreLevel.FILE_SIZE;
+    private long maxPeriod = CompactStoreLevel.MAX_PERIOD;
+    private long fileCapacity = MemTableStoreLevel.FILE_SIZE;
     private InternalKeyComparator internalKeyComparator = new InternalKeyComparator();
 	private String dir = null;	
 	

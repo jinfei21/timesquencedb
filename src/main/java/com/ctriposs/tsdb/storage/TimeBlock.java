@@ -1,18 +1,16 @@
 package com.ctriposs.tsdb.storage;
 
+public class TimeBlock {
 
-public class IndexBlock {
-
-	public static final int MAX_BLOCK_META_COUNT = 200;
-	private final IndexMeta metas[];
+	private final TimeItem times[];
 	private int curPos = 0;
 	private int maxPos = -1;
 	
-	public IndexBlock(byte[] bytes, int count){
+	public TimeBlock(byte[] bytes, int count){
 		this.maxPos = count - 1;
-		this.metas = new IndexMeta[count]; 
+		this.times = new TimeItem[count]; 
 		for(int i=0;i<count;i++){
-			metas[i] = new IndexMeta(bytes, i*IndexMeta.META_SIZE);
+			times[i] = new TimeItem(bytes, i*TimeItem.TIME_ITEM_SIZE);
 		}
 	}
 
@@ -24,16 +22,16 @@ public class IndexBlock {
 		}
 	}
 	
-	public boolean seekCode(long code){
+	public boolean seek(long time){
 	
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
 		while (left < right) {
 			int mid = (left + right) / 2;
-			if (code < metas[mid].getCode()) {
+			if (time < times[mid].getTime()) {
 				right = mid - 1;
-			} else if (code > metas[mid].getCode()) {
+			} else if (time > times[mid].getTime()) {
 				left = mid + 1;
 			} else {
 				curPos = mid;
@@ -45,7 +43,7 @@ public class IndexBlock {
 			int pos = curPos - 1;
 			for (; pos >= 0; pos--) {
 				
-				if (metas[pos].getCode() != code) {
+				if (times[pos].getTime() < time) {
 					break;
 				}
 			}
@@ -57,24 +55,24 @@ public class IndexBlock {
 		return result;
 	}
 	
-	public IndexMeta curMeta(){
+	public TimeItem current(){
 		if (curPos <= maxPos||curPos >= 0) {
-			return metas[curPos];
+			return times[curPos];
 		}
 		return null;
 	}
 
-	public IndexMeta nextMeta()  {
+	public TimeItem next()  {
 		if (curPos <= maxPos) {
-			return metas[curPos++];
+			return times[curPos++];
 		}
 		return null;
 	}
 
 	
-	public IndexMeta prevMeta() {
+	public TimeItem prev() {
 		if (curPos >= 0) {
-			return metas[curPos--];
+			return times[curPos--];
 		}
 		return null;
 	}

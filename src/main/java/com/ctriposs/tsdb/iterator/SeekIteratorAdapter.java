@@ -8,10 +8,10 @@ import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.storage.PureFileStorage;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 
@@ -58,7 +58,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					iterators = getNextIterators(curSeekTime);
 					if(null != iterators){
 						for(IFileIterator<InternalKey, byte[]> it:iterators){
-							it.seek(seekKey.getCode());
+							it.seek(seekKey.getCode(),curSeekTime);
 						}		
 						findSmallest();
 						direction = Direction.forward;
@@ -83,7 +83,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if (it != curIterator) {
 					try {
 						if (it.hasNext()) {
-							it.seek(seekKey.getCode());
+							it.seek(seekKey.getCode(),curSeekTime);
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -106,7 +106,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if(curIterator != it){
 					try {
 						if(it.hasNext()){
-							it.seek(seekKey.getCode());
+							it.seek(seekKey.getCode(),curSeekTime);
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -139,7 +139,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		
 		if(null != iterators){
 			for(IFileIterator<InternalKey, byte[]> it:iterators){
-				it.seek(seekKey.getCode());
+				it.seek(seekKey.getCode(),curSeekTime);
 			}		
 			findSmallest();
 			direction = Direction.forward;

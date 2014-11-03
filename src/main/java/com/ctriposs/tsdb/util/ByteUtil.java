@@ -147,4 +147,12 @@ public class ByteUtil {
         return left.length - right.length;
     }
     
+    public static void main(String args[]){
+    	double a=42536;
+    	double b=121;
+    	System.out.println(b/a);
+    	System.out.println(2/a);
+    	System.out.println(Integer.MAX_VALUE/(1024*1024*1024));
+    
+    }
 }

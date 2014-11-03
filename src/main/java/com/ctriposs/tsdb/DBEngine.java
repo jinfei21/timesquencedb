@@ -6,8 +6,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
-import com.ctriposs.tsdb.level.PurgeLevel;
-import com.ctriposs.tsdb.level.StoreLevel;
+import com.ctriposs.tsdb.level.CompactStoreLevel;
+import com.ctriposs.tsdb.level.MemTableStoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
@@ -22,10 +22,10 @@ public class DBEngine implements IDB {
 	private MemTable memTable;
 	
 	/** Store memtable to file*/
-	private StoreLevel storeLevel;
+	private MemTableStoreLevel storeLevel;
 	
 	/** Clean too old files*/
-	private PurgeLevel purgeLevel;
+	private CompactStoreLevel purgeLevel;
 	
 	/** Manage the file by time sequence */
 	private FileManager fileManager;
@@ -65,11 +65,11 @@ public class DBEngine implements IDB {
 		this.fileManager = new FileManager(config.getDBDir(), config.getFileCapacity(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
-		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
-		this.purgeLevel = new PurgeLevel(fileManager);
+		this.storeLevel = new MemTableStoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
+		this.purgeLevel = new CompactStoreLevel(fileManager);
 		
 		this.storeLevel.start();
-		this.purgeLevel.start();
+		//this.purgeLevel.start();
 	}
 
 	private void checkTime(long time){

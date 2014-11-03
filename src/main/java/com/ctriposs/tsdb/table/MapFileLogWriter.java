@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ctriposs.tsdb.ILogWriter;
-import com.ctriposs.tsdb.IStorage;
-import com.ctriposs.tsdb.storage.IndexMeta;
+import com.ctriposs.tsdb.common.IStorage;
+import com.ctriposs.tsdb.common.MapFileStorage;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.MapFileStorage;
 import com.ctriposs.tsdb.util.ByteUtil;
 
 public class MapFileLogWriter implements ILogWriter {
@@ -27,11 +26,11 @@ public class MapFileLogWriter implements ILogWriter {
 
 	@Override
 	public void add(long code, long time, byte[] value) throws IOException {
-		int metaOffset = current.getAndAdd(IndexMeta.META_SIZE + value.length);
-		storage.put(metaOffset + IndexMeta.CODE_OFFSET, ByteUtil.toBytes(code));
-		storage.put(metaOffset + IndexMeta.TIME_OFFSET, ByteUtil.toBytes(time));
-		storage.put(metaOffset + IndexMeta.VALUE_SIZE_OFFSET, ByteUtil.toBytes(value.length));
-		storage.put(metaOffset + IndexMeta.VALUE_OFFSET_OFFSET, value);
+		int metaOffset = current.getAndAdd(20 + value.length);
+		storage.put(metaOffset + 0, ByteUtil.toBytes(code));
+		storage.put(metaOffset + 4, ByteUtil.toBytes(time));
+		storage.put(metaOffset + 12, ByteUtil.toBytes(value.length));
+		storage.put(metaOffset + 16, value);
 	}
 
 	@Override

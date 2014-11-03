@@ -1,4 +1,4 @@
-package com.ctriposs.tsdb.storage;
+package com.ctriposs.tsdb.common;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-import com.ctriposs.tsdb.IStorage;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class MapFileStorage implements IStorage {
@@ -37,9 +36,9 @@ public class MapFileStorage implements IStorage {
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 
-	private ByteBuffer getLocal(int position) {
+	private ByteBuffer getLocal(long position) {
 		ByteBuffer buffer = threadLocalBuffer.get();
-		buffer.position(position);
+		buffer.position((int)position);
 		return buffer;
 	}
 
@@ -63,20 +62,20 @@ public class MapFileStorage implements IStorage {
 	}
 
 	@Override
-	public void get(int position, byte[] dest) throws IOException {
+	public void get(long position, byte[] dest) throws IOException {
 		ByteBuffer buffer = this.getLocal(position);
 		buffer.get(dest);
 	}
 
 	@Override
-	public void put(int position, byte[] source) throws IOException {
+	public void put(long position, byte[] source) throws IOException {
 		ByteBuffer buffer = this.getLocal(position);
 		buffer.put(source);
 	}
 	
 
 	@Override
-	public void put(int position, ByteBuffer source) throws IOException {
+	public void put(long position, ByteBuffer source) throws IOException {
 		ByteBuffer buffer = this.getLocal(position);
 		buffer.put(source);
 	}

@@ -4,17 +4,17 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import com.ctriposs.tsdb.storage.IndexMeta;
+import com.ctriposs.tsdb.storage.CodeItem;
 
 public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 
-	void seek(int code) throws IOException;
+	void seek(int code,long time) throws IOException;
 
-	void seekToFirst() throws IOException;
+	void seekToFirst(int code) throws IOException;
 
-	IndexMeta nextMeta() throws IOException;
+	CodeItem nextCode() throws IOException;
 	
-	IndexMeta prevMeta() throws IOException;	
+	CodeItem prevCode() throws IOException;	
 	
 	K key();
 
