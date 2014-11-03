@@ -1,13 +1,14 @@
 package com.ctriposs.tsdb.storage;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.util.ByteUtil;
 
 public class CodeItem implements Serializable, Comparable<CodeItem> {
 
-	public static final int CODE_ITEM_SIZE = (Integer.SIZE + Long.SIZE + Long.SIZE + Long.SIZE + Long.SIZE) / Byte.SIZE;
+	public static final int CODE_ITEM_SIZE = (Integer.SIZE + Long.SIZE + Long.SIZE + Long.SIZE + Integer.SIZE) / Byte.SIZE;
 
 	public static final int CODE_OFFSET = 0;
 	public static final int MIN_TIME_OFFSET = 4;
@@ -19,7 +20,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 	private long minTime;
 	private long maxTime;
 	private long timeOffSet;
-	private AtomicLong timeCount;
+	private AtomicInteger timeCount;
 
 	public CodeItem(byte[] bytes) {
 		this(bytes, 0);
@@ -30,7 +31,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 		this.minTime = ByteUtil.ToLong(bytes, offSet + MIN_TIME_OFFSET);
 		this.maxTime = ByteUtil.ToLong(bytes, offSet + MAX_TIME_OFFSET);
 		this.timeOffSet = ByteUtil.ToLong(bytes, offSet + TIME_OFFSET_OFFSET);
-		this.timeCount = new AtomicLong(ByteUtil.ToLong(bytes,offSet + TIME_COUNT_OFFSET));
+		this.timeCount = new AtomicInteger(ByteUtil.ToInt(bytes,offSet + TIME_COUNT_OFFSET));
 	}
 	
 	public CodeItem(int code,long timeOffset,long minTime,long maxTime){
@@ -38,7 +39,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 		this.timeOffSet = timeOffset;
 		this.minTime = minTime;
 		this.maxTime = maxTime;
-		this.timeCount = new AtomicLong(0);
+		this.timeCount = new AtomicInteger(0);
 	}
 	
 	public byte[] toByte(){
@@ -47,7 +48,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 		System.arraycopy(ByteUtil.toBytes(minTime), 0, bytes, CodeItem.MIN_TIME_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(maxTime), 0, bytes, CodeItem.MAX_TIME_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(timeOffSet), 0, bytes, CodeItem.TIME_OFFSET_OFFSET, 8);
-		System.arraycopy(ByteUtil.toBytes(timeCount.get()), 0, bytes, CodeItem.TIME_COUNT_OFFSET, 8);
+		System.arraycopy(ByteUtil.toBytes(timeCount.get()), 0, bytes, CodeItem.TIME_COUNT_OFFSET, 4);
 		return bytes;
 	}
 	
@@ -94,7 +95,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 		this.timeOffSet = timeOffSet;
 	}
 
-	public long getTimeCount() {
+	public int getTimeCount() {
 		return timeCount.get();
 	}
 

@@ -26,6 +26,8 @@ public class FilePersistent {
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 	private long fileNumber;
+	
+	
 	public FilePersistent(IStorage storage,long timeCount,long fileNumber){
 		this.storage = storage;
 		this.timeCount = timeCount;

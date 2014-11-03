@@ -42,14 +42,6 @@ public class CodeBlock {
 		}
 		
 		if (left < right) {
-			int pos = curPos - 1;
-			for (; pos >= 0; pos--) {
-				
-				if (codes[pos].getCode() != code) {
-					break;
-				}
-			}
-			curPos = pos + 1;
 			result = true;
 		} else {
 			curPos = maxPos + 1;

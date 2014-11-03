@@ -10,14 +10,20 @@ import com.ctriposs.tsdb.storage.CodeBlock;
 import com.ctriposs.tsdb.storage.CodeItem;
 import com.ctriposs.tsdb.storage.Head;
 import com.ctriposs.tsdb.storage.TimeBlock;
+import com.ctriposs.tsdb.storage.TimeItem;
 
 public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	private IStorage storage;
-	private int maxBlockIndex = 0;
-	private int curBlockIndex = 0;
+	private int maxCodeBlockIndex = 0;
+	private int maxTimeBlockIndex = 0;
+	private int curCodeBlockIndex = -1;
+	private int curTimeBlockIndex = -1;
+	
 	private Entry<InternalKey, byte[]> curEntry;
-	private TimeBlock curBlock;
+	private TimeBlock curTimeBlock;
+	private CodeBlock curCodeBlock;
+	private CodeItem curCodeItem;
 	private Head head;
 	
 	public FileSeekIterator(IStorage storage)throws IOException {
@@ -25,10 +31,11 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		byte[] bytes = new byte[Head.HEAD_SIZE];
 		this.storage.get(0, bytes);
 		this.head = new Head(bytes);
-		this.maxBlockIndex = 0;
-		this.curBlockIndex = -1;
+		this.maxCodeBlockIndex = (head.getCodeCount()+DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
 		this.curEntry = null;
-		this.curBlock = null;
+		this.curTimeBlock = null;
+		this.curCodeBlock = null;
+		this.curCodeItem = null;
 	}
 
 
@@ -47,24 +54,34 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		return null;
 	}
 
-	private CodeBlock getNextCodeBlock(int index) throws IOException{
-		
+	private void nextCodeBlock() throws IOException{
+		curCodeBlockIndex++;
 		byte[] bytes = null;
 		int count = 0;
-		if(curBlockIndex == maxBlockIndex){
-			count = head.getCodeCount() - curBlockIndex*DBConfig.BLOCK_MAX_COUNT;
-
+		if(curCodeBlockIndex == maxCodeBlockIndex){
+			count = head.getCodeCount() - curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
 		}else{
 			count = DBConfig.BLOCK_MAX_COUNT;		
 		}
 		bytes = new byte[count*CodeItem.CODE_ITEM_SIZE];
-		storage.get(head.getCodeOffset()+0, bytes);
-		CodeBlock block = new CodeBlock(bytes, count);
-		return block;
+		storage.get(head.getCodeOffset()+curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
+		curCodeBlock = new CodeBlock(bytes, count);
+
 	}
 	
-	private TimeBlock getNextTimeBlock(int index) throws IOException{
-		return null;
+	private void nextTimeBlock() throws IOException{
+		
+		curTimeBlockIndex++;
+		byte[] bytes = null;
+		int count = 0;
+		if(curTimeBlockIndex == maxTimeBlockIndex){
+			count = curCodeItem.getTimeCount() - curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
+		}else{
+			count = DBConfig.BLOCK_MAX_COUNT;		
+		}
+		bytes = new byte[count*TimeItem.TIME_ITEM_SIZE];
+		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT+TimeItem.TIME_ITEM_SIZE, bytes);
+		curTimeBlock = new TimeBlock(bytes, count);
 	}
 
 	@Override
@@ -74,14 +91,30 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	}
 
 
-
 	@Override
 	public void seekToFirst(int code) throws IOException {
-		
+		int index = 0;
+		if (head.contain(code)) {
+			while (true) {
+				nextCodeBlock();
+
+				if (curCodeBlock.seek(code)) {
+					curCodeItem = curCodeBlock.current();
+					maxCodeBlockIndex = (curCodeItem.getTimeCount()+DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
+					curTimeBlockIndex = -1;
+					break;
+				}
+			}
+			//read time
+			if(curCodeItem != null){
+				readTimeItem(curCodeItem.getTimeOffSet());
+			}
+		}
+	}
+	
+	private void readTimeItem(long offset){
 		
 	}
-
-
 
 	@Override
 	public CodeItem nextCode() throws IOException {
@@ -148,8 +181,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	@Override
 	public void close() throws IOException {
 
-
-		
+		storage.close();
 	}
 
 	@Override
