@@ -31,7 +31,7 @@ public abstract class Level {
 	protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
         @Override
         public int compare(Long o1, Long o2) {
-            return (int) (o1 - o2);
+            return (int) (o2 - o1);
         }
     });
 	
@@ -39,7 +39,7 @@ public abstract class Level {
 	private final Lock lock = new ReentrantLock();
 
 	
-	public Level(FileManager fileManager,int level){
+	public Level(FileManager fileManager, int level){
 		this.fileManager = fileManager;
 		this.level = level;
 	}
