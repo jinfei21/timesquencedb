@@ -40,8 +40,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.curCodeItem = null;
 	}
 	
-	
-
 	@Override
 	public boolean hasNext() {
 		if(curTimeBlockIndex < maxTimeBlockIndex){
