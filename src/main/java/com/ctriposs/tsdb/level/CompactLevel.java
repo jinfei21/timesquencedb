@@ -15,7 +15,9 @@ import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.MergeFileSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.DateFormatter;
 
@@ -28,8 +30,8 @@ public class CompactLevel extends Level {
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
 	private Level prevLevel;
-	
-	public CompactLevel(FileManager fileManager,Level prevLevel,int level,long interval,int threads) {
+
+	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
 		super(fileManager, level,interval,threads);
 		this.prevLevel = prevLevel;
 	}
@@ -63,7 +65,6 @@ public class CompactLevel extends Level {
 
 		@Override
 		public byte[] getValue(InternalKey key) {
-		
 			return null;
 		}
 
@@ -72,7 +73,7 @@ public class CompactLevel extends Level {
             System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
-            if (level == 1 && timeFileMap.firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)) {
+            if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)) {
                 try {
                     Thread.sleep(MAX_SLEEP_TIME);
                 } catch (InterruptedException e) {
@@ -80,7 +81,7 @@ public class CompactLevel extends Level {
                 }
             } else {
                 Map<Long, List<Long>> levelMap = new HashMap<Long, List<Long>>();
-                NavigableSet<Long> keySet = timeFileMap.descendingKeySet();
+                NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
                 int power = (int) Math.pow(4, (double) (level - 1));
 
                 for (Long time : keySet) {
@@ -99,7 +100,7 @@ public class CompactLevel extends Level {
                     long higherLevelKey = entry.getKey();
                     List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
                     for (Long time : entry.getValue()) {
-                        fileMetaList.addAll(timeFileMap.get(time));
+                        fileMetaList.addAll(prevLevel.getTimeFileMap().get(time));
                     }
 
                     mergeSort(higherLevelKey, fileMetaList);
@@ -107,15 +108,22 @@ public class CompactLevel extends Level {
             }
 		}
 
-        private void mergeSort(long key, List<FileMeta> fileMetaList) throws IOException {
+        private void mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
             List<IFileIterator<InternalKey, byte[]>> iterators = new ArrayList<IFileIterator<InternalKey, byte[]>>();
+            long totalTimeCount = 0;
             for (FileMeta meta : fileMetaList) {
-                iterators.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), MemTable.MAX_MEM_SIZE)));
+                FileSeekIterator fileSeekIterator = new FileSeekIterator(new PureFileStorage(meta.getFile(), MemTable.MAX_MEM_SIZE));
+                iterators.add(fileSeekIterator);
+                totalTimeCount += fileSeekIterator.timeItemCount();
             }
 
             MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager, iterators);
+            long fileNumber = fileManager.getFileNumber();
+            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), MemTable.MAX_MEM_SIZE);
+            DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
             while (fileSeekIterator.hasNext()) {
-
+                Map.Entry<InternalKey, byte[]> entry = fileSeekIterator.next();
+                dbWriter.add(entry.getKey(), entry.getValue());
             }
         }
 		
@@ -123,13 +131,11 @@ public class CompactLevel extends Level {
 
 	@Override
 	public byte[] getValue(InternalKey key) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public long format(long time) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 }
