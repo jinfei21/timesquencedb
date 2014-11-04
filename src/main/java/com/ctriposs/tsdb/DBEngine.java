@@ -68,7 +68,7 @@ public class DBEngine implements IDB {
 		this.fileManager = new FileManager(config.getDBDir(), config.getFileCapacity(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
-		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
+		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);
 		this.compactLevelMap = new HashMap<Integer,Level>();
 		this.storeLevel.start();
 		//
@@ -138,7 +138,14 @@ public class DBEngine implements IDB {
 	
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
-		return new SeekIteratorAdapter(fileManager, storeLevel, compactLevelMap);
+		
+		SeekIteratorAdapter it = new SeekIteratorAdapter(fileManager, storeLevel.iterator());
+		
+		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+			it.addIterator(entry.getValue().iterator());
+		}
+		
+		return it;
 	}
 
 	@Override

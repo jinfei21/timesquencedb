@@ -29,8 +29,8 @@ public class StoreLevel extends Level {
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
-	public StoreLevel(FileManager fileManager, int threads, int memCount) {
-		super(fileManager,0);
+	public StoreLevel(FileManager fileManager, int threads, int memCount,long interval) {
+		super(fileManager,0,interval);
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);		
 		for(int i = 0; i < threads; i++){
 			tasks[i] = new MemTask(i);
@@ -42,11 +42,6 @@ public class StoreLevel extends Level {
 		this.memQueue.put(memTable);
 	}
 
-	@Override
-	public long format(long time) {
-		return MemTable.format(time);
-	}
-	
 
 	@Override
 	public byte[] getValue(InternalKey key) throws IOException{

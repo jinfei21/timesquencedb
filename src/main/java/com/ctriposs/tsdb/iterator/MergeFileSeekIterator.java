@@ -1,40 +1,31 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 
-public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
+public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 	
-	private List<ISeekIterator<InternalKey, byte[]>> iterators;
-	private Direction direction;
-	private ISeekIterator<InternalKey, byte[]> curIterator;
 	private FileManager fileManager;
+	private List<IFileIterator<InternalKey, byte[]>> iterators;
+	private Direction direction;
+	private Entry<InternalKey, byte[]> curEntry;
+	private IFileIterator<InternalKey, byte[]> curIterator;
 	private long curSeekTime;
-	private String curSeekTable;
-	private String curSeekColumn;
+	private InternalKey seekKey;
 	
-	public SeekIteratorAdapter(FileManager fileManage,ISeekIterator<InternalKey, byte[]>... its) {
-
-		this.iterators = new ArrayList<ISeekIterator<InternalKey,byte[]>>();
-		for(ISeekIterator<InternalKey, byte[]> it:its){
-			iterators.add(it);
-		}
+	public MergeFileSeekIterator(FileManager fileManager, List<IFileIterator<InternalKey, byte[]>> iterators) {
 		this.fileManager = fileManager;
+		this.iterators = iterators;
 		this.direction = Direction.forward;
+		this.curEntry = null;
 		this.curIterator = null;
 		this.iterators = null;
-	}
-	
-	public void addIterator(ISeekIterator<InternalKey, byte[]>... its) {
-		for(ISeekIterator<InternalKey, byte[]> it:its){
-			iterators.add(it);
-		}
 	}
 
 	@Override
@@ -43,77 +34,69 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		boolean result = false;
 
 		if(iterators != null) {
-			for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+			for (IFileIterator<InternalKey, byte[]> it : iterators) {
 				if(it.hasNext()) {
 					result = true;
                     break;
 				}
 			}
-		}
-
+		}		
 		return result;
 	}
 
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
-			for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+			for (IFileIterator<InternalKey, byte[]> it : iterators) {
 
 				if (it != curIterator) {
 					try {
 						if (it.hasNext()) {
-							it.seek(curSeekTable,curSeekColumn,curSeekTime);
+							it.seek(seekKey.getCode(),curSeekTime);
 						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						throw new RuntimeException(e);
 					}
 				}
 			}
 			direction = Direction.forward;
 		}
-		Entry<InternalKey, byte[]> entry = curIterator.next();
+		curEntry = curIterator.next();
 		findSmallest();
-		return entry;
+		return curEntry;
 	}
 	
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if(direction != Direction.reverse){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(curIterator != it){
 					try {
 						if(it.hasNext()){
-							it.seek(curSeekTable,curSeekColumn,curSeekTime);
+							it.seek(seekKey.getCode(),curSeekTime);
 						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						throw new RuntimeException(e);
 					}
 				}
 			}
 			direction = Direction.reverse;
 		}
-		Entry<InternalKey, byte[]> entry = curIterator.prev();
+		curEntry = curIterator.prev();
 		findLargest();
-		return entry;		
+		return curEntry;		
 	}
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("unsupport remove operation!");
-	}
 	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
-		this.curSeekTable = table;
-		this.curSeekColumn = column;
-		this.curSeekTime = time;
+		
+		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column),time);
 		
 		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
-				it.seek(table,  column,time);
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
+				it.seek(seekKey.getCode(),curSeekTime);
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -122,8 +105,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findSmallest(){
 		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> smallest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			IFileIterator<InternalKey, byte[]> smallest = null;
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(it.valid()){
 					if(smallest == null){
 						smallest = it;
@@ -138,12 +121,12 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findLargest(){
 		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> largest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			IFileIterator<InternalKey, byte[]> largest = null;
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
-					}else if(fileManager.compare(largest.key(), it.key())<0){
+					}else if(fileManager.compare(largest.key(), it.key())<=0){
 						largest = it;
 					}
 				}
@@ -152,42 +135,41 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-
 	@Override
 	public String table() {
-		if(curIterator != null){
-			curIterator.table();
+		if(curEntry != null){
+			fileManager.getName(curEntry.getKey().getTableCode());
 		}
 		return null;
 	}
 
 	@Override
 	public String column() {
-		if(curIterator != null){
-			curIterator.column();
+		if(curEntry != null){
+			fileManager.getName(curEntry.getKey().getColumnCode());
 		}
 		return null;
 	}
 
 	@Override
 	public long time() {
-		if(curIterator != null){
-			return curIterator.key().getTime();
+		if(curEntry != null){
+			return curEntry.getKey().getTime();
 		}
 		return 0;
 	}
 
 	@Override
 	public byte[] value() throws IOException {
-		if(curIterator != null){
-			return curIterator.value();
+		if(curEntry != null){
+			return curEntry.getValue();
 		}
 		return null;
 	}
 
 	@Override
 	public boolean valid() {
-		if(curIterator==null){
+		if(curEntry==null){
 			return false;
 		}else{
 			return true;
@@ -199,7 +181,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public void close() throws IOException{
 		
 		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+			for(IFileIterator<InternalKey, byte[]> it:iterators){
 				it.close();
 			}
 		}
@@ -207,10 +189,15 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 	@Override
 	public InternalKey key() {
-		if(curIterator != null){
-			return curIterator.key();
+		if(curEntry != null){
+			return curEntry.getKey();
 		}
 		return null;
+	}
+	
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
 	
 	enum Direction{
