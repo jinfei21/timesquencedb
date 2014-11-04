@@ -29,6 +29,7 @@ public class CodeBlock {
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
+		curPos = -1;
 		while (left < right) {
 			int mid = (left + right) / 2;
 			if (code < codes[mid].getCode()) {
@@ -41,7 +42,7 @@ public class CodeBlock {
 			}
 		}
 		
-		if (left < right) {
+		if (curPos != -1) {
 			result = true;
 		} else {
 			curPos = maxPos + 1;

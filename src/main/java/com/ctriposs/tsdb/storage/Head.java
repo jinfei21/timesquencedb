@@ -74,12 +74,20 @@ public class Head implements Serializable {
 		return largest;
 	}
 
-	public boolean contain(int code){
+	public boolean containCode(int code){
 		boolean result = false;
 		if(code >= smallest.getCode()&&code <= largest.getCode()){
 			result = true;
 		}
 		
+		return result;
+	}
+	
+	public boolean containKey(InternalKey key){
+		boolean result = false;
+		if(smallest.compareTo(key)<=0&&largest.compareTo(key)>=0){
+			result = true;
+		}
 		return result;
 	}
 }

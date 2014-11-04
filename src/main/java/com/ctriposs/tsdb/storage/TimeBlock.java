@@ -27,6 +27,7 @@ public class TimeBlock {
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
+		curPos = -1;
 		while (left < right) {
 			int mid = (left + right) / 2;
 			if (time < times[mid].getTime()) {
@@ -39,7 +40,7 @@ public class TimeBlock {
 			}
 		}
 		
-		if (left < right) {
+		if (curPos != -1) {
 			int pos = curPos - 1;
 			for (; pos >= 0; pos--) {
 				
@@ -56,14 +57,14 @@ public class TimeBlock {
 	}
 	
 	public TimeItem current(){
-		if (curPos <= maxPos||curPos >= 0) {
+		if (curPos <= maxPos&&curPos >= 0) {
 			return times[curPos];
 		}
 		return null;
 	}
 
 	public TimeItem next()  {
-		if (curPos <= maxPos) {
+		if (curPos >= 0&&curPos <= maxPos) {
 			return times[curPos++];
 		}
 		return null;
@@ -72,7 +73,7 @@ public class TimeBlock {
 	
 	public TimeItem prev() {
 		if (curPos >= 0) {
-			return times[curPos--];
+			return times[curPos++];
 		}
 		return null;
 	}

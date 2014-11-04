@@ -2,17 +2,15 @@ package com.ctriposs.tsdb.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IStorage;
 
-public class FilePersistent {
+public class DBWriter {
 
 	
 	private IStorage storage;
@@ -22,13 +20,10 @@ public class FilePersistent {
 	private InternalKey largest = null;
 	private AtomicLong valueOffset = null;
 	private AtomicLong timeOffset = null;
-	private Map<Integer,CodeItem> codeMap = new ConcurrentHashMap<Integer,CodeItem>();
-	/** The list change lock. */
-	private final Lock lock = new ReentrantLock();
 	private long fileNumber;
+	private Map<Integer,CodeItem> codeMap = new LinkedHashMap<Integer,CodeItem>();	
 	
-	
-	public FilePersistent(IStorage storage,long timeCount,long fileNumber){
+	public DBWriter(IStorage storage,long timeCount,long fileNumber){
 		this.storage = storage;
 		this.timeCount = timeCount;
 		this.valueOffset = new AtomicLong(Head.HEAD_SIZE + TimeItem.TIME_ITEM_SIZE * timeCount);
@@ -54,17 +49,9 @@ public class FilePersistent {
 		storage.put(vOffset, value);
 		//record code
 		CodeItem codeItem = codeMap.get(key.getCode());
-		if(codeItem==null){
-			try{
-				lock.lock();
-				codeItem = codeMap.get(key.getCode());
-				if(codeItem == null){
-					codeItem = new CodeItem(key.getCode(), tOffset, key.getTime(), key.getTime());
-					codeMap.put(key.getCode(), codeItem);
-				}
-			}finally{
-				lock.unlock();
-			}
+		if (codeItem == null) {
+			codeItem = new CodeItem(key.getCode(), tOffset, key.getTime(),key.getTime());
+			codeMap.put(key.getCode(), codeItem);
 		}
 		codeItem.addTimeItem(key.getTime());
 		

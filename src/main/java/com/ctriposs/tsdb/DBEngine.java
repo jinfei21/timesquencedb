@@ -72,19 +72,13 @@ public class DBEngine implements IDB {
 		//this.purgeLevel.start();
 	}
 
-	private void checkTime(long time){
-		long threshold = System.currentTimeMillis() - time;
-		if(threshold > config.getMaxPeriod()) {
-			throw new IllegalArgumentException("time is to old!");
-		}
-	}
+
 
 	@Override
 	public void put(String tableName, String colName, long time, byte[] value) throws IOException{
 		
 		putCounter.incrementAndGet();
-		
-		checkTime(time);
+
 		
 		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
 		
@@ -110,7 +104,6 @@ public class DBEngine implements IDB {
 	@Override
 	public byte[] get(String tableName, String colName, long time) throws IOException {
 		getCounter.incrementAndGet();
-		checkTime(time);
 		
 		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
 		byte[] value = memTable.getValue(key);
@@ -127,9 +120,6 @@ public class DBEngine implements IDB {
 	@Override
 	public void delete(long afterTime) throws IOException {
 		deleteCounter.incrementAndGet();
-
-		checkTime(afterTime);
-
 		fileManager.delete(afterTime);
 	}
 	
