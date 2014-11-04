@@ -1,6 +1,11 @@
 package com.ctriposs.tsdb.level;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
@@ -9,7 +14,7 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.util.DateFormatter;
 
-public class CompactStoreLevel extends Level {
+public class CompactLevel extends Level {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
     public final static long ONE_HOUR = 1000 * 60 * 60L;
@@ -18,8 +23,8 @@ public class CompactStoreLevel extends Level {
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
 
-	public CompactStoreLevel(FileManager fileManager) {
-		super(fileManager, 5);
+	public CompactLevel(FileManager fileManager,int level) {
+		super(fileManager, level);
 	}
 
 	@Override
@@ -99,5 +104,11 @@ public class CompactStoreLevel extends Level {
 
         }
 		
+	}
+
+	@Override
+	public byte[] getValue(InternalKey key) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

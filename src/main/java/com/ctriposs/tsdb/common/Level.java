@@ -1,7 +1,9 @@
 package com.ctriposs.tsdb.common;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.Queue;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public abstract class Level {
 
@@ -76,6 +79,26 @@ public abstract class Level {
 		list.add(file);
 	}
 	
+	public Queue<FileMeta> getFiles(long time){
+		return timeFileMap.get(time);
+	}
+	
+	public int getFileSize(){
+		return timeFileMap.size();
+	}
+	
+	
+	public void delete(long afterTime) throws IOException {
+		for(Entry<Long, Queue<FileMeta>> entry : timeFileMap.entrySet()) {
+			if(entry.getKey() < afterTime) {
+				Queue<FileMeta> list = entry.getValue();
+				for(FileMeta meta : list){
+					fileManager.delete(meta.getFile());
+				}
+			}
+		}
+	}
+	
 	public abstract class Task implements Runnable {
 
 		private int num;
@@ -112,4 +135,5 @@ public abstract class Level {
 	
 	public abstract long getStoreCounter();
 	
+	public abstract byte[] getValue(InternalKey key) throws IOException;
 }

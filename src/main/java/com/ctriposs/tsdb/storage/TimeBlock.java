@@ -5,12 +5,18 @@ public class TimeBlock {
 	private final TimeItem times[];
 	private int curPos = 0;
 	private int maxPos = -1;
+	private long minTime = 0;
+	private long maxTime = 0;
 	
 	public TimeBlock(byte[] bytes, int count){
 		this.maxPos = count - 1;
 		this.times = new TimeItem[count]; 
 		for(int i=0;i<count;i++){
 			times[i] = new TimeItem(bytes, i*TimeItem.TIME_ITEM_SIZE);
+			if(i==0){
+				minTime = times[i].getTime();
+			}
+			maxTime = times[i].getTime();
 		}
 	}
 
@@ -19,6 +25,16 @@ public class TimeBlock {
 			return true;
 		}else{
 			return false;
+		}
+	}
+	
+	public int containTime(long time){
+		if(time >= minTime && time <= maxTime){
+			return 0;
+		}else if(time < minTime){
+			return -1;
+		}else{
+			return 1;
 		}
 	}
 	

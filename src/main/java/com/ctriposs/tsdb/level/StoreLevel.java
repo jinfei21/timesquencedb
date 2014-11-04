@@ -3,6 +3,7 @@ package com.ctriposs.tsdb.level;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,13 +13,14 @@ import com.ctriposs.tsdb.common.IStorage;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.MapFileStorage;
 import com.ctriposs.tsdb.common.PureFileStorage;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.table.MemTable;
 
-public class MemTableStoreLevel extends Level {
+public class StoreLevel extends Level {
 
 
 	private ArrayBlockingQueue<MemTable> memQueue;
@@ -26,7 +28,7 @@ public class MemTableStoreLevel extends Level {
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
-	public MemTableStoreLevel(FileManager fileManager, int threads, int memCount) {
+	public StoreLevel(FileManager fileManager, int threads, int memCount) {
 		super(fileManager,0);
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);		
 		for(int i = 0; i < threads; i++){
@@ -40,7 +42,7 @@ public class MemTableStoreLevel extends Level {
 	}
 
 	
-	public byte[] getValue(InternalKey key){
+	public byte[] getValue(InternalKey key) throws IOException{
 		byte[] value = null;
 
 		for(MemTable table : memQueue) {
@@ -53,6 +55,28 @@ public class MemTableStoreLevel extends Level {
 			value = task.getValue(key);
 			if(value != null){
 				return value;
+			}
+		}
+		
+		long ts = key.getTime();
+		Queue<FileMeta> list = getFiles(MemTable.format(ts));
+		if(list != null) {
+			for(FileMeta meta : list) {
+				if(meta.contains(key)){
+					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
+					FileSeekIterator it = new FileSeekIterator(storage);
+					it.seekToFirst(key.getCode());
+
+					while(it.hasNext()){
+						it.next();
+						int diff = fileManager.compare(key,it.key());
+						if(0==diff){
+							return it.value();
+						}else if(diff < 0){
+							break;
+						}
+					}
+				}
 			}
 		}
 

@@ -3,16 +3,17 @@ package com.ctriposs.tsdb.iterator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MemTable;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
@@ -21,18 +22,15 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private NameManager nameManager;
 	private List<IFileIterator<InternalKey, byte[]>> iterators;
 	private Direction direction;
-	private InternalKeyComparator internalKeyComparator;
 	private Entry<InternalKey, byte[]> curEntry;
 	private IFileIterator<InternalKey, byte[]> curIterator;
 	private long curSeekTime;
 	private InternalKey seekKey;
 	
-	public SeekIteratorAdapter(FileManager fileManager, NameManager nameManager, InternalKeyComparator internalKeyComparator) {
+	public SeekIteratorAdapter(FileManager fileManager, Level level0,Map<Integer,Level> compactLevel) {
 		this.fileManager = fileManager;
-		this.nameManager = nameManager;
 		this.curEntry = null;
 		this.direction = Direction.forward;
-		this.internalKeyComparator = internalKeyComparator;
 		this.curIterator = null;
 		this.iterators = null;
 	}
