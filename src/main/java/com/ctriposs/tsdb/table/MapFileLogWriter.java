@@ -18,6 +18,11 @@ public class MapFileLogWriter implements ILogWriter {
 		this.current = new AtomicInteger(0);
 		this.storage = new MapFileStorage(dir, System.currentTimeMillis(), FileName.logFileName(fileNumber), capacity);
 	}
+	
+	public MapFileLogWriter(String dir, String fileName, long capacity) throws IOException {
+		this.current = new AtomicInteger(0);
+		this.storage = new MapFileStorage(dir, System.currentTimeMillis(),fileName, capacity);
+	}
 
 	@Override
 	public void close() throws IOException {
@@ -33,6 +38,14 @@ public class MapFileLogWriter implements ILogWriter {
 		storage.put(metaOffset + 16, value);
 	}
 
+
+    public void add(String name, short code) throws IOException {
+        byte[] nameBytes = ByteUtil.ToBytes(name);
+        int offset = current.getAndAdd(2 + nameBytes.length);
+        storage.put(offset, ByteUtil.toBytes(code));
+        storage.put(offset + 2, nameBytes);
+    }
+    
 	@Override
 	public String getName() {
 		return storage.getName();
