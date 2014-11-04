@@ -138,7 +138,7 @@ public class DBEngine implements IDB {
 	
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
-		
+
 		SeekIteratorAdapter it = new SeekIteratorAdapter(fileManager, storeLevel.iterator());
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){

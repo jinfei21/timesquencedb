@@ -4,10 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
+import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.table.MemTable;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
@@ -76,7 +81,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		findSmallest();
 		return entry;
 	}
-	
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
@@ -151,7 +155,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			curIterator = largest;
 		}
 	}
-	
 
 	@Override
 	public String table() {
@@ -193,7 +196,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return true;
 		}
 	}
-
 
 	@Override
 	public void close() throws IOException{
