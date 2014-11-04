@@ -60,9 +60,14 @@ public class FileManager {
 		return maxFileNumber.incrementAndGet();
 	}
 
-    public NameManager getNameManager() {
-        return nameManager;
+    public short getCode(String name) {
+        return nameManager.getCode(name);
     }
+
+    public String getName(short code) {
+        return nameManager.getName(code);
+    }
+
 
     public InternalKeyComparator getInternalKeyComparator() {
         return internalKeyComparator;

@@ -1,4 +1,4 @@
-package com.ctriposs.tsdb.iterator;
+package com.ctriposs.tsdb.common;
 
 import java.io.IOException;
 import java.util.Iterator;

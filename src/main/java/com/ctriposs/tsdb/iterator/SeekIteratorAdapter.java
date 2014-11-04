@@ -3,32 +3,32 @@ package com.ctriposs.tsdb.iterator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
-import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.MemTable;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private FileManager fileManager;
-	private NameManager nameManager;
 	private List<IFileIterator<InternalKey, byte[]>> iterators;
 	private Direction direction;
 	private Entry<InternalKey, byte[]> curEntry;
 	private IFileIterator<InternalKey, byte[]> curIterator;
 	private long curSeekTime;
 	private InternalKey seekKey;
+	private Level level;
 	
-	public SeekIteratorAdapter(FileManager fileManager, Level level0,Map<Integer,Level> compactLevel) {
+	public SeekIteratorAdapter(FileManager fileManager, Level level) {
 		this.fileManager = fileManager;
+		this.level = level;
 		this.curEntry = null;
 		this.direction = Direction.forward;
 		this.curIterator = null;
@@ -124,16 +124,12 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
 	
-	private long format(long time){
-		return time/MemTable.MINUTE*MemTable.MINUTE;
-	}
-	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 		
-		seekKey = new InternalKey(nameManager.getCode(table),nameManager.getCode(column),time);
+		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column),time);
 		
-		iterators = getNextIterators(format(time));
+		iterators = getNextIterators(level.format(time));
 		
 		if(null != iterators){
 			for(IFileIterator<InternalKey, byte[]> it:iterators){
@@ -151,7 +147,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if(it.valid()){
 					if(smallest == null){
 						smallest = it;
-					}else if(internalKeyComparator.compare(smallest.key(), it.key())>0){
+					}else if(fileManager.compare(smallest.key(), it.key())>0){
 						smallest = it;
 					}
 				}
@@ -167,7 +163,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
-					}else if(internalKeyComparator.compare(largest.key(), it.key())<0){
+					}else if(fileManager.compare(largest.key(), it.key())<0){
 						largest = it;
 					}
 				}
@@ -183,7 +179,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 
 		curSeekTime = time;
-		Queue<FileMeta> metaQueue = fileManager.getFiles(time);
+		Queue<FileMeta> metaQueue = level.getFiles(time);
 		if(metaQueue != null) {
 			List<IFileIterator<InternalKey, byte[]>> list = new ArrayList<IFileIterator<InternalKey, byte[]>>();
 			for(FileMeta meta : metaQueue) {
@@ -199,7 +195,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public String table() {
 		if(curEntry != null){
-			nameManager.getName(curEntry.getKey().getTableCode());
+			fileManager.getName(curEntry.getKey().getTableCode());
 		}
 		return null;
 	}
@@ -207,7 +203,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public String column() {
 		if(curEntry != null){
-			nameManager.getName(curEntry.getKey().getColumnCode());
+			fileManager.getName(curEntry.getKey().getColumnCode());
 		}
 		return null;
 	}

@@ -2,7 +2,6 @@ package com.ctriposs.tsdb.storage;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.util.ByteUtil;
 
@@ -53,7 +52,7 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 	}
 	
 	public void addTimeItem(long time){
-		if(time<=minTime){
+		if(time<minTime){
 			minTime = time;
 		}else{
 			if(time>maxTime){

@@ -2,20 +2,18 @@ package com.ctriposs.tsdb.common;
 
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.Queue;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
-import com.ctriposs.tsdb.util.FileUtil;
 
 public abstract class Level {
 
@@ -27,7 +25,6 @@ public abstract class Level {
 	protected Task[] tasks;
 	
 	protected volatile boolean run = false;
-	protected static AtomicInteger fileCount = new AtomicInteger(0);
 	protected FileManager fileManager;
 	protected int level;
 	
@@ -99,6 +96,9 @@ public abstract class Level {
 		}
 	}
 	
+	
+	
+	
 	public abstract class Task implements Runnable {
 
 		private int num;
@@ -136,4 +136,6 @@ public abstract class Level {
 	public abstract long getStoreCounter();
 	
 	public abstract byte[] getValue(InternalKey key) throws IOException;
+	
+	public abstract long format(long time);
 }

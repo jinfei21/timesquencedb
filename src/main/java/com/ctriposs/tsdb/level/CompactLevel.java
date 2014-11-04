@@ -111,4 +111,10 @@ public class CompactLevel extends Level {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public long format(long time) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

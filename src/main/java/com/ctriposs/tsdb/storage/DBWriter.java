@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IStorage;
@@ -22,8 +19,6 @@ public class DBWriter {
 	private InternalKey largest = null;
 	private AtomicLong valueOffset = null;
 	private AtomicLong timeOffset = null;
-	/** The list change lock. */
-	private final Lock lock = new ReentrantLock();
 	private long fileNumber;
 	private Map<Integer,CodeItem> codeMap = new LinkedHashMap<Integer,CodeItem>();	
 	

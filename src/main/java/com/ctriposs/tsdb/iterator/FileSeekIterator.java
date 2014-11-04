@@ -6,7 +6,9 @@ import java.util.Map.Entry;
 import com.ctriposs.tsdb.DBConfig;
 import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.IStorage;
+import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.storage.CodeBlock;
 import com.ctriposs.tsdb.storage.CodeItem;
 import com.ctriposs.tsdb.storage.Head;
@@ -26,7 +28,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	private CodeBlock curCodeBlock;
 	private CodeItem curCodeItem;
 	private Head head;
-	
+
 	public FileSeekIterator(IStorage storage)throws IOException {
 		this.storage = storage;
 		byte[] bytes = new byte[Head.HEAD_SIZE];

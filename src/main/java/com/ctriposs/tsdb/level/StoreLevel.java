@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
@@ -24,7 +25,7 @@ public class StoreLevel extends Level {
 
 
 	private ArrayBlockingQueue<MemTable> memQueue;
-	
+	protected AtomicInteger fileCount = new AtomicInteger(0);
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
@@ -41,7 +42,13 @@ public class StoreLevel extends Level {
 		this.memQueue.put(memTable);
 	}
 
+	@Override
+	public long format(long time) {
+		return MemTable.format(time);
+	}
 	
+
+	@Override
 	public byte[] getValue(InternalKey key) throws IOException{
 		byte[] value = null;
 
@@ -59,7 +66,7 @@ public class StoreLevel extends Level {
 		}
 		
 		long ts = key.getTime();
-		Queue<FileMeta> list = getFiles(MemTable.format(ts));
+		Queue<FileMeta> list = getFiles(format(ts));
 		if(list != null) {
 			for(FileMeta meta : list) {
 				if(meta.contains(key)){
@@ -157,5 +164,5 @@ public class StoreLevel extends Level {
 	public void incrementStoreCount() {
 		storeCounter.incrementAndGet();
 	}
-	
+
 }
