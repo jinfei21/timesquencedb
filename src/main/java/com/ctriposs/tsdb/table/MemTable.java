@@ -42,7 +42,7 @@ public class MemTable {
 		return used.get();
 	}
 
-	private long format(long time) {
+	public static long format(long time) {
 		return time/MINUTE*MINUTE;
 	}
 

@@ -1,13 +1,16 @@
 package com.ctriposs.tsdb;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
-import com.ctriposs.tsdb.level.CompactStoreLevel;
-import com.ctriposs.tsdb.level.MemTableStoreLevel;
+import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
@@ -22,10 +25,10 @@ public class DBEngine implements IDB {
 	private MemTable memTable;
 	
 	/** Store memtable to file*/
-	private MemTableStoreLevel storeLevel;
+	private StoreLevel storeLevel;
 	
-	/** Clean too old files*/
-	private CompactStoreLevel purgeLevel;
+	/** Compact files */
+	private Map<Integer,Level> compactLevelMap;
 	
 	/** Manage the file by time sequence */
 	private FileManager fileManager;
@@ -65,11 +68,13 @@ public class DBEngine implements IDB {
 		this.fileManager = new FileManager(config.getDBDir(), config.getFileCapacity(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
-		this.storeLevel = new MemTableStoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
-		this.purgeLevel = new CompactStoreLevel(fileManager);
-		
+		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable());
+		this.compactLevelMap = new HashMap<Integer,Level>();
 		this.storeLevel.start();
-		//this.purgeLevel.start();
+		//
+		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+			entry.getValue().start();
+		}
 	}
 
 
@@ -109,8 +114,13 @@ public class DBEngine implements IDB {
 		byte[] value = memTable.getValue(key);
 		if(value == null) {
 			value = storeLevel.getValue(key);
-			if(value == null) {
-				value = fileManager.getValue(key);
+			if(value == null){
+				for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+					value = entry.getValue().getValue(key);
+					if(value != null){
+						return value;
+					}
+				}
 			}
 		}
 
@@ -120,19 +130,25 @@ public class DBEngine implements IDB {
 	@Override
 	public void delete(long afterTime) throws IOException {
 		deleteCounter.incrementAndGet();
-		fileManager.delete(afterTime);
+		this.storeLevel.delete(afterTime);
+		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+			entry.getValue().delete(afterTime);
+		}
 	}
 	
 	@Override
 	public ISeekIterator<InternalKey, byte[]> iterator() {
-		return new SeekIteratorAdapter(fileManager, nameManager, internalKeyComparator);
+		return new SeekIteratorAdapter(fileManager, storeLevel, compactLevelMap);
 	}
 
 	@Override
 	public void close() throws IOException {
 		
 		this.storeLevel.stop();
-		this.purgeLevel.stop();
+		
+		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+			entry.getValue().stop();
+		}
 	}
 
 	public long getHitCounter() {
@@ -155,11 +171,30 @@ public class DBEngine implements IDB {
 		return deleteCounter.get();
 	}
 
-	public long getStoreCounter(){
-		return storeLevel.getStoreCounter();
+	public long getStoreCounter(int level){
+		if(level == 0){
+			return storeLevel.getStoreCounter();
+		}else{
+			Level sLevel = compactLevelMap.get(level);
+			if(sLevel != null){
+				return sLevel.getStoreCounter();
+			}else{
+				return 0;
+			}
+		}
 	}
 	
-	public long getStoreErrorCounter(){
-		return storeLevel.getStoreErrorCounter();
+	public long getStoreErrorCounter(int level){
+
+		if(level == 0){
+			return storeLevel.getStoreErrorCounter();
+		}else{
+			Level sLevel = compactLevelMap.get(level);
+			if(sLevel != null){
+				return sLevel.getStoreErrorCounter();
+			}else{
+				return 0;
+			}
+		}
 	}
 }

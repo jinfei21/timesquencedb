@@ -30,8 +30,8 @@ public class DBEngineStressTest {
             if (counter  % 1000000 == 0) {
                 System.out.println("Current date:" + new Date());
                 System.out.println("counter:     " + counter);
-                System.out.println("store        " + engine.getStoreCounter());
-                System.out.println("store error  " + engine.getStoreErrorCounter());
+                System.out.println("store        " + engine.getStoreCounter(0));
+                System.out.println("store error  " + engine.getStoreErrorCounter(0));
 
 
                 System.out.println();
