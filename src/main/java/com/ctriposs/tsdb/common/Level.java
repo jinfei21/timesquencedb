@@ -31,8 +31,8 @@ public abstract class Level {
 	protected FileManager fileManager;
 	protected int level;
 	protected long interval;
-	
-	protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
+
+    protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
         @Override
         public int compare(Long o1, Long o2) {
             return (int) (o1 - o2);
@@ -169,6 +169,10 @@ public abstract class Level {
 	public abstract long getStoreErrorCounter();
 	
 	public abstract long getStoreCounter();
+
+    public ConcurrentSkipListMap<Long, Queue<FileMeta>> getTimeFileMap() {
+        return timeFileMap;
+    }
 	
 	public abstract byte[] getValue(InternalKey key) throws IOException;
 	

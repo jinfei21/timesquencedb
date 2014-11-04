@@ -30,7 +30,8 @@ public class CompactLevel extends Level {
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
 	private Level prevLevel;
-	public CompactLevel(FileManager fileManager,Level prevLevel,int level,long interval,int threads) {
+
+	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
 		super(fileManager, level,interval,threads);
 		this.prevLevel = prevLevel;
 	}
@@ -72,7 +73,7 @@ public class CompactLevel extends Level {
             System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
-            if (level == 1 && timeFileMap.firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)) {
+            if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)) {
                 try {
                     Thread.sleep(MAX_SLEEP_TIME);
                 } catch (InterruptedException e) {
@@ -80,7 +81,7 @@ public class CompactLevel extends Level {
                 }
             } else {
                 Map<Long, List<Long>> levelMap = new HashMap<Long, List<Long>>();
-                NavigableSet<Long> keySet = timeFileMap.descendingKeySet();
+                NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
                 int power = (int) Math.pow(4, (double) (level - 1));
 
                 for (Long time : keySet) {
@@ -99,7 +100,7 @@ public class CompactLevel extends Level {
                     long higherLevelKey = entry.getKey();
                     List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
                     for (Long time : entry.getValue()) {
-                        fileMetaList.addAll(timeFileMap.get(time));
+                        fileMetaList.addAll(prevLevel.getTimeFileMap().get(time));
                     }
 
                     mergeSort(higherLevelKey, fileMetaList);
