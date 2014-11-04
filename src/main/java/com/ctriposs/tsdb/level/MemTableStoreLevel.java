@@ -15,9 +15,7 @@ import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.FilePersistent;
-import com.ctriposs.tsdb.storage.Head;
-import com.ctriposs.tsdb.storage.TimeItem;
+import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.table.MemTable;
 
 public class MemTableStoreLevel extends Level {
@@ -104,12 +102,12 @@ public class MemTableStoreLevel extends Level {
 			}
 			
 			int size = dataMap.size();
-			FilePersistent fPersist = new FilePersistent(storage, size, fileNumber);
+			DBWriter dbWriter = new DBWriter(storage, size,fileNumber);
 			for(Entry<InternalKey, byte[]> entry : dataMap.entrySet()){
-				fPersist.add(entry.getKey(), entry.getValue());
+				dbWriter.add(entry.getKey(), entry.getValue());
 			}	
 			
-			return fPersist.close();	
+			return dbWriter.close();	
 		}
 
 	}
