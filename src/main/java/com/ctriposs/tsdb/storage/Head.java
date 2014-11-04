@@ -51,9 +51,7 @@ public class Head implements Serializable {
 		System.arraycopy(ByteUtil.toBytes(largest.getTime()), 0, bytes, MAX_TIME_OFFSET, 8);	
 		return bytes;
 	}
-	
 
-	
 	public long getCodeOffset() {
 		return codeOffset;
 	}

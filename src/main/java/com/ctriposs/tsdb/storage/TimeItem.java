@@ -15,8 +15,7 @@ public class TimeItem implements Serializable, Comparable<TimeItem> {
 	private long time;
 	private int valueSize;
 	private long valueOffset;
-	
-	
+
 	public TimeItem(byte[] bytes) {
 		this(bytes, 0);
 	}

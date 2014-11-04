@@ -42,15 +42,13 @@ public class InternalKey implements Comparable<InternalKey> {
 	}
 	
 
-	public byte[] toTimeItemByte(int valueSize,long valueOffset){
+	public byte[] toTimeItemByte(int valueSize, long valueOffset){
 		byte[] bytes = new byte[TimeItem.TIME_ITEM_SIZE];
 		System.arraycopy(ByteUtil.toBytes(time), 0, bytes, TimeItem.TIME_OFFSET, 8);
 		System.arraycopy(ByteUtil.toBytes(valueSize), 0, bytes, TimeItem.VALUE_SIZE_OFFSET, 4);
 		System.arraycopy(ByteUtil.toBytes(valueOffset), 0, bytes, TimeItem.VALUE_OFFSET_OFFSET, 8);
 		return bytes;
 	}
-	
-
 	
 	@Override
 	public boolean equals(Object o){

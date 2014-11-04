@@ -20,12 +20,8 @@ public class TimeBlock {
 		}
 	}
 
-	public boolean hashNext(){
-		if(curPos < maxPos){
-			return true;
-		}else{
-			return false;
-		}
+	public boolean hasNext() {
+        return curPos < maxPos;
 	}
 	
 	public int containTime(long time){
@@ -39,7 +35,7 @@ public class TimeBlock {
 	}
 	
 	public boolean seek(long time){
-	
+
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
@@ -79,8 +75,8 @@ public class TimeBlock {
 		return null;
 	}
 
-	public TimeItem next()  {
-		if (curPos >= 0&&curPos <= maxPos) {
+	public TimeItem next() {
+		if (curPos >= 0 && curPos <= maxPos) {
 			return times[curPos++];
 		}
 		return null;
