@@ -30,8 +30,9 @@ public class StoreLevel extends Level {
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
 	public StoreLevel(FileManager fileManager, int threads, int memCount,long interval) {
-		super(fileManager,0,interval);
+		super(fileManager,0,interval,threads);
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);		
+		
 		for(int i = 0; i < threads; i++){
 			tasks[i] = new MemTask(i);
 		}
@@ -60,29 +61,7 @@ public class StoreLevel extends Level {
 			}
 		}
 		
-		long ts = key.getTime();
-		Queue<FileMeta> list = getFiles(format(ts));
-		if(list != null) {
-			for(FileMeta meta : list) {
-				if(meta.contains(key)){
-					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
-					FileSeekIterator it = new FileSeekIterator(storage);
-					it.seekToFirst(key.getCode());
-
-					while(it.hasNext()){
-						it.next();
-						int diff = fileManager.compare(key,it.key());
-						if(0==diff){
-							return it.value();
-						}else if(diff < 0){
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		return value;
+		return getValueFromFile(key);
 	}
 
 	class MemTask extends Task {

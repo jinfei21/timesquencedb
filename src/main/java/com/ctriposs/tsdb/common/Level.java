@@ -13,6 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
@@ -41,10 +42,11 @@ public abstract class Level {
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 
-	public Level(FileManager fileManager, int level,long interval){
+	public Level(FileManager fileManager, int level,long interval,int threads){
 		this.fileManager = fileManager;
 		this.level = level;
 		this.interval = interval;
+		tasks = new Task[threads];
 	}
 	
 	public void start() {
@@ -110,7 +112,30 @@ public abstract class Level {
 		}
 	}
 	
-	
+	public byte[] getValueFromFile(InternalKey key)throws IOException{
+		long ts = key.getTime();
+		Queue<FileMeta> list = getFiles(format(ts));
+		if(list != null) {
+			for(FileMeta meta : list) {
+				if(meta.contains(key)){
+					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
+					FileSeekIterator it = new FileSeekIterator(storage);
+					it.seekToFirst(key.getCode());
+
+					while(it.hasNext()){
+						it.next();
+						int diff = fileManager.compare(key,it.key());
+						if(0==diff){
+							return it.value();
+						}else if(diff < 0){
+							break;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
 	
 	
 	public abstract class Task implements Runnable {

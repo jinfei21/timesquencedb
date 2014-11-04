@@ -26,7 +26,7 @@ public class DBEnginePutTest {
         
         Map<Long,String> map = new LinkedHashMap<Long,String>();
         
-        for (int i = 0; i < 2 * INIT_COUNT; i++) {
+        for (int i = 0; i < INIT_COUNT; i++) {
         	String n = String.valueOf(random.nextInt(300));
 
         	long l = System.currentTimeMillis();
