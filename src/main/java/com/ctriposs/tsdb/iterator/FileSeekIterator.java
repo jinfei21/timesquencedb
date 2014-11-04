@@ -32,7 +32,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		byte[] bytes = new byte[Head.HEAD_SIZE];
 		this.storage.get(0, bytes);
 		this.head = new Head(bytes);
-		this.maxCodeBlockIndex = (head.getCodeCount()+DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
+		this.maxCodeBlockIndex = (head.getCodeCount() + DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
 		this.curEntry = null;
 		this.curTimeBlock = null;
 		this.curCodeBlock = null;
@@ -43,7 +43,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	public boolean hasNext() {
 		if(curTimeBlockIndex <= maxTimeBlockIndex){
 			if(curTimeBlock != null){
-				if(!curTimeBlock.hashNext()){
+				if(!curTimeBlock.hasNext()){
 					try{
 						nextTimeBlock();
 					}catch(IOException e){

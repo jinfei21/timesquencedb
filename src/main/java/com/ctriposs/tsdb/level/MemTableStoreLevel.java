@@ -102,7 +102,7 @@ public class MemTableStoreLevel extends Level {
 			}
 			
 			int size = dataMap.size();
-			DBWriter dbWriter = new DBWriter(storage, size,fileNumber);
+			DBWriter dbWriter = new DBWriter(storage, size, fileNumber);
 			for(Entry<InternalKey, byte[]> entry : dataMap.entrySet()){
 				dbWriter.add(entry.getKey(), entry.getValue());
 			}	

@@ -37,7 +37,7 @@ public class DBWriter {
 	
 	public void add(InternalKey key, byte[] value)throws IOException {
 		timeIndex++;
-		if(timeIndex==0){
+		if(timeIndex == 0) {
 			smallest = key;
 		}
 		
@@ -45,24 +45,24 @@ public class DBWriter {
 			throw new IOException("add item over timecount");
 		}
 		largest = key;
+
 		// write time item
 		long tOffset = timeOffset.getAndAdd(TimeItem.TIME_ITEM_SIZE);
 		long vOffset = valueOffset.getAndAdd(value.length);
-		storage.put(tOffset,key.toTimeItemByte(value.length, vOffset));
+		storage.put(tOffset, key.toTimeItemByte(value.length, vOffset));
 		// write value item
 		storage.put(vOffset, value);
 		//record code
 		CodeItem codeItem = codeMap.get(key.getCode());
 		if (codeItem == null) {
-			codeItem = new CodeItem(key.getCode(), tOffset, key.getTime(),key.getTime());
+			codeItem = new CodeItem(key.getCode(), tOffset, key.getTime(), key.getTime());
 			codeMap.put(key.getCode(), codeItem);
 		}
 		codeItem.addTimeItem(key.getTime());
-		
 	}
 	
 	private void writeCodeArea()throws IOException {
-		for(Entry<Integer,CodeItem> entry:codeMap.entrySet()){
+		for(Entry<Integer,CodeItem> entry: codeMap.entrySet()){
 			long cOffset = valueOffset.getAndAdd(CodeItem.CODE_ITEM_SIZE);
 			storage.put(cOffset, entry.getValue().toByte());
 		}
@@ -76,7 +76,7 @@ public class DBWriter {
 	public FileMeta close()throws IOException {
 		long cOffset = valueOffset.get();
 		writeCodeArea();
-		writeHead(cOffset,codeMap.size(),timeCount,smallest,largest);
+		writeHead(cOffset,codeMap.size(), timeCount, smallest, largest);
 		storage.close();
 		return new FileMeta(fileNumber, new File(storage.getName()), smallest, largest);
 	}

@@ -16,12 +16,8 @@ public class CodeBlock {
 		}
 	}
 
-	public boolean hashNext(){
-		if(curPos < maxPos){
-			return true;
-		}else{
-			return false;
-		}
+	public boolean hasNext(){
+        return curPos < maxPos;
 	}
 	
 	public boolean seek(long code){
