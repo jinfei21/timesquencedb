@@ -11,8 +11,8 @@ public class CodeBlock {
 	public CodeBlock(byte[] bytes, int count){
 		this.maxPos = count - 1;
 		this.codes = new CodeItem[count]; 
-		for(int i=0;i<count;i++){
-			codes[i] = new CodeItem(bytes, i*CodeItem.CODE_ITEM_SIZE);
+		for(int i = 0; i < count; i++) {
+			codes[i] = new CodeItem(bytes, i * CodeItem.CODE_ITEM_SIZE);
 		}
 	}
 
@@ -29,6 +29,7 @@ public class CodeBlock {
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
+
 		while (left < right) {
 			int mid = (left + right) / 2;
 			if (code < codes[mid].getCode()) {
@@ -46,13 +47,15 @@ public class CodeBlock {
 		} else {
 			curPos = maxPos + 1;
 		}
+
 		return result;
 	}
 	
-	public CodeItem current(){
-		if (curPos <= maxPos||curPos >= 0) {
+	public CodeItem current() {
+		if (curPos <= maxPos || curPos >= 0) {
 			return codes[curPos];
 		}
+
 		return null;
 	}
 
@@ -60,6 +63,7 @@ public class CodeBlock {
 		if (curPos <= maxPos) {
 			return codes[curPos++];
 		}
+
 		return null;
 	}
 
@@ -68,6 +72,7 @@ public class CodeBlock {
 		if (curPos >= 0) {
 			return codes[curPos--];
 		}
+
 		return null;
 	}
 }

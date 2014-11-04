@@ -14,7 +14,6 @@ import com.ctriposs.tsdb.common.IStorage;
 
 public class FilePersistent {
 
-	
 	private IStorage storage;
 	private long timeCount = 0;
 	private long timeIndex = -1;
@@ -22,17 +21,16 @@ public class FilePersistent {
 	private InternalKey largest = null;
 	private AtomicLong valueOffset = null;
 	private AtomicLong timeOffset = null;
-	private Map<Integer,CodeItem> codeMap = new ConcurrentHashMap<Integer,CodeItem>();
+	private Map<Integer, CodeItem> codeMap = new ConcurrentHashMap<Integer, CodeItem>();
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 	private long fileNumber;
 	
-	
-	public FilePersistent(IStorage storage,long timeCount,long fileNumber){
+	public FilePersistent(IStorage storage, long timeCount, long fileNumber){
 		this.storage = storage;
 		this.timeCount = timeCount;
 		this.valueOffset = new AtomicLong(Head.HEAD_SIZE + TimeItem.TIME_ITEM_SIZE * timeCount);
-		this.valueOffset = new AtomicLong(Head.HEAD_SIZE);
+		this.timeOffset = new AtomicLong(Head.HEAD_SIZE);
 		this.fileNumber = fileNumber;
 	}
 	
@@ -87,6 +85,6 @@ public class FilePersistent {
 		writeCodeArea();
 		writeHead(cOffset,codeMap.size(),timeCount,smallest,largest);
 		storage.close();
-		return new FileMeta(fileNumber,new File(storage.getName()), smallest, largest);
+		return new FileMeta(fileNumber, new File(storage.getName()), smallest, largest);
 	}
 }

@@ -41,7 +41,6 @@ public class MemTableStoreLevel extends Level {
 		this.memQueue.put(memTable);
 	}
 
-	
 	public byte[] getValue(InternalKey key){
 		byte[] value = null;
 
@@ -85,29 +84,27 @@ public class MemTableStoreLevel extends Level {
 			for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();
-					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(),table.getFileNumber());
+					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(), table.getFileNumber());
 					add(entry.getKey(), fileMeta);					
 					fileCount.decrementAndGet();
 				}catch(IOException e){
 					//TODO
-					e.printStackTrace();
 					storeErrorCounter.incrementAndGet();
 				}						
 			}
 			fileManager.delete(new File(table.getLogFile()));
-		
 		}
 
 		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap, long fileNumber) throws IOException {
 			IStorage storage;
 			if(fileCount.get() < 8) {
-				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), fileManager.getFileCapacity());
+				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), fileManager.getFileCapacity());
 			} else {
-				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), fileManager.getFileCapacity());
+				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), fileManager.getFileCapacity());
 			}
 			
 			int size = dataMap.size();
-			FilePersistent fPersist = new FilePersistent(storage, size,fileNumber);
+			FilePersistent fPersist = new FilePersistent(storage, size, fileNumber);
 			for(Entry<InternalKey, byte[]> entry : dataMap.entrySet()){
 				fPersist.add(entry.getKey(), entry.getValue());
 			}	

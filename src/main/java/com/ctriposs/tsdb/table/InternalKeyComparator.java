@@ -9,7 +9,8 @@ public class InternalKeyComparator implements Comparator<InternalKey> {
 	@Override
 	public int compare(InternalKey o1, InternalKey o2) {
 		int diff = (int) (o1.getCode() - o2.getCode());
-		if(diff == 0){
+
+		if(diff == 0) {
 			diff = (int) (o1.getTime() - o2.getTime());
 		}
 		return diff;

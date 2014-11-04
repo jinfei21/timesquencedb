@@ -12,13 +12,13 @@ public class FileName {
 		return makeFileName(number,"name");
 	}
 	
-	public static String dataFileName(long number,int level){
-		return makeFileName(number,"dat-"+level);
+	public static String dataFileName(long number, int level){
+		return makeFileName(number, "dat-"+level);
 	}
 	
-	private static String makeFileName(long number,String suffix){
+	private static String makeFileName(long number, String suffix){
 		Preconditions.checkArgument(number >=0 , "number is negative!");
 		Preconditions.checkNotNull(suffix, "suffix is null!");
-		return String.format("%06d.%s", number,suffix);
+		return String.format("%06d.%s", number, suffix);
 	}
 }

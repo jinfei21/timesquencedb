@@ -9,8 +9,8 @@ public class TimeBlock {
 	public TimeBlock(byte[] bytes, int count){
 		this.maxPos = count - 1;
 		this.times = new TimeItem[count]; 
-		for(int i=0;i<count;i++){
-			times[i] = new TimeItem(bytes, i*TimeItem.TIME_ITEM_SIZE);
+		for(int i = 0; i < count; i++) {
+			times[i] = new TimeItem(bytes, i * TimeItem.TIME_ITEM_SIZE);
 		}
 	}
 
@@ -27,6 +27,7 @@ public class TimeBlock {
 		boolean result = false;
 		int left = 0;
 		int right = maxPos;
+
 		while (left < right) {
 			int mid = (left + right) / 2;
 			if (time < times[mid].getTime()) {
