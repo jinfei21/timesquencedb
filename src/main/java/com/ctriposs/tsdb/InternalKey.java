@@ -40,7 +40,6 @@ public class InternalKey implements Comparable<InternalKey> {
 	public int getCode(){
 		return this.code;
 	}
-	
 
 	public byte[] toTimeItemByte(int valueSize, long valueOffset){
 		byte[] bytes = new byte[TimeItem.TIME_ITEM_SIZE];

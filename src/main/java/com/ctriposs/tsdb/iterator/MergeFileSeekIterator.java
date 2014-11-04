@@ -65,7 +65,6 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		findSmallest();
 		return curEntry;
 	}
-	
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
@@ -88,7 +87,6 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return curEntry;		
 	}
 
-	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 		
@@ -175,7 +173,6 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 			return true;
 		}
 	}
-
 
 	@Override
 	public void close() throws IOException{

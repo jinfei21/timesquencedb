@@ -43,7 +43,6 @@ public class StoreLevel extends Level {
 		this.memQueue.put(memTable);
 	}
 
-
 	@Override
 	public byte[] getValue(InternalKey key) throws IOException{
 		byte[] value = null;

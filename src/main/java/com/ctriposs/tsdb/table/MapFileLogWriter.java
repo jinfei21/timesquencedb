@@ -30,7 +30,7 @@ public class MapFileLogWriter implements ILogWriter {
 	}
 
 	@Override
-	public void add(long code, long time, byte[] value) throws IOException {
+	public void add(int code, long time, byte[] value) throws IOException {
 		int metaOffset = current.getAndAdd(20 + value.length);
 		storage.put(metaOffset + 0, ByteUtil.toBytes(code));
 		storage.put(metaOffset + 4, ByteUtil.toBytes(time));

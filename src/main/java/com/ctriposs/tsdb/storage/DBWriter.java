@@ -22,7 +22,7 @@ public class DBWriter {
 	private long fileNumber;
 	private Map<Integer,CodeItem> codeMap = new LinkedHashMap<Integer,CodeItem>();	
 	
-	public DBWriter(IStorage storage,long timeCount,long fileNumber){
+	public DBWriter(IStorage storage, long timeCount, long fileNumber) {
 		this.storage = storage;
 		this.timeCount = timeCount;
 		this.valueOffset = new AtomicLong(Head.HEAD_SIZE + TimeItem.TIME_ITEM_SIZE * timeCount);
