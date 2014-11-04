@@ -16,6 +16,8 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 	
 	CodeItem prevCode() throws IOException;	
 	
+	long timeItemCount();
+	
 	K key();
 
 	long time();

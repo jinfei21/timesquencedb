@@ -19,7 +19,7 @@ public class FileManager {
 	
 	private String dir;
 	private long fileCapacity;
-	private AtomicLong maxFileNumber = new AtomicLong(0L); 
+	private AtomicLong maxFileNumber = new AtomicLong(1L); 
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
    
@@ -30,7 +30,6 @@ public class FileManager {
 		this.nameManager = nameManager;
 	}
 	
-
     public Queue<FileMeta> copy(Queue<FileMeta> oldList) {
         return new PriorityBlockingQueue<FileMeta>(oldList);
     }

@@ -20,7 +20,7 @@ public class CodeBlock {
         return curPos < maxPos;
 	}
 	
-	public boolean seek(long code){
+	public boolean seek(int code){
 	
 		boolean result = false;
 		int left = 0;

@@ -39,10 +39,12 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.curCodeBlock = null;
 		this.curCodeItem = null;
 	}
+	
+	
 
 	@Override
 	public boolean hasNext() {
-		if(curTimeBlockIndex <= maxTimeBlockIndex){
+		if(curTimeBlockIndex < maxTimeBlockIndex){
 			if(curTimeBlock != null){
 				if(!curTimeBlock.hasNext()){
 					try{
@@ -80,10 +82,16 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		int count = 0;
 		if(curCodeBlockIndex == maxCodeBlockIndex){
 			count = head.getCodeCount() - curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
-		}else{
+		}else if(curCodeBlockIndex<maxCodeBlockIndex){
 			count = DBConfig.BLOCK_MAX_COUNT;		
+		}else{
+			curCodeBlock = null;
+			return;
 		}
 		bytes = new byte[count*CodeItem.CODE_ITEM_SIZE];
+		if(head.getCodeOffset()<0){
+			System.out.println("fsafas");
+		}
 		storage.get(head.getCodeOffset()+curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
 		curCodeBlock = new CodeBlock(bytes, count);
 
@@ -114,9 +122,13 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		int count = 0;
 		if(curTimeBlockIndex == maxTimeBlockIndex){
 			count = curCodeItem.getTimeCount() - curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
-		}else{
+		}else if(curTimeBlockIndex < maxTimeBlockIndex){
 			count = DBConfig.BLOCK_MAX_COUNT;		
+		}else{
+			curTimeBlock = null;
+			return;
 		}
+
 		bytes = new byte[count*TimeItem.TIME_ITEM_SIZE];
 		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT+TimeItem.TIME_ITEM_SIZE, bytes);
 		curTimeBlock = new TimeBlock(bytes, count);
@@ -206,7 +218,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeBlock != null) {
 				curCodeItem = curCodeBlock.current();
 				if (curCodeItem != null) {
-					maxCodeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
+					maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
 					curTimeBlockIndex = -1;
 				}
 			}
@@ -352,9 +364,17 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		storage.close();
 	}
 
+
+	@Override
+	public long timeItemCount() {
+		return head.getTimeCount();
+	}
+	
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
+
+
 
 }

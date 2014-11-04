@@ -13,7 +13,7 @@ public class FileName {
 	}
 	
 	public static String dataFileName(long number, int level){
-		return makeFileName(number, "dat-"+level);
+		return makeFileName(number, level+"-dat");
 	}
 	
 	private static String makeFileName(long number, String suffix){

@@ -19,7 +19,7 @@ public class NameManager {
     private MapFileLogWriter fileWriter;
 
 	public NameManager(String dir) throws IOException {
-        this.fileWriter = new MapFileLogWriter( dir,  FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
+        this.fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
 	}
 	
 	public short getCode(String name) throws IOException {
