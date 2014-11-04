@@ -23,8 +23,8 @@ public class CompactLevel extends Level {
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
 
-	public CompactLevel(FileManager fileManager,int level) {
-		super(fileManager, level);
+	public CompactLevel(FileManager fileManager,int level,long interval) {
+		super(fileManager, level,interval);
 	}
 
 	@Override

@@ -11,7 +11,9 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 
@@ -27,6 +29,7 @@ public abstract class Level {
 	protected volatile boolean run = false;
 	protected FileManager fileManager;
 	protected int level;
+	protected long interval;
 	
 	protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
         @Override
@@ -38,9 +41,10 @@ public abstract class Level {
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 
-	public Level(FileManager fileManager, int level){
+	public Level(FileManager fileManager, int level,long interval){
 		this.fileManager = fileManager;
 		this.level = level;
+		this.interval = interval;
 	}
 	
 	public void start() {
@@ -57,6 +61,10 @@ public abstract class Level {
 			run = false;
 			executor.shutdownNow();
 		}
+	}
+	
+	public ISeekIterator<InternalKey, byte[]> iterator(){
+		return new LevelSeekIterator(fileManager, this, interval);
 	}
 	
 	public void add(long time, FileMeta file) {
@@ -83,6 +91,12 @@ public abstract class Level {
 	public int getFileSize(){
 		return timeFileMap.size();
 	}
+	
+
+	public long format(long time) {
+		return time/interval*interval;
+	}
+	
 	
 	
 	public void delete(long afterTime) throws IOException {
@@ -137,5 +151,4 @@ public abstract class Level {
 	
 	public abstract byte[] getValue(InternalKey key) throws IOException;
 	
-	public abstract long format(long time);
 }

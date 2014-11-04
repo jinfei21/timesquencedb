@@ -8,7 +8,6 @@ import com.ctriposs.tsdb.InternalEntry;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.IStorage;
-import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.storage.CodeBlock;
 import com.ctriposs.tsdb.storage.CodeItem;
 import com.ctriposs.tsdb.storage.Head;
