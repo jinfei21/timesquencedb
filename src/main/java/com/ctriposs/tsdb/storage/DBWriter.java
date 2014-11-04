@@ -5,14 +5,16 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IStorage;
 
 public class DBWriter {
 
-	
 	private IStorage storage;
 	private long timeCount = 0;
 	private long timeIndex = -1;
@@ -20,6 +22,8 @@ public class DBWriter {
 	private InternalKey largest = null;
 	private AtomicLong valueOffset = null;
 	private AtomicLong timeOffset = null;
+	/** The list change lock. */
+	private final Lock lock = new ReentrantLock();
 	private long fileNumber;
 	private Map<Integer,CodeItem> codeMap = new LinkedHashMap<Integer,CodeItem>();	
 	
@@ -27,7 +31,7 @@ public class DBWriter {
 		this.storage = storage;
 		this.timeCount = timeCount;
 		this.valueOffset = new AtomicLong(Head.HEAD_SIZE + TimeItem.TIME_ITEM_SIZE * timeCount);
-		this.valueOffset = new AtomicLong(Head.HEAD_SIZE);
+		this.timeOffset = new AtomicLong(Head.HEAD_SIZE);
 		this.fileNumber = fileNumber;
 	}
 	
@@ -74,6 +78,6 @@ public class DBWriter {
 		writeCodeArea();
 		writeHead(cOffset,codeMap.size(),timeCount,smallest,largest);
 		storage.close();
-		return new FileMeta(fileNumber,new File(storage.getName()), smallest, largest);
+		return new FileMeta(fileNumber, new File(storage.getName()), smallest, largest);
 	}
 }

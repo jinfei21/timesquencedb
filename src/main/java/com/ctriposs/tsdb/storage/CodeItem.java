@@ -31,10 +31,10 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 		this.minTime = ByteUtil.ToLong(bytes, offSet + MIN_TIME_OFFSET);
 		this.maxTime = ByteUtil.ToLong(bytes, offSet + MAX_TIME_OFFSET);
 		this.timeOffSet = ByteUtil.ToLong(bytes, offSet + TIME_OFFSET_OFFSET);
-		this.timeCount = new AtomicInteger(ByteUtil.ToInt(bytes,offSet + TIME_COUNT_OFFSET));
+		this.timeCount = new AtomicInteger(ByteUtil.ToInt(bytes, offSet + TIME_COUNT_OFFSET));
 	}
 	
-	public CodeItem(int code,long timeOffset,long minTime,long maxTime){
+	public CodeItem(int code, long timeOffset, long minTime, long maxTime) {
 		this.code = code;
 		this.timeOffSet = timeOffset;
 		this.minTime = minTime;

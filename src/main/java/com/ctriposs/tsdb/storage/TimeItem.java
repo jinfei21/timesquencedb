@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.ctriposs.tsdb.util.ByteUtil;
 
 public class TimeItem implements Serializable, Comparable<TimeItem> {
+
 	public static final int TIME_ITEM_SIZE = (Integer.SIZE + Long.SIZE + Long.SIZE ) / Byte.SIZE;
 
 	public static final int TIME_OFFSET = 0;

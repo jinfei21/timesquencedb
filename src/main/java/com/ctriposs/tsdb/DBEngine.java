@@ -94,7 +94,7 @@ public class DBEngine implements IDB {
 					try {
 						memTable.close();
 						storeLevel.addMemTable(memTable);
-						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(),internalKeyComparator);
+						memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 						memTable.add(key, value);					
 					} catch (Exception e) {
 						throw new IOException(e);
