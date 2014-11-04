@@ -1,5 +1,8 @@
 package com.ctriposs.tsdb.manage;
 
+import com.ctriposs.tsdb.storage.NameFileWriter;
+
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,15 +15,15 @@ public class NameManager {
 	private Map<Short,String> codeMap = new ConcurrentHashMap<Short,String>();
 	private Lock lock = new ReentrantLock();
 	private AtomicInteger maxCode = new AtomicInteger(1);
+    private NameFileWriter fileWriter;
 
-	
-	public NameManager(String dir){
-	
+	public NameManager(String dir) throws IOException {
+        this.fileWriter = new NameFileWriter(dir);
 	}
 	
-	public short getCode(String name){
+	public short getCode(String name) throws IOException {
 		Short code = nameMap.get(name);
-		if(code==null){
+		if(code == null){
 			try{
 				lock.lock();
 				code = nameMap.get(name);
@@ -33,6 +36,8 @@ public class NameManager {
 				lock.unlock();
 			}
 		}
+
+        fileWriter.add(name, code);
 		return code;
 	}
 	

@@ -60,7 +60,7 @@ public class FileManager {
 		return maxFileNumber.incrementAndGet();
 	}
 
-    public short getCode(String name) {
+    public short getCode(String name) throws IOException {
         return nameManager.getCode(name);
     }
 

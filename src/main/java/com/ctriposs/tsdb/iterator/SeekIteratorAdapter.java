@@ -95,7 +95,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		findSmallest();
 		return curEntry;
 	}
-	
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
@@ -190,7 +189,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return getNextIterators(time + MemTable.MINUTE);
 		}
 	}
-	
 
 	@Override
 	public String table() {
@@ -232,7 +230,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return true;
 		}
 	}
-
 
 	@Override
 	public void close() throws IOException{

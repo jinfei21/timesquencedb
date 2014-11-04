@@ -9,7 +9,7 @@ public class FileName {
 	}
 	
 	public static String nameFileName(long number){
-		return makeFileName(number,"name");
+		return makeFileName(number, "name");
 	}
 	
 	public static String dataFileName(long number, int level){
