@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
@@ -46,7 +45,7 @@ public abstract class Level {
 		this.fileManager = fileManager;
 		this.level = level;
 		this.interval = interval;
-		tasks = new Task[threads];
+		this.tasks = new Task[threads];
 	}
 	
 	public void start() {
@@ -87,7 +86,7 @@ public abstract class Level {
 	}
 	
 	public Queue<FileMeta> getFiles(long time){
-		return timeFileMap.get(time);
+		return timeFileMap.get(format(time));
 	}
 	
 	public int getFileSize(){

@@ -1,7 +1,7 @@
 package com.ctriposs.tsdb;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
@@ -69,7 +69,7 @@ public class DBEngine implements IDB {
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);
-		this.compactLevelMap = new HashMap<Integer,Level>();
+		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
 		this.storeLevel.start();
 		//
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
@@ -77,16 +77,12 @@ public class DBEngine implements IDB {
 		}
 	}
 
-
-
 	@Override
 	public void put(String tableName, String colName, long time, byte[] value) throws IOException{
 		
 		putCounter.incrementAndGet();
-
 		
 		InternalKey key = new InternalKey(nameManager.getCode(tableName), nameManager.getCode(colName), time);
-		
 		if(!memTable.add(key, value)) {
 			try {
 				lock.lock();

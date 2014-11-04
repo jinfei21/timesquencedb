@@ -59,6 +59,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 					return true;
 				}
 			}else{
+				
 				try{
 					nextTimeBlock();
 				}catch(IOException e){
@@ -80,16 +81,14 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		int count = 0;
 		if(curCodeBlockIndex == maxCodeBlockIndex){
 			count = head.getCodeCount() - curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
-		}else if(curCodeBlockIndex<maxCodeBlockIndex){
+		}else if(curCodeBlockIndex < maxCodeBlockIndex){
 			count = DBConfig.BLOCK_MAX_COUNT;		
 		}else{
 			curCodeBlock = null;
 			return;
 		}
 		bytes = new byte[count*CodeItem.CODE_ITEM_SIZE];
-		if(head.getCodeOffset()<0){
-			System.out.println("fsafas");
-		}
+		
 		storage.get(head.getCodeOffset()+curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
 		curCodeBlock = new CodeBlock(bytes, count);
 
@@ -195,7 +194,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 		}
 		curTimeBlockIndex = -1;
-		maxTimeBlockIndex = 0;
+		maxTimeBlockIndex = -1;
 	}
 
 
@@ -230,7 +229,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			}
 		}
 		curTimeBlockIndex = -1;
-		maxTimeBlockIndex = 0;
+		maxTimeBlockIndex = -1;
 	}
 
 
