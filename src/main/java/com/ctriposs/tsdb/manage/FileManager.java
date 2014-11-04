@@ -13,23 +13,23 @@ import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
+
 	public final static long MAX_FILE_SIZE = 2*1024*1024*1024L;
 	public final static int MAX_FILES = 30; 
 
-	
 	private String dir;
 	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(1L); 
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
    
-	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator,NameManager nameManager){
+	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator, NameManager nameManager){
 		this.dir = dir;
 		this.fileCapacity = fileCapacity;
 		this.internalKeyComparator = internalKeyComparator;
 		this.nameManager = nameManager;
 	}
-	
+
     public Queue<FileMeta> copy(Queue<FileMeta> oldList) {
         return new PriorityBlockingQueue<FileMeta>(oldList);
     }
@@ -42,7 +42,6 @@ public class FileManager {
 		return internalKeyComparator.compare(o1,o2);
 	}
 
-	
 	public void delete(File file)throws IOException {
 		FileUtil.forceDelete(file);
 	}
@@ -66,7 +65,6 @@ public class FileManager {
     public String getName(short code) {
         return nameManager.getName(code);
     }
-
 
     public InternalKeyComparator getInternalKeyComparator() {
         return internalKeyComparator;

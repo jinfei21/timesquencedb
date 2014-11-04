@@ -42,7 +42,7 @@ public abstract class Level {
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 
-	public Level(FileManager fileManager, int level,long interval,int threads){
+	public Level(FileManager fileManager, int level, long interval, int threads){
 		this.fileManager = fileManager;
 		this.level = level;
 		this.interval = interval;
@@ -93,14 +93,11 @@ public abstract class Level {
 	public int getFileSize(){
 		return timeFileMap.size();
 	}
-	
 
 	public long format(long time) {
 		return time/interval*interval;
 	}
-	
-	
-	
+
 	public void delete(long afterTime) throws IOException {
 		for(Entry<Long, Queue<FileMeta>> entry : timeFileMap.entrySet()) {
 			if(entry.getKey() < afterTime) {
@@ -136,7 +133,6 @@ public abstract class Level {
 		}
 		return null;
 	}
-	
 	
 	public abstract class Task implements Runnable {
 

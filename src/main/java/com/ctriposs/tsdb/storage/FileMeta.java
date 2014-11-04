@@ -5,7 +5,7 @@ import java.io.File;
 
 import com.ctriposs.tsdb.InternalKey;
 
-public class FileMeta implements Comparable<FileMeta>{
+public class FileMeta implements Comparable<FileMeta> {
 
     private final File file;
 

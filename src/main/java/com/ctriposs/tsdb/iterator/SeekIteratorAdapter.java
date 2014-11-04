@@ -24,7 +24,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private String curSeekTable;
 	private String curSeekColumn;
 	
-	public SeekIteratorAdapter(FileManager fileManage,ISeekIterator<InternalKey, byte[]>... its) {
+	public SeekIteratorAdapter(FileManager fileManage, ISeekIterator<InternalKey, byte[]>... its) {
 
 		this.iterators = new ArrayList<ISeekIterator<InternalKey,byte[]>>();
 		for(ISeekIterator<InternalKey, byte[]> it:its){

@@ -9,9 +9,14 @@ import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.Level;
+import com.ctriposs.tsdb.common.PureFileStorage;
+import com.ctriposs.tsdb.iterator.FileSeekIterator;
+import com.ctriposs.tsdb.iterator.MergeFileSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.DateFormatter;
 
 public class CompactLevel extends Level {
@@ -101,8 +106,16 @@ public class CompactLevel extends Level {
             }
 		}
 
-        private void mergeSort(long key, List<FileMeta> fileMetaList) {
+        private void mergeSort(long key, List<FileMeta> fileMetaList) throws IOException {
+            List<IFileIterator<InternalKey, byte[]>> iterators = new ArrayList<IFileIterator<InternalKey, byte[]>>();
+            for (FileMeta meta : fileMetaList) {
+                iterators.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), MemTable.MAX_MEM_SIZE)));
+            }
 
+            MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager, iterators);
+            while (fileSeekIterator.hasNext()) {
+
+            }
         }
 		
 	}
