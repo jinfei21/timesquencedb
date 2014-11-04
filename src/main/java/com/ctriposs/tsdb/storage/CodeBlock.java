@@ -27,7 +27,7 @@ public class CodeBlock {
 		int right = maxPos;
 
 		curPos = -1;
-		while (left < right) {
+		while (left <= right) {
 			int mid = (left + right) / 2;
 			if (code < codes[mid].getCode()) {
 				right = mid - 1;

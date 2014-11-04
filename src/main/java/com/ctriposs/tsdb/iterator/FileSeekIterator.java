@@ -127,7 +127,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 
 		bytes = new byte[count*TimeItem.TIME_ITEM_SIZE];
-		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT+TimeItem.TIME_ITEM_SIZE, bytes);
+		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT*TimeItem.TIME_ITEM_SIZE, bytes);
 		curTimeBlock = new TimeBlock(bytes, count);
 	}
 	
@@ -145,7 +145,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			return;
 		}
 		bytes = new byte[count*TimeItem.TIME_ITEM_SIZE];
-		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT+TimeItem.TIME_ITEM_SIZE, bytes);
+		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT*TimeItem.TIME_ITEM_SIZE, bytes);
 		curTimeBlock = new TimeBlock(bytes, count);
 	}
 

@@ -40,7 +40,7 @@ public class TimeBlock {
 		int left = 0;
 		int right = maxPos;
 		curPos = -1;
-		while (left < right) {
+		while (left <= right) {
 			int mid = (left + right) / 2;
 			if (time < times[mid].getTime()) {
 				right = mid - 1;
