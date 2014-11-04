@@ -17,7 +17,7 @@ public class CodeBlock {
 	}
 
 	public boolean hasNext(){
-        return curPos < maxPos;
+        return curPos <= maxPos;
 	}
 	
 	public boolean seek(int code){

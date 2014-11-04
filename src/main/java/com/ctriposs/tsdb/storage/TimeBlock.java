@@ -21,7 +21,7 @@ public class TimeBlock {
 	}
 
 	public boolean hasNext() {
-        return curPos < maxPos;
+        return curPos <= maxPos;
 	}
 	
 	public int containTime(long time){
