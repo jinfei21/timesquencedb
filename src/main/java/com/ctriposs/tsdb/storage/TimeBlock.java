@@ -24,6 +24,10 @@ public class TimeBlock {
         return curPos <= maxPos;
 	}
 	
+	public boolean hasPrev() {
+        return curPos >= 0;
+	}
+	
 	public int containTime(long time){
 		if(time >= minTime && time <= maxTime){
 			return 0;

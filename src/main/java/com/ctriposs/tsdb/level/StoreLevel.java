@@ -80,8 +80,8 @@ public class StoreLevel extends Level {
 
 		@Override
 		public void process() throws Exception {
-			table = memQueue.take();
-
+			table = memQueue.poll();
+			if(table == null) return;
 			for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();

@@ -18,6 +18,8 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 	
 	long timeItemCount();
 	
+	long priority();
+	
 	K key();
 
 	long time();
@@ -25,6 +27,8 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 	byte[] value() throws IOException;
 
 	boolean valid();
+	
+    boolean hasPrev();
 
 	Entry<K, V> prev();
 

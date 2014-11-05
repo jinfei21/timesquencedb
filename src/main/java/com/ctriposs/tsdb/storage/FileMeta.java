@@ -33,6 +33,10 @@ public class FileMeta implements Comparable<FileMeta> {
     public File getFile(){
     	return file;
     }
+    
+    public long getFileNumber(){
+    	return fileNumber;
+    }
 
     public boolean contains(InternalKey key) {
         return key.compareTo( smallest) >= 0 && key.compareTo(largest) <= 0;
@@ -54,7 +58,7 @@ public class FileMeta implements Comparable<FileMeta> {
 
 	@Override
 	public int compareTo(FileMeta o) {
-		return (int) (fileNumber-o.fileNumber);
+		return (int) (o.fileNumber-fileNumber);
 	}
 	
 }

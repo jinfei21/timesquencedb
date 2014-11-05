@@ -44,9 +44,11 @@ public class DBEnginePutTest {
         	if(s != null){
         		String dd = new String(s);
         		if(d[1].equals(dd)){
-        			System.out.println("OK");
+        			//System.out.println("OK");
         		}else{
-        			System.out.println(++error+"error "+entry.getValue());
+        			System.out.println(++error+"error ");
+        			System.out.println("实际值："+entry.getValue());
+        			System.out.println("存储值："+dd);
         		}
         	}else{
         		System.out.println(++miss+"not found "+entry.getValue()+"-"+entry.getKey());

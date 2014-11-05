@@ -3,13 +3,14 @@ package com.ctriposs.tsdb.common;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
@@ -75,7 +76,7 @@ public abstract class Level {
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityBlockingQueue<FileMeta>();
+					list = new PriorityQueue<FileMeta>();
 					timeFileMap.put(time, list);
 				}
 			} finally {
@@ -132,7 +133,6 @@ public abstract class Level {
 						if(0==diff){
 							return it.value();
 						}else if(diff < 0){
-							System.out.print(diff+"not found,  ");
 							break;
 						}
 					}
@@ -158,6 +158,7 @@ public abstract class Level {
 				try {
 					incrementStoreCount();
 					process();
+					Thread.sleep(500);
 				} catch (Throwable e) {
 					//TODO 
 					e.printStackTrace();

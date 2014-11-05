@@ -20,6 +20,10 @@ public class CodeBlock {
         return curPos <= maxPos;
 	}
 	
+	public boolean hasPrev(){
+        return curPos >= 0;
+	}
+	
 	public boolean seek(int code){
 	
 		boolean result = false;

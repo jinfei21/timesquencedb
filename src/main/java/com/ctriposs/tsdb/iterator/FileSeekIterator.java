@@ -27,7 +27,8 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	private CodeBlock curCodeBlock;
 	private CodeItem curCodeItem;
 	private Head head;
-
+	private long fileNumber;
+	
 	public FileSeekIterator(IStorage storage)throws IOException {
 		this.storage = storage;
 		byte[] bytes = new byte[Head.HEAD_SIZE];
@@ -38,6 +39,11 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.curTimeBlock = null;
 		this.curCodeBlock = null;
 		this.curCodeItem = null;
+	}
+	
+	public FileSeekIterator(IStorage storage,long fileNumber)throws IOException {
+		this(storage);
+		this.fileNumber = fileNumber;
 	}
 	
 	@Override
@@ -72,6 +78,42 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 				}
 			}
 		}
+		return false;
+	}
+	
+	@Override
+	public boolean hasPrev() {
+		if(curTimeBlockIndex >= 0){
+			if(curTimeBlock != null){
+				if(!curTimeBlock.hasPrev()){
+					try{
+						prevTimeBlock();
+					}catch(IOException e){
+						throw new RuntimeException(e);
+					}
+					if(curTimeBlock == null){
+						return false;
+					}else{
+						return true;
+					}
+				}else{
+					return true;
+				}		
+				
+			}else{
+				try{
+					prevTimeBlock();
+				}catch(IOException e){
+					throw new RuntimeException(e);
+				}
+				if(curTimeBlock == null){
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		
 		return false;
 	}
 
@@ -197,7 +239,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		maxTimeBlockIndex = -2;
 	}
 
-
 	@Override
 	public void seekToFirst(int code) throws IOException {
 
@@ -232,7 +273,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		maxTimeBlockIndex = -2;
 	}
 
-
 	@Override
 	public InternalKey key() {
 
@@ -241,7 +281,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 		return null;
 	}
-
 
 	@Override
 	public long time() {
@@ -341,8 +380,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		return null;
 	}
 
-
-
 	@Override
 	public CodeItem prevCode() throws IOException {
 		if(curCodeBlock == null){
@@ -361,7 +398,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		storage.close();
 	}
 
-
 	@Override
 	public long timeItemCount() {
 		return head.getTimeCount();
@@ -370,6 +406,11 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
+	}
+
+	@Override
+	public long priority() {
+		return fileNumber;
 	}
 
 
