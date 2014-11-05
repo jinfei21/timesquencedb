@@ -65,7 +65,7 @@ public abstract class Level {
 		}
 	}
 	
-	public ISeekIterator<InternalKey, byte[]> iterator(){
+	public LevelSeekIterator iterator(){
 		return new LevelSeekIterator(fileManager, this, interval);
 	}
 	

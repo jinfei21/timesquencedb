@@ -1,9 +1,10 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
@@ -11,29 +12,37 @@ import com.ctriposs.tsdb.manage.FileManager;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
-	private List<ISeekIterator<InternalKey, byte[]>> iterators;
+	private Queue<LevelSeekIterator> itQueue;
 	private Direction direction;
-	private ISeekIterator<InternalKey, byte[]> curIterator;
+	private ISeekIterator<InternalKey, byte[]> curIt;
 	private FileManager fileManager;
 	private long curSeekTime;
 	private String curSeekTable;
 	private String curSeekColumn;
 	
-	public SeekIteratorAdapter(FileManager fileManage, ISeekIterator<InternalKey, byte[]>... its) {
+	public SeekIteratorAdapter(FileManager fileManage, LevelSeekIterator... its) {
 
-		this.iterators = new ArrayList<ISeekIterator<InternalKey,byte[]>>();
-		for(ISeekIterator<InternalKey, byte[]> it:its){
-			iterators.add(it);
+		this.itQueue = new PriorityQueue<LevelSeekIterator>(5, new Comparator<LevelSeekIterator>() {
+
+			@Override
+			public int compare(LevelSeekIterator o1,
+					LevelSeekIterator o2) {
+				
+				return 0;
+			}
+		});
+		for(LevelSeekIterator it:its){
+			itQueue.add(it);
 		}
 		this.fileManager = fileManager;
 		this.direction = Direction.forward;
-		this.curIterator = null;
-		this.iterators = null;
+		this.curIt = null;
+		this.itQueue = null;
 	}
 	
-	public void addIterator(ISeekIterator<InternalKey, byte[]>... its) {
-		for(ISeekIterator<InternalKey, byte[]> it:its){
-			iterators.add(it);
+	public void addIterator(LevelSeekIterator... its) {
+		for(LevelSeekIterator it:its){
+			itQueue.add(it);
 		}
 	}
 
@@ -42,8 +51,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 		boolean result = false;
 
-		if(iterators != null) {
-			for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+		if(itQueue != null) {
+			for (LevelSeekIterator it : itQueue) {
 				if(it.hasNext()) {
 					result = true;
                     break;
@@ -57,22 +66,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
-			for (ISeekIterator<InternalKey, byte[]> it : iterators) {
+			for (LevelSeekIterator it : itQueue) {
 
-				if (it != curIterator) {
+				if (it != curIt) {
 					try {
 						if (it.hasNext()) {
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
 						}
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						throw new RuntimeException(e);
 					}
 				}
 			}
 			direction = Direction.forward;
 		}
-		Entry<InternalKey, byte[]> entry = curIterator.next();
+		Entry<InternalKey, byte[]> entry = curIt.next();
 		findSmallest();
 		return entry;
 	}
@@ -80,21 +88,20 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if(direction != Direction.reverse){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
-				if(curIterator != it){
+			for(LevelSeekIterator it:itQueue){
+				if(curIt != it){
 					try {
 						if(it.hasNext()){
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
 						}
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					} catch (IOException e) {			
+						throw new RuntimeException(e);
 					}
 				}
 			}
 			direction = Direction.reverse;
 		}
-		Entry<InternalKey, byte[]> entry = curIterator.prev();
+		Entry<InternalKey, byte[]> entry = curIt.prev();
 		findLargest();
 		return entry;		
 	}
@@ -110,8 +117,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.curSeekColumn = column;
 		this.curSeekTime = time;
 		
-		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+		if(null != itQueue){
+			for(LevelSeekIterator it:itQueue){
 				it.seek(table,  column,time);
 			}		
 			findSmallest();
@@ -120,9 +127,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	}
 	
 	private void findSmallest(){
-		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> smallest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+		if(null != itQueue){
+			LevelSeekIterator smallest = null;
+			for(LevelSeekIterator it:itQueue){
 				if(it.valid()){
 					if(smallest == null){
 						smallest = it;
@@ -131,14 +138,14 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
-			curIterator = smallest;
+			curIt = smallest;
 		}
 	}
 	
 	private void findLargest(){
-		if(null != iterators){
-			ISeekIterator<InternalKey, byte[]> largest = null;
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+		if(null != itQueue){
+			LevelSeekIterator largest = null;
+			for(LevelSeekIterator it:itQueue){
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
@@ -147,45 +154,45 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
-			curIterator = largest;
+			curIt = largest;
 		}
 	}
 
 	@Override
 	public String table() {
-		if(curIterator != null){
-			curIterator.table();
+		if(curIt != null){
+			curIt.table();
 		}
 		return null;
 	}
 
 	@Override
 	public String column() {
-		if(curIterator != null){
-			curIterator.column();
+		if(curIt != null){
+			curIt.column();
 		}
 		return null;
 	}
 
 	@Override
 	public long time() {
-		if(curIterator != null){
-			return curIterator.key().getTime();
+		if(curIt != null){
+			return curIt.key().getTime();
 		}
 		return 0;
 	}
 
 	@Override
 	public byte[] value() throws IOException {
-		if(curIterator != null){
-			return curIterator.value();
+		if(curIt != null){
+			return curIt.value();
 		}
 		return null;
 	}
 
 	@Override
 	public boolean valid() {
-		if(curIterator==null){
+		if(curIt==null){
 			return false;
 		}else{
 			return true;
@@ -195,8 +202,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public void close() throws IOException{
 		
-		if(null != iterators){
-			for(ISeekIterator<InternalKey, byte[]> it:iterators){
+		if(null != itQueue){
+			for(LevelSeekIterator it:itQueue){
 				it.close();
 			}
 		}
@@ -204,8 +211,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 	@Override
 	public InternalKey key() {
-		if(curIterator != null){
-			return curIterator.key();
+		if(curIt != null){
+			return curIt.key();
 		}
 		return null;
 	}
