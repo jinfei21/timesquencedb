@@ -282,6 +282,10 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		return null;
 	}
 	
+	public int getLevelNum(){
+		return level.getLevelNum();
+	}
+	
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");

@@ -27,8 +27,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			@Override
 			public int compare(LevelSeekIterator o1,
 					LevelSeekIterator o2) {
-				
-				return 0;
+				int diff = o1.getLevelNum() - o2.getLevelNum();
+				return diff;
 			}
 		});
 		for(LevelSeekIterator it:its){
@@ -106,10 +106,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		return entry;		
 	}
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("unsupport remove operation!");
-	}
 	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
@@ -195,7 +191,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(curIt==null){
 			return false;
 		}else{
-			return true;
+			return curIt.valid();
 		}
 	}
 
@@ -215,6 +211,11 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			return curIt.key();
 		}
 		return null;
+	}
+
+	@Override
+	public void remove() {
+		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
 	
 	enum Direction{
