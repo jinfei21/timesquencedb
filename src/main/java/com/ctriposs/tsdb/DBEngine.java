@@ -79,7 +79,7 @@ public class DBEngine implements IDB {
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().start();
 		}
-		
+		this.fileManager.recoveryName();
 		this.storeLevel.recoveryData();
 		recoveryLog();
 	}

@@ -2,7 +2,6 @@ package com.ctriposs.tsdb.level;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -18,9 +17,7 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.storage.Head;
 import com.ctriposs.tsdb.table.MemTable;
-import com.ctriposs.tsdb.util.FileUtil;
 
 public class StoreLevel extends Level {
 
@@ -42,7 +39,9 @@ public class StoreLevel extends Level {
 	
 
 	public void addMemTable(MemTable memTable) throws Exception {
-		this.memQueue.put(memTable);
+		if(memTable != null){
+			this.memQueue.put(memTable);
+		}
 	}
 
 	@Override
