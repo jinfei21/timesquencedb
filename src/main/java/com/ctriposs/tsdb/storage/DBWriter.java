@@ -63,7 +63,7 @@ public class DBWriter {
 		}
 	}
 	
-	public void writeHead(long codeOffset,int codeCount,long timeCount,InternalKey smallest,InternalKey largest)throws IOException {
+	private void writeHead(long codeOffset,int codeCount,long timeCount,InternalKey smallest,InternalKey largest)throws IOException {
 		Head head = new Head(codeOffset, codeCount, timeCount, smallest, largest);
 		storage.put(0, head.toByte());
 	}
@@ -71,7 +71,7 @@ public class DBWriter {
 	public FileMeta close()throws IOException {
 		long cOffset = valueOffset.get();
 		writeCodeArea();
-		writeHead(cOffset,codeMap.size(), timeCount, smallest, largest);
+		writeHead(cOffset,codeMap.size(), timeIndex+1, smallest, largest);
 		storage.close();
 		return new FileMeta(fileNumber, new File(storage.getName()), smallest, largest);
 	}

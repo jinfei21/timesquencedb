@@ -37,6 +37,15 @@ public abstract class Level {
             return (int) (o1 - o2);
         }
     });
+    
+    private Comparator<FileMeta> fileMetaComparator =  new Comparator<FileMeta>() {
+
+		@Override
+		public int compare(FileMeta o1, FileMeta o2) {
+			int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
+			return diff;
+		}
+	};
 	
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
@@ -75,14 +84,7 @@ public abstract class Level {
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityQueue<FileMeta>(5,new Comparator<FileMeta>() {
-
-						@Override
-						public int compare(FileMeta o1, FileMeta o2) {
-							int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
-							return -diff;
-						}
-					});
+					list = new PriorityQueue<FileMeta>(5,fileMetaComparator);
 					timeFileMap.put(time, list);
 				}
 			} finally {
