@@ -40,7 +40,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 	public boolean hasNext() {
 
 		boolean result = false;
-
 		if(iterators != null) {
 			for (IFileIterator<InternalKey, byte[]> it : iterators) {
 				if(it.hasNext()) {
@@ -178,7 +177,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		if(metaQueue != null) {
 			List<IFileIterator<InternalKey, byte[]>> list = new ArrayList<IFileIterator<InternalKey, byte[]>>();
 			for(FileMeta meta : metaQueue) {
-				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile(), meta.getFile().length())));
+				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile())));
 			}
 			return list;
 		} else {

@@ -24,10 +24,9 @@ public class PureFileStorage implements IStorage {
 		fileChannel = raf.getChannel();
 	}
 
-	public PureFileStorage(File file, long capacity) throws IOException {
+	public PureFileStorage(File file) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
 		fullFileName = file.getPath();
-		raf.setLength(capacity);
 		fileChannel = raf.getChannel();
 	}
 	

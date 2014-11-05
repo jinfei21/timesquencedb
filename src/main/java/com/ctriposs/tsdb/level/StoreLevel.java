@@ -101,9 +101,9 @@ public class StoreLevel extends Level {
 		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap, long fileNumber) throws IOException {
 			IStorage storage;
 			if(fileCount.get() < 8) {
-				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), fileManager.getFileCapacity());
+				storage = new MapFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), FILE_SIZE);
 			} else {
-				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), fileManager.getFileCapacity());
+				storage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber,level), FILE_SIZE);
 			}
 			
 			int size = dataMap.size();

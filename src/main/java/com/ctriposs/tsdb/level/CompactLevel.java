@@ -112,7 +112,7 @@ public class CompactLevel extends Level {
             List<IFileIterator<InternalKey, byte[]>> iterators = new ArrayList<IFileIterator<InternalKey, byte[]>>();
             long totalTimeCount = 0;
             for (FileMeta meta : fileMetaList) {
-                FileSeekIterator fileSeekIterator = new FileSeekIterator(new PureFileStorage(meta.getFile(), MemTable.MAX_MEM_SIZE));
+                FileSeekIterator fileSeekIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
                 iterators.add(fileSeekIterator);
                 totalTimeCount += fileSeekIterator.timeItemCount();
             }

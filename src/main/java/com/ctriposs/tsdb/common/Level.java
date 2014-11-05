@@ -114,7 +114,7 @@ public abstract class Level {
 		if(list != null) {
 			for(FileMeta meta : list) {
 				if(meta.contains(key)){
-					IStorage storage = new PureFileStorage(meta.getFile(), meta.getFile().length());
+					IStorage storage = new PureFileStorage(meta.getFile());
 					FileSeekIterator it = new FileSeekIterator(storage);
 					it.seekToFirst(key.getCode());
 

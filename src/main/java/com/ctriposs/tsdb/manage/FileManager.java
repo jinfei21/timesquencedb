@@ -2,14 +2,10 @@ package com.ctriposs.tsdb.manage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Queue;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
-import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
@@ -18,14 +14,12 @@ public class FileManager {
 	public final static int MAX_FILES = 30; 
 
 	private String dir;
-	private long fileCapacity;
 	private AtomicLong maxFileNumber = new AtomicLong(1L); 
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
    
-	public FileManager(String dir, long fileCapacity, InternalKeyComparator internalKeyComparator, NameManager nameManager){
+	public FileManager(String dir,  InternalKeyComparator internalKeyComparator, NameManager nameManager){
 		this.dir = dir;
-		this.fileCapacity = fileCapacity;
 		this.internalKeyComparator = internalKeyComparator;
 		this.nameManager = nameManager;
 	}
@@ -40,10 +34,6 @@ public class FileManager {
 	
 	public String getStoreDir(){
 		return dir;
-	}
-
-	public long getFileCapacity() {
-		return fileCapacity;
 	}
 	
 	public long getFileNumber(){
