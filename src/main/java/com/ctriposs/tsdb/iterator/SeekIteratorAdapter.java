@@ -62,6 +62,13 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 		return result;
 	}
+	
+
+	@Override
+	public boolean hasPrev() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	@Override
 	public Entry<InternalKey, byte[]> next() {
@@ -131,6 +138,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 						smallest = it;
 					}else if(fileManager.compare(smallest.key(), it.key())>0){
 						smallest = it;
+					}else if(fileManager.compare(smallest.key(), it.key())==0){
+						smallest = it;
 					}
 				}
 			}
@@ -142,12 +151,16 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(null != itQueue){
 			LevelSeekIterator largest = null;
 			for(LevelSeekIterator it:itQueue){
+				itQueue.remove(it);
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
 					}else if(fileManager.compare(largest.key(), it.key())<0){
 						largest = it;
+					}else if(fileManager.compare(largest.key(), it.key())==0){
+					
 					}
+					itQueue.add(it);
 				}
 			}
 			curIt = largest;

@@ -44,6 +44,13 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return result;
 	}
 
+
+	@Override
+	public boolean hasPrev() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
@@ -200,4 +207,5 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 	enum Direction{
 		forward,reverse
 	}
+
 }

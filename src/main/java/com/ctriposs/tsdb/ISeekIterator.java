@@ -20,6 +20,8 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
 	boolean valid();
 	
+	boolean hasPrev();
+	
 	Entry<K,V> prev();
 
 	void close() throws IOException;

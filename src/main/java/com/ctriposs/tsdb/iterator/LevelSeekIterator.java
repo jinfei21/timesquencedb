@@ -294,4 +294,10 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 	enum Direction{
 		forward,reverse
 	}
+
+	@Override
+	public boolean hasPrev() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
