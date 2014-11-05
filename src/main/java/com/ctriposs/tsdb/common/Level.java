@@ -11,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.LevelSeekIterator;
@@ -81,7 +80,7 @@ public abstract class Level {
 						@Override
 						public int compare(FileMeta o1, FileMeta o2) {
 							int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
-							return diff;
+							return -diff;
 						}
 					});
 					timeFileMap.put(time, list);
@@ -124,7 +123,7 @@ public abstract class Level {
 		}
 	}
 	
-	public byte[] getValueFromFile(InternalKey key)throws IOException{
+	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
 		Queue<FileMeta> list = getFiles(format(ts));
 		if(list != null) {

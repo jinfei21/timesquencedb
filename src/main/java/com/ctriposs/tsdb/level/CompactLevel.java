@@ -9,7 +9,6 @@ import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
@@ -68,18 +67,20 @@ public class CompactLevel extends Level {
 			return null;
 		}
 
+		private boolean check(){
+			 if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)){
+				 return false;
+			 }else{
+				 return true;
+			 }
+		}
 		@Override
 		public void process() throws Exception {
             System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
-            if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)) {
-                try {
-                    Thread.sleep(MAX_SLEEP_TIME);
-                } catch (InterruptedException e) {
-                    Thread.interrupted();
-                }
-            } else {
+            if (check()) {
+
                 Map<Long, List<Long>> levelMap = new HashMap<Long, List<Long>>();
                 NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
                 int power = (int) Math.pow(4, (double) (level - 1));
@@ -109,15 +110,15 @@ public class CompactLevel extends Level {
 		}
 
         private void mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
-            List<IFileIterator<InternalKey, byte[]>> iterators = new ArrayList<IFileIterator<InternalKey, byte[]>>();
+        	 MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
             for (FileMeta meta : fileMetaList) {
-                FileSeekIterator fileSeekIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
-                iterators.add(fileSeekIterator);
-                totalTimeCount += fileSeekIterator.timeItemCount();
+                FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
+                fileSeekIterator.addIterator(fileIterator);;
+                totalTimeCount += fileIterator.timeItemCount();
             }
 
-            MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager, iterators);
+           
             long fileNumber = fileManager.getFileNumber();
             PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), MemTable.MAX_MEM_SIZE);
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
@@ -131,11 +132,7 @@ public class CompactLevel extends Level {
 
 	@Override
 	public byte[] getValue(InternalKey key) throws IOException {
-		return null;
+		return getValueFromFile(key);
 	}
 
-	@Override
-	public long format(long time) {
-		return 0;
-	}
 }

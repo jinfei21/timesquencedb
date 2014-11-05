@@ -89,7 +89,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		
 		if(!result) {
 			curSeekTime -= interval;
-			if(curSeekTime < System.currentTimeMillis()-fileManager.getMaxPeriod()) {
+			if(curSeekTime > System.currentTimeMillis()-fileManager.getMaxPeriod()) {
 				try {
 					itQueue = getPrevIterators(curSeekTime);
 					if(null != itQueue){
@@ -209,7 +209,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
-					}else if(fileManager.compare(largest.key(), it.key())<=0){
+					}else if(fileManager.compare(largest.key(), it.key())<0){
 						largest = it;
 					}else if(fileManager.compare(largest.key(), it.key())==0){
 						while(it.hasPrev()){
@@ -235,6 +235,21 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 			return null;
 		}
 
+		Queue<IFileIterator<InternalKey, byte[]>> queue = getIterators(time);
+		if(queue != null){
+			
+			if(itQueue!=null){
+				for(IFileIterator<InternalKey, byte[]> it:itQueue){
+					it.close();
+				}
+			}
+			return queue;
+		}else {
+			return getNextIterators(time + interval);
+		}
+	}
+	
+	private Queue<IFileIterator<InternalKey, byte[]>> getIterators(long time) throws IOException {
 		curSeekTime = time;
 		Queue<FileMeta> metaQueue = level.getFiles(time);
 		if(metaQueue != null) {
@@ -249,16 +264,10 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 			
 			for(FileMeta meta : metaQueue) {
 				queue.add(new FileSeekIterator(new PureFileStorage(meta.getFile()),meta.getFileNumber()));
-			}
-			
-			if(itQueue!=null){
-				for(IFileIterator<InternalKey, byte[]> it:itQueue){
-					it.close();
-				}
-			}
+			}	
 			return queue;
-		} else {
-			return getNextIterators(time + interval);
+		}else{
+			return null;
 		}
 	}
 	
@@ -268,21 +277,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 			return null;
 		}
 
-		curSeekTime = time;
-		Queue<FileMeta> metaQueue = level.getFiles(time);
-		if(metaQueue != null) {
-			Queue<IFileIterator<InternalKey, byte[]>> queue = new PriorityQueue<IFileIterator<InternalKey, byte[]>>(5, new Comparator<IFileIterator<InternalKey, byte[]>>() {
-
-				@Override
-				public int compare(IFileIterator<InternalKey, byte[]> o1,IFileIterator<InternalKey, byte[]> o2) {
-					int diff = (int) (o2.priority() - o1.priority());
-					return diff;
-				}
-			});
-			
-			for(FileMeta meta : metaQueue) {
-				queue.add(new FileSeekIterator(new PureFileStorage(meta.getFile()),meta.getFileNumber()));
-			}
+		Queue<IFileIterator<InternalKey, byte[]>> queue = getIterators(time);
+		if(queue != null){
 			
 			if(itQueue!=null){
 				for(IFileIterator<InternalKey, byte[]> it:itQueue){
