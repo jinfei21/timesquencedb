@@ -2,10 +2,14 @@ package com.ctriposs.tsdb.manage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.ctriposs.tsdb.ILogReader;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MapFileLogReader;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
@@ -41,7 +45,14 @@ public class FileManager {
 	public long getFileNumber(){
 		return maxFileNumber.incrementAndGet();
 	}
-
+	
+	public void upateFileNumber(long fileNumber){
+		long l = maxFileNumber.get();
+		if(fileNumber>l){
+			maxFileNumber.set(fileNumber);
+		}
+	}
+	
     public short getCode(String name) throws IOException {
         return nameManager.getCode(name);
     }
@@ -59,7 +70,15 @@ public class FileManager {
 	}
 	
 	public void recoveryName()throws IOException {
-		
+		List<File> list = FileUtil.listFiles(new File(dir),"name");
+		for(File file:list){
+			ILogReader logReader = new MapFileLogReader(file);
+			
+			for(Entry<String,Short>entry:logReader.getNameMap().entrySet()){
+				nameManager.add(entry.getKey(), entry.getValue());
+			}
+			logReader.close();
+		}
 	}
 	
 

@@ -49,17 +49,20 @@ public class FileUtil {
     	return list;
     }
     
-    public static List<File> listFiles(File dir,String suffix){
+    public static List<File> listFiles(File dir,final String suffix){
     	List<File> list = new ArrayList<File>();
     	if(dir.exists()) {
     		for (File f : dir.listFiles(new FilenameFilter() {
 				
 				@Override
 				public boolean accept(File fdir, String name) {
-					System.out.println(fdir+"|"+name);
+
+					if(name.endsWith(suffix)){
+						return true;
+					}
 					return false;
-				}
-			})) {
+				}})
+			 ) {
     			if(f.isFile()) {
     				list.add(f);
     			}
@@ -172,5 +175,9 @@ public class FileUtil {
         
        unmap.invoke(null, buffer);
      
+    }
+    
+    public static void main(String args[]){
+    	FileUtil.listFiles(new File("d:\\tsdb_test\\put_test"), "dat");
     }
 }

@@ -38,7 +38,6 @@ public class MapFileLogWriter implements ILogWriter {
 		storage.put(metaOffset + 16, value);
 	}
 
-
     public void add(String name, short code) throws IOException {
         byte[] nameBytes = ByteUtil.ToBytes(name);
         int offset = current.getAndAdd(2 + nameBytes.length);

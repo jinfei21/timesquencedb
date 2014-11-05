@@ -1,7 +1,9 @@
 package com.ctriposs.tsdb.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -16,6 +18,8 @@ import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.storage.Head;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public abstract class Level {
 
@@ -57,6 +61,24 @@ public abstract class Level {
 		this.tasks = new Task[threads];
 	}
 	
+	public void recoveryData() throws IOException {
+		List<File> list = FileUtil.listFiles(new File(fileManager.getStoreDir()), level + "-dat");
+		
+		for(File file:list){
+			IStorage storage = new MapFileStorage(file);
+			byte[] bytes = new byte[Head.HEAD_SIZE];
+			storage.get(0, bytes);
+			Head head = new Head(bytes);
+			String name[] = file.getName().split("[-|.]");
+			long time = Long.parseLong(name[0]);
+			long fileNumber = Long.parseLong(name[1]);
+			FileMeta fileMeta = new FileMeta(fileNumber, file, head.getSmallest(),head.getLargest());
+			add(time, fileMeta);
+			storage.close();
+		}
+
+	}
+	
 	public void start() {
 		if(!run) {
             run = true;
@@ -77,7 +99,7 @@ public abstract class Level {
 		return new LevelSeekIterator(fileManager, this, interval);
 	}
 	
-	public void add(long time, FileMeta file) {
+	public void add(long time, FileMeta fileMeta) {
 		Queue<FileMeta> list = timeFileMap.get(time);
 		if(list == null) {
 			try{
@@ -91,7 +113,7 @@ public abstract class Level {
 				lock.unlock();
 			}
 		}
-		list.add(file);
+		list.add(fileMeta);
 	}
 	
 	public Queue<FileMeta> getFiles(long time){
@@ -188,5 +210,5 @@ public abstract class Level {
 	public abstract long getStoreCounter();
 
 	public abstract byte[] getValue(InternalKey key) throws IOException;
-	
+
 }

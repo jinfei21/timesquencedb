@@ -1,7 +1,9 @@
 package com.ctriposs.tsdb;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
@@ -14,7 +16,9 @@ import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MapFileLogReader;
 import com.ctriposs.tsdb.table.MemTable;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public class DBEngine implements IDB {
 
@@ -76,6 +80,29 @@ public class DBEngine implements IDB {
 			entry.getValue().start();
 		}
 		
+		this.storeLevel.recoveryData();
+		recoveryLog();
+	}
+	
+	private void recoveryLog()throws IOException{
+		List<File> files = FileUtil.listFiles(new File(fileManager.getStoreDir()), "log");
+		
+		for(File file:files){
+			ILogReader logReader = new MapFileLogReader(file);
+
+			String name[] = file.getName().split("[-|.]");
+			long time = Long.parseLong(name[0]);
+			long fileNumber = Long.parseLong(name[1]);
+			fileManager.upateFileNumber(fileNumber);
+			
+			try {
+				storeLevel.addMemTable(logReader.getMemTable());
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+			
+			logReader.close();
+		}
 		
 	}
 

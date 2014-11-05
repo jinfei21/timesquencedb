@@ -29,10 +29,10 @@ public class MapFileStorage implements IStorage {
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 	
-	public MapFileStorage(File file, long capacity) throws IOException {
+	public MapFileStorage(File file) throws IOException {
 		raf = new RandomAccessFile(file, "rw");
 		fullFileName = file.getPath();
-		mappedByteBuffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, capacity);
+		mappedByteBuffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, file.length());
 		threadLocalBuffer = new ThreadLocalByteBuffer(mappedByteBuffer);
 	}
 
