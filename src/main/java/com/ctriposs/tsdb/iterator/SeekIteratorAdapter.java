@@ -20,7 +20,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private String curSeekTable;
 	private String curSeekColumn;
 	
-	public SeekIteratorAdapter(FileManager fileManage, LevelSeekIterator... its) {
+	public SeekIteratorAdapter(FileManager fileManager, LevelSeekIterator... its) {
 
 		this.itQueue = new PriorityQueue<LevelSeekIterator>(5, new Comparator<LevelSeekIterator>() {
 
