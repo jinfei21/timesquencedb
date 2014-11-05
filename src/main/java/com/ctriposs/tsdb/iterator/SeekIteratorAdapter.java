@@ -50,7 +50,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public boolean hasNext() {
 
 		boolean result = false;
-
 		if(itQueue != null) {
 			for (LevelSeekIterator it : itQueue) {
 				if(it.hasNext()) {
@@ -66,8 +65,17 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 	@Override
 	public boolean hasPrev() {
-		// TODO Auto-generated method stub
-		return false;
+		boolean result = false;
+		if(itQueue != null) {
+			for (LevelSeekIterator it : itQueue) {
+				if(it.hasPrev()) {
+					result = true;
+                    break;
+				}
+			}
+		}
+
+		return result;
 	}
 
 	@Override

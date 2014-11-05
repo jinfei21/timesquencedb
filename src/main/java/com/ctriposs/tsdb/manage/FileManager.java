@@ -17,11 +17,13 @@ public class FileManager {
 	private AtomicLong maxFileNumber = new AtomicLong(1L); 
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
+    private long maxPeriod; 
    
-	public FileManager(String dir,  InternalKeyComparator internalKeyComparator, NameManager nameManager){
+	public FileManager(String dir,long maxPeriod, InternalKeyComparator internalKeyComparator, NameManager nameManager){
 		this.dir = dir;
 		this.internalKeyComparator = internalKeyComparator;
 		this.nameManager = nameManager;
+		this.maxPeriod = maxPeriod;
 	}
 	
 	public int compare(InternalKey o1, InternalKey o2){
@@ -51,4 +53,9 @@ public class FileManager {
     public InternalKeyComparator getInternalKeyComparator() {
         return internalKeyComparator;
     }
+
+	public long getMaxPeriod() {
+		return maxPeriod;
+	}
+
 }

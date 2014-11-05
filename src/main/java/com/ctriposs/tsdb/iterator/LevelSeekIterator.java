@@ -74,6 +74,43 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		return result;
 	}
 
+
+	@Override
+	public boolean hasPrev() {
+		boolean result = false;
+		if(itQueue != null) {
+			for (IFileIterator<InternalKey, byte[]> it : itQueue) {
+				if(it.hasPrev()) {
+					result = true;
+                    break;
+				}
+			}
+		}
+		
+		if(!result) {
+			curSeekTime -= interval;
+			if(curSeekTime < System.currentTimeMillis()-fileManager.getMaxPeriod()) {
+				try {
+					itQueue = getPrevIterators(curSeekTime);
+					if(null != itQueue){
+						for(IFileIterator<InternalKey, byte[]> it:itQueue){
+							it.seek(seekKey.getCode(),curSeekTime);
+						}		
+						findLargest();
+						direction = Direction.reverse;
+					}
+				} catch (IOException e) {
+					result = false;
+					throw new RuntimeException(e);
+				}
+			}else{
+				result = false;
+			}
+		}
+
+		return result;
+	}
+	
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
@@ -221,6 +258,39 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
+	private Queue<IFileIterator<InternalKey, byte[]>> getPrevIterators(long time) throws IOException {
+
+		if(time < System.currentTimeMillis()-fileManager.getMaxPeriod()){
+			return null;
+		}
+
+		curSeekTime = time;
+		Queue<FileMeta> metaQueue = level.getFiles(time);
+		if(metaQueue != null) {
+			Queue<IFileIterator<InternalKey, byte[]>> queue = new PriorityQueue<IFileIterator<InternalKey, byte[]>>(5, new Comparator<IFileIterator<InternalKey, byte[]>>() {
+
+				@Override
+				public int compare(IFileIterator<InternalKey, byte[]> o1,IFileIterator<InternalKey, byte[]> o2) {
+					int diff = (int) (o2.priority() - o1.priority());
+					return diff;
+				}
+			});
+			
+			for(FileMeta meta : metaQueue) {
+				queue.add(new FileSeekIterator(new PureFileStorage(meta.getFile()),meta.getFileNumber()));
+			}
+			
+			if(itQueue!=null){
+				for(IFileIterator<InternalKey, byte[]> it:itQueue){
+					it.close();
+				}
+			}
+			return queue;
+		} else {
+			return getPrevIterators(time - interval);
+		}
+	}
+	
 
 	@Override
 	public String table() {
@@ -295,9 +365,4 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		forward,reverse
 	}
 
-	@Override
-	public boolean hasPrev() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 }
