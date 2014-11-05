@@ -45,4 +45,9 @@ public class NameManager {
 	public String getName(short code){
 		return codeMap.get(code);
 	}
+	
+	public void add(String name,short code){
+		nameMap.put(name, code);
+		codeMap.put(code, name);  
+	}
 }

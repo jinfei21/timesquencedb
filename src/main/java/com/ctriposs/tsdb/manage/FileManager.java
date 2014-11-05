@@ -57,5 +57,10 @@ public class FileManager {
 	public long getMaxPeriod() {
 		return maxPeriod;
 	}
+	
+	public void recoveryName()throws IOException {
+		
+	}
+	
 
 }

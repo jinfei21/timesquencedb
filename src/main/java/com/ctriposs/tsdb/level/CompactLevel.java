@@ -24,8 +24,8 @@ public class CompactLevel extends Level {
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
     public final static long ONE_HOUR = 1000 * 60 * 60L;
 
-	private AtomicLong purgeCounter = new AtomicLong(0);
-	private AtomicLong purgeErrorCounter = new AtomicLong(0);
+	private AtomicLong storeCounter = new AtomicLong(0);
+	private AtomicLong storeErrorCounter = new AtomicLong(0);
 	private Level prevLevel;
 
 	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
@@ -33,24 +33,23 @@ public class CompactLevel extends Level {
 		this.prevLevel = prevLevel;
 	}
 
+	public long getStoreCounter(){
+		return storeCounter.get();
+	}
+	
+	public long getStoreErrorCounter(){
+		return storeErrorCounter.get();
+	}
+
 	@Override
 	public void incrementStoreError() {
-		purgeErrorCounter.incrementAndGet();
+		storeErrorCounter.incrementAndGet();
+		
 	}
 
 	@Override
 	public void incrementStoreCount() {
-		purgeCounter.incrementAndGet();
-	}
-
-	@Override
-	public long getStoreErrorCounter() {
-		return purgeErrorCounter.get();
-	}
-
-	@Override
-	public long getStoreCounter() {
-		return purgeCounter.get();
+		storeCounter.incrementAndGet();
 	}
 
 	class CompactTask extends Task {

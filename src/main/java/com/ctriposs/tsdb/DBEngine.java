@@ -75,6 +75,8 @@ public class DBEngine implements IDB {
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().start();
 		}
+		
+		
 	}
 
 	@Override

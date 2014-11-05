@@ -4,11 +4,13 @@ import static java.nio.file.Files.isSymbolicLink;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
 import sun.nio.ch.FileChannelImpl;
 
 public class FileUtil {
@@ -38,6 +40,26 @@ public class FileUtil {
     	List<File> list = new ArrayList<File>();
     	if(dir.exists()) {
     		for (File f : dir.listFiles()) {
+    			if(f.isFile()) {
+    				list.add(f);
+    			}
+    		}
+    	}
+    		
+    	return list;
+    }
+    
+    public static List<File> listFiles(File dir,String suffix){
+    	List<File> list = new ArrayList<File>();
+    	if(dir.exists()) {
+    		for (File f : dir.listFiles(new FilenameFilter() {
+				
+				@Override
+				public boolean accept(File fdir, String name) {
+					System.out.println(fdir+"|"+name);
+					return false;
+				}
+			})) {
     			if(f.isFile()) {
     				list.add(f);
     			}
