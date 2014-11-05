@@ -152,7 +152,7 @@ public abstract class Level {
 	
 	public abstract class Task implements Runnable {
 
-		private int num;
+		protected int num;
 
 		public Task(int num) {
 			this.num = num;

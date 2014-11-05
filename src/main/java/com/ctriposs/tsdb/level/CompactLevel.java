@@ -24,7 +24,6 @@ public class CompactLevel extends Level {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
     public final static long ONE_HOUR = 1000 * 60 * 60L;
-    private static final int MAX_SLEEP_TIME = 5 * 1000;
 
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
