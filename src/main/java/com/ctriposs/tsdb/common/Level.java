@@ -96,6 +96,14 @@ public abstract class Level {
 	public long format(long time) {
 		return time/interval*interval;
 	}
+	
+    public ConcurrentSkipListMap<Long, Queue<FileMeta>> getTimeFileMap() {
+        return timeFileMap;
+    }
+	
+    public int getLevelNum(){
+    	return level;
+    }
 
 	public void delete(long afterTime) throws IOException {
 		for(Entry<Long, Queue<FileMeta>> entry : timeFileMap.entrySet()) {
@@ -170,10 +178,6 @@ public abstract class Level {
 	
 	public abstract long getStoreCounter();
 
-    public ConcurrentSkipListMap<Long, Queue<FileMeta>> getTimeFileMap() {
-        return timeFileMap;
-    }
-	
 	public abstract byte[] getValue(InternalKey key) throws IOException;
 	
 }

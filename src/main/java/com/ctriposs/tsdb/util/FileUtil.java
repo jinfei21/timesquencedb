@@ -5,12 +5,10 @@ import static java.nio.file.Files.isSymbolicLink;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
 import sun.nio.ch.FileChannelImpl;
 
 public class FileUtil {

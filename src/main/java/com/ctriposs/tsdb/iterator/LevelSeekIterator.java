@@ -34,6 +34,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		this.curEntry = null;
 		this.curIterator = null;
 		this.iterators = null;
+		this.curSeekTime = 0;
 	}
 
 	@Override
@@ -62,8 +63,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 						direction = Direction.forward;
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
 					result = false;
+					throw new RuntimeException(e);
 				}
 			}else{
 				result = false;
