@@ -14,7 +14,7 @@ public class DBWriter {
 
 	private IStorage storage;
 	private long timeCount = 0;
-	private long timeIndex = -1;
+	private long timeIndex = 0;
 	private InternalKey smallest = null;
 	private InternalKey largest = null;
 	private AtomicLong valueOffset = null;
@@ -31,8 +31,8 @@ public class DBWriter {
 	}
 	
 	public void add(InternalKey key, byte[] value)throws IOException {
-		timeIndex++;
-		if(timeIndex == 0) {
+		++timeIndex;
+		if(timeIndex == 1) {
 			smallest = key;
 		}
 		
@@ -71,7 +71,7 @@ public class DBWriter {
 	public FileMeta close()throws IOException {
 		long cOffset = valueOffset.get();
 		writeCodeArea();
-		writeHead(cOffset,codeMap.size(), timeIndex+1, smallest, largest);
+		writeHead(cOffset,codeMap.size(), timeIndex, smallest, largest);
 		storage.close();
 		return new FileMeta(fileNumber, new File(storage.getName()), smallest, largest);
 	}

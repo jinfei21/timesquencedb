@@ -107,7 +107,7 @@ public class CompactLevel extends Level {
             }
 		}
 
-        private void mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
+        private FileMeta mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
         	 MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
             long fileLen = 0;
@@ -126,6 +126,7 @@ public class CompactLevel extends Level {
                 Map.Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
+            return dbWriter.close();
         }
 		
 	}
