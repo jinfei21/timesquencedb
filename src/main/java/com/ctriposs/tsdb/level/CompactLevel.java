@@ -17,7 +17,6 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.DateFormatter;
 
 public class CompactLevel extends Level {
