@@ -188,6 +188,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 							int diff = fileManager.compare(smallest.key(),it.key());
 							if(0==diff){
 								continue;
+							}else{
+								break;
 							}
 						}
 
@@ -215,6 +217,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 							int diff = fileManager.compare(largest.key(),it.key());
 							if(0==diff){
 								continue;
+							}else{
+								break;
 							}
 						}
 					}					

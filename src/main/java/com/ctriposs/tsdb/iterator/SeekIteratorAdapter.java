@@ -25,12 +25,12 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.itQueue = new PriorityQueue<LevelSeekIterator>(5, new Comparator<LevelSeekIterator>() {
 
 			@Override
-			public int compare(LevelSeekIterator o1,
-					LevelSeekIterator o2) {
+			public int compare(LevelSeekIterator o1,LevelSeekIterator o2) {
 				int diff = o1.getLevelNum() - o2.getLevelNum();
 				return diff;
 			}
 		});
+		
 		for(LevelSeekIterator it:its){
 			itQueue.add(it);
 		}
@@ -97,6 +97,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 		Entry<InternalKey, byte[]> entry = curIt.next();
 		findSmallest();
+		if(entry != null){
+			curSeekTime = entry.getKey().getTime();
+		}
 		return entry;
 	}
 
@@ -118,6 +121,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		}
 		Entry<InternalKey, byte[]> entry = curIt.prev();
 		findLargest();
+		if(entry != null){
+			curSeekTime = entry.getKey().getTime();
+		}
 		return entry;		
 	}
 
@@ -147,6 +153,15 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}else if(fileManager.compare(smallest.key(), it.key())>0){
 						smallest = it;
 					}else if(fileManager.compare(smallest.key(), it.key())==0){
+						while(it.hasNext()){
+							it.next();
+							int diff = fileManager.compare(smallest.key(),it.key());
+							if(0==diff){
+								continue;
+							}else{
+								break;
+							}
+						}
 						smallest = it;
 					}
 				}
@@ -166,7 +181,15 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}else if(fileManager.compare(largest.key(), it.key())<0){
 						largest = it;
 					}else if(fileManager.compare(largest.key(), it.key())==0){
-					
+						while(it.hasPrev()){
+							it.prev();
+							int diff = fileManager.compare(largest.key(),it.key());
+							if(0==diff){
+								continue;
+							}else{
+								break;
+							}
+						}
 					}
 					itQueue.add(it);
 				}

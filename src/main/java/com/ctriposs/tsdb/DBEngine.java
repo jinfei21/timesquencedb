@@ -65,7 +65,7 @@ public class DBEngine implements IDB {
 			this.internalKeyComparator = config.getInternalKeyComparator();
 		}
 		this.nameManager = new NameManager(config.getDBDir());
-		this.fileManager = new FileManager(config.getDBDir(), internalKeyComparator, nameManager);
+		this.fileManager = new FileManager(config.getDBDir(),config.getMaxPeriod(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);

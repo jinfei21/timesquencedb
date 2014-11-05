@@ -76,7 +76,14 @@ public abstract class Level {
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityQueue<FileMeta>();
+					list = new PriorityQueue<FileMeta>(5,new Comparator<FileMeta>() {
+
+						@Override
+						public int compare(FileMeta o1, FileMeta o2) {
+							int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
+							return diff;
+						}
+					});
 					timeFileMap.put(time, list);
 				}
 			} finally {
