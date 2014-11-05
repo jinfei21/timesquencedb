@@ -1,7 +1,7 @@
 package com.ctriposs.tsdb;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -24,9 +24,9 @@ public class DBEnginePutTest {
         
         String data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         
-        Map<Long,String> map = new LinkedHashMap<Long,String>();
+        Map<Long,String> map = new HashMap<Long,String>();
         
-        for (int i = 0; i < INIT_COUNT; i++) {
+        for (int i = 0; i < 2*INIT_COUNT; i++) {
         	String n = String.valueOf(random.nextInt(300));
 
         	long l = System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class DBEnginePutTest {
         		if(d[1].equals(dd)){
         			System.out.println("OK");
         		}else{
-        			System.out.print(++error+"error "+entry.getValue());
+        			System.out.println(++error+"error "+entry.getValue());
         		}
         	}else{
         		System.out.println(++miss+"not found "+entry.getValue()+"-"+entry.getKey());

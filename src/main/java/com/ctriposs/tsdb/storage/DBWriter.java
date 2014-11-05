@@ -60,9 +60,7 @@ public class DBWriter {
 		for(Entry<Integer,CodeItem> entry: codeMap.entrySet()){
 			long cOffset = valueOffset.getAndAdd(CodeItem.CODE_ITEM_SIZE);
 			storage.put(cOffset, entry.getValue().toByte());
-			System.out.print(entry.getValue().getCode()+",");
 		}
-		System.out.println();
 	}
 	
 	public void writeHead(long codeOffset,int codeCount,long timeCount,InternalKey smallest,InternalKey largest)throws IOException {

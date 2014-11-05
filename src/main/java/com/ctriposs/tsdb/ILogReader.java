@@ -2,7 +2,7 @@ package com.ctriposs.tsdb;
 
 import java.io.IOException;
 
-public interface ILogWriter {
+public interface ILogReader {
 
     void close() throws IOException;
 

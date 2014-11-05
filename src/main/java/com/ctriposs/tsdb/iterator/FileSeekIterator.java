@@ -17,8 +17,8 @@ import com.ctriposs.tsdb.storage.TimeItem;
 public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	private IStorage storage;
-	private int maxCodeBlockIndex = 0;
-	private int maxTimeBlockIndex = 0;
+	private int maxCodeBlockIndex = -2;
+	private int maxTimeBlockIndex = -2;
 	private int curCodeBlockIndex = -1;
 	private int curTimeBlockIndex = -1;
 	
@@ -42,7 +42,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	
 	@Override
 	public boolean hasNext() {
-		if(curTimeBlockIndex < maxTimeBlockIndex){
+		if(curTimeBlockIndex <= maxTimeBlockIndex){
 			if(curTimeBlock != null){
 				if(!curTimeBlock.hasNext()){
 					try{
@@ -194,7 +194,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 		}
 		curTimeBlockIndex = -1;
-		maxTimeBlockIndex = -1;
+		maxTimeBlockIndex = -2;
 	}
 
 
@@ -229,7 +229,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			}
 		}
 		curTimeBlockIndex = -1;
-		maxTimeBlockIndex = -1;
+		maxTimeBlockIndex = -2;
 	}
 
 

@@ -29,14 +29,6 @@ public class FileManager {
 		this.internalKeyComparator = internalKeyComparator;
 		this.nameManager = nameManager;
 	}
-
-    public Queue<FileMeta> copy(Queue<FileMeta> oldList) {
-        return new PriorityBlockingQueue<FileMeta>(oldList);
-    }
-
-	private long format(long time,int level){
-		return time/ MemTable.MINUTE*MemTable.MINUTE;
-	}
 	
 	public int compare(InternalKey o1, InternalKey o2){
 		return internalKeyComparator.compare(o1,o2);

@@ -21,7 +21,7 @@ public abstract class Level {
 
 	public final static int MAX_SIZE = 6;
 	public final static long FILE_SIZE = 256 * 1024 * 1024L;
-	public final static int THREAD_COUNT = 2;
+	public final static int THREAD_COUNT = 3;
 	
 	protected ExecutorService executor = Executors.newFixedThreadPool(2);
 	protected Task[] tasks;
@@ -124,6 +124,7 @@ public abstract class Level {
 						if(0==diff){
 							return it.value();
 						}else if(diff < 0){
+							System.out.print(diff+"not found,  ");
 							break;
 						}
 					}

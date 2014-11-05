@@ -68,4 +68,14 @@ public class InternalKey implements Comparable<InternalKey> {
 		}
 		return diff;
 	}
+	
+	@Override
+	public String toString(){
+		final StringBuilder sb = new StringBuilder();
+		sb.append("InternalKey");
+		sb.append("{code=").append(code);
+        sb.append(", time=").append(time);
+		sb.append('}');
+		return sb.toString();
+	}
 }

@@ -54,7 +54,7 @@ public class FileMeta implements Comparable<FileMeta> {
 
 	@Override
 	public int compareTo(FileMeta o) {
-		return (int) (o.fileNumber-fileNumber);
+		return (int) (fileNumber-o.fileNumber);
 	}
 	
 }
