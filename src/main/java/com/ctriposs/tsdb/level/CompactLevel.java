@@ -109,20 +109,22 @@ public class CompactLevel extends Level {
 		}
 
         private void mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
-        	 MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager);
+        	 MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
+            long fileLen = 0;
             for (FileMeta meta : fileMetaList) {
                 FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
-                fileSeekIterator.addIterator(fileIterator);;
+                mergeIterator.addIterator(fileIterator);;
                 totalTimeCount += fileIterator.timeItemCount();
+                fileLen += meta.getFile().length();
             }
 
            
             long fileNumber = fileManager.getFileNumber();
-            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), MemTable.MAX_MEM_SIZE);
+            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber(), level), fileLen);
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
-            while (fileSeekIterator.hasNext()) {
-                Map.Entry<InternalKey, byte[]> entry = fileSeekIterator.next();
+            while (mergeIterator.hasNext()) {
+                Map.Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
         }
