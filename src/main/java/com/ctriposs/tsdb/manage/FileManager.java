@@ -73,11 +73,16 @@ public class FileManager {
 		List<File> list = FileUtil.listFiles(new File(dir),"name");
 		for(File file:list){
 			ILogReader logReader = new MapFileLogReader(file,0,internalKeyComparator);
-			
+			boolean delete = false;
 			for(Entry<String,Short>entry:logReader.getNameMap().entrySet()){
 				nameManager.add(entry.getKey(), entry.getValue());
+				delete = true;
 			}
 			logReader.close();
+			if(delete){
+				FileUtil.forceDelete(file);
+			}
+			
 		}
 	}
 	

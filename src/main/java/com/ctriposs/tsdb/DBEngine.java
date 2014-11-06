@@ -96,8 +96,11 @@ public class DBEngine implements IDB {
 			fileManager.upateFileNumber(fileNumber);
 			ILogReader logReader = new MapFileLogReader(file,fileNumber,internalKeyComparator);
 			try {
-				
-				storeLevel.addMemTable(logReader.getMemTable());
+				MemTable memTable = logReader.getMemTable();
+				memTable.close();
+				if(!memTable.isEmpty()){
+					storeLevel.addMemTable(memTable);
+				}
 			} catch (Exception e) {
 				throw new IOException(e);
 			}finally{

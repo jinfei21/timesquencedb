@@ -10,6 +10,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -47,7 +48,7 @@ public abstract class Level {
 		@Override
 		public int compare(FileMeta o1, FileMeta o2) {
 			int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
-			return diff;
+			return -diff;
 		}
 	};
 	
@@ -75,6 +76,7 @@ public abstract class Level {
 			FileMeta fileMeta = new FileMeta(fileNumber, file, head.getSmallest(),head.getLargest());
 			add(time, fileMeta);
 			storage.close();
+			fileManager.upateFileNumber(fileNumber);
 		}
 
 	}
@@ -106,7 +108,7 @@ public abstract class Level {
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityQueue<FileMeta>(5,fileMetaComparator);
+					list = new PriorityBlockingQueue<FileMeta>(5,fileMetaComparator);
 					timeFileMap.put(time, list);
 				}
 			} finally {

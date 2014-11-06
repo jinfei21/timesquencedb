@@ -6,12 +6,12 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.storage.CodeItem;
 
-public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>{
+public class MergeFileSeekIterator{
 	
 	private FileManager fileManager;
 	private Queue<IFileIterator<InternalKey, byte[]>> itQueue;
@@ -46,7 +46,6 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		}
 	}
 
-	@Override
 	public boolean hasNext() {
 
 		boolean result = false;
@@ -56,6 +55,15 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 				if(it.hasNext()) {
 					result = true;
                     break;
+				}else{
+					try {
+						if(it.hasNextCode()){
+							result = true;
+		                    break;
+						}
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
 				}
 			}
 		}		
@@ -63,7 +71,6 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 	}
 
 
-	@Override
 	public boolean hasPrev() {
 		boolean result = false;
 
@@ -72,21 +79,30 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 				if(it.hasPrev()) {
 					result = true;
                     break;
+				}else{
+					try {
+						if(it.hasPrevCode()){
+							result = true;
+		                    break;
+						}
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
 				}
 			}
 		}		
 		return result;
 	}
 	
-	@Override
-	public Entry<InternalKey, byte[]> next() {
+	
+	public Entry<InternalKey, byte[]> next() throws IOException {
 		if (direction != Direction.forward) {
 			for (IFileIterator<InternalKey, byte[]> it : itQueue) {
 
 				if (it != curIt) {
 					try {
 						if (it.hasNext()) {
-							it.seek(seekKey.getCode(),curSeekTime);
+							it.seekToCurrent(it.currentCode().getCode());
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -100,14 +116,14 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return curEntry;
 	}
 
-	@Override
-	public Entry<InternalKey, byte[]> prev() {
+
+	public Entry<InternalKey, byte[]> prev() throws IOException {
 		if(direction != Direction.reverse){
 			for(IFileIterator<InternalKey, byte[]> it:itQueue){
 				if(curIt != it){
 					try {
 						if(it.hasNext()){
-							it.seek(seekKey.getCode(),curSeekTime);
+							it.seekToCurrent(it.currentCode().getCode());
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -121,7 +137,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return curEntry;		
 	}
 
-	@Override
+
 	public void seek(String table, String column, long time) throws IOException {
 		
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column),time);
@@ -129,13 +145,31 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		if(null != itQueue){
 			for(IFileIterator<InternalKey, byte[]> it:itQueue){
 				it.seek(seekKey.getCode(),curSeekTime);
+				it.next();
 			}		
 			findSmallest();
 			direction = Direction.forward;
 		}
 	}
 	
-	private void findSmallest(){
+	public void seekToFirst() throws IOException {
+		
+		if(null != itQueue){
+			for(IFileIterator<InternalKey, byte[]> it:itQueue){
+				if(it.hasNextCode()){
+					CodeItem item = it.nextCode();
+					if(item != null){
+						it.seekToCurrent(item.getCode());
+					}
+					it.next();
+				}
+			}		
+			findSmallest();
+			direction = Direction.forward;
+		}
+	}
+	
+	private void findSmallest() throws IOException{
 		if(null != itQueue){
 			IFileIterator<InternalKey, byte[]> smallest = null;
 			for(IFileIterator<InternalKey, byte[]> it:itQueue){
@@ -158,13 +192,22 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 						}
 					}
 					itQueue.add(it);
+				}else{
+					if(it.hasNextCode()){
+						CodeItem item = it.nextCode();
+						if(item != null){
+							it.seekToCurrent(item.getCode());
+						}
+						it.prev();
+						itQueue.add(it);
+					}
 				}
 			}
 			curIt = smallest;
 		}
 	}
 	
-	private void findLargest(){
+	private void findLargest() throws IOException{
 		if(null != itQueue){
 			IFileIterator<InternalKey, byte[]> largest = null;
 			for(IFileIterator<InternalKey, byte[]> it:itQueue){
@@ -186,13 +229,22 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 						}
 					}
 					itQueue.add(it);
+				}else{
+					if(it.hasPrevCode()){
+						CodeItem item = it.prevCode();
+						if(item != null){
+							it.seekToCurrent(item.getCode());
+						}
+						it.prev();
+						itQueue.add(it);
+					}
 				}
 			}
 			curIt = largest;
 		}
 	}
 	
-	@Override
+
 	public String table() {
 		if(curEntry != null){
 			fileManager.getName(curEntry.getKey().getTableCode());
@@ -200,7 +252,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return null;
 	}
 
-	@Override
+	
 	public String column() {
 		if(curEntry != null){
 			fileManager.getName(curEntry.getKey().getColumnCode());
@@ -208,7 +260,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return null;
 	}
 
-	@Override
+
 	public long time() {
 		if(curEntry != null){
 			return curEntry.getKey().getTime();
@@ -216,7 +268,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return 0;
 	}
 
-	@Override
+
 	public byte[] value() throws IOException {
 		if(curEntry != null){
 			return curEntry.getValue();
@@ -224,7 +276,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return null;
 	}
 
-	@Override
+
 	public boolean valid() {
 		if(curEntry==null){
 			return false;
@@ -233,7 +285,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		}
 	}
 
-	@Override
+
 	public void close() throws IOException{
 		
 		if(null != itQueue){
@@ -243,7 +295,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		}
 	}
 
-	@Override
+
 	public InternalKey key() {
 		if(curEntry != null){
 			return curEntry.getKey();
@@ -251,7 +303,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 		return null;
 	}
 	
-	@Override
+	
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}

@@ -49,16 +49,17 @@ public class MapFileStorage implements IStorage {
 		}
 		if (raf != null) {
 			raf.close();
-		}
+		}		
+
 		//implies system GC
 		try {
 			FileUtil.unmap(mappedByteBuffer);
 		} catch (Throwable e) {
 			throw new IOException(e);
 		}
+
 		threadLocalBuffer.set(null);
 		threadLocalBuffer = null;
-
 	}
 
 	@Override

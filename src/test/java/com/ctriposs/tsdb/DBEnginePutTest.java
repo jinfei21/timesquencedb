@@ -47,7 +47,7 @@ public class DBEnginePutTest {
         			//System.out.println("OK");
         		}else{
         			System.out.println(++error+"error ");
-        			System.out.println("实际值："+entry.getValue());
+        			System.out.println("实际值："+d[1]);
         			System.out.println("存储值："+dd);
         		}
         	}else{

@@ -85,6 +85,7 @@ public class StoreLevel extends Level {
 		public void process() throws Exception {
 			table = memQueue.poll();
 			if(table == null) return;
+			
 			for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();
@@ -97,8 +98,9 @@ public class StoreLevel extends Level {
 					storeErrorCounter.incrementAndGet();
 				}						
 			}
+
 			fileManager.delete(new File(table.getLogFile()));
-		
+			
 		}
 
 		private FileMeta storeFile(Long time, ConcurrentSkipListMap<InternalKey, byte[]> dataMap, long fileNumber) throws IOException {

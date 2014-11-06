@@ -49,6 +49,7 @@ public class FileMeta implements Comparable<FileMeta> {
 		sb.append("FileMeta");
 		sb.append("{name=").append(file.getName());
         sb.append(", fileSize=").append(file.length());
+        sb.append(", fileNumber=").append(fileNumber);
         sb.append(", smallest=").append(smallest);
         sb.append(", largest=").append(largest);
 		sb.append('}');
@@ -58,7 +59,8 @@ public class FileMeta implements Comparable<FileMeta> {
 
 	@Override
 	public int compareTo(FileMeta o) {
-		return (int) (o.fileNumber-fileNumber);
+		int diff = (int) (o.fileNumber-fileNumber);
+		return -diff;
 	}
 	
 }

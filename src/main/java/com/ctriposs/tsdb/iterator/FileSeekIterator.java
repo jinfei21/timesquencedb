@@ -116,6 +116,76 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		
 		return false;
 	}
+	
+
+	@Override
+	public boolean hasNextCode() throws IOException {
+		if(curCodeBlockIndex <= maxCodeBlockIndex){
+			if(curCodeBlock != null){
+				if(!curCodeBlock.hasNext()){
+					try{
+						nextCodeBlock();
+					}catch(IOException e){
+						throw new RuntimeException(e);
+					}
+					if(curCodeBlock == null){
+						return false;
+					}else{
+						return true;
+					}
+				}else{
+					return true;
+				}
+			}else{
+				try{
+					nextCodeBlock();
+				}catch(IOException e){
+					throw new RuntimeException(e);
+				}
+				if(curCodeBlock == null){
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean hasPrevCode() throws IOException {
+		if(curCodeBlockIndex >= 0){
+			if(curCodeBlock != null){
+				if(!curCodeBlock.hasPrev()){
+					try{
+						prevCodeBlock();
+					}catch(IOException e){
+						throw new RuntimeException(e);
+					}
+					if(curCodeBlock == null){
+						return false;
+					}else{
+						return true;
+					}
+				}else{
+					return true;
+				}
+			}else{
+				try{
+					prevCodeBlock();
+				}catch(IOException e){
+					throw new RuntimeException(e);
+				}
+				if(curCodeBlock == null){
+					return false;
+				}else{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 
 	private void nextCodeBlock() throws IOException{
 		++curCodeBlockIndex;
@@ -238,29 +308,56 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		curTimeBlockIndex = -1;
 		maxTimeBlockIndex = -2;
 	}
-
+	
 	@Override
-	public void seekToFirst(int code) throws IOException {
+	public void seekToFirst(int code) throws IOException{
+		maxTimeBlockIndex = -2;
+		curCodeBlockIndex = -1;
+		curTimeBlockIndex = -1;
+		if (head.containCode(code)) {
+			if(curCodeBlock==null){
+				nextCodeBlock();
+			}
+			find(code);
+			// read time
+			if (curCodeItem != null) {
+				nextTimeBlock();
+				if (curTimeBlock != null) {
+					return;
+				}
+			}
+		}
+		curTimeBlockIndex = -1;
+		maxTimeBlockIndex = -2;
+	}
+
+	private void find(int code)throws IOException {
+		if (curCodeBlock != null) {
+			while (!curCodeBlock.seek(code)) {
+				nextCodeBlock();
+				if (curCodeBlock == null) {
+					break;
+				}
+			}
+		}
+
+		if (curCodeBlock != null) {
+			curCodeItem = curCodeBlock.current();
+			if (curCodeItem != null) {
+				maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
+				curTimeBlockIndex = -1;
+			}
+		}
+	}
+	
+	@Override
+	public void seekToCurrent(int code) throws IOException {
 
 		if (head.containCode(code)) {
-			nextCodeBlock();
-			if (curCodeBlock != null) {
-				while (!curCodeBlock.seek(code)) {
-					nextCodeBlock();
-					if (curCodeBlock == null) {
-						break;
-					}
-				}
+			if(curCodeBlock==null){
+				nextCodeBlock();
 			}
-
-			if (curCodeBlock != null) {
-				curCodeItem = curCodeBlock.current();
-				if (curCodeItem != null) {
-					maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
-					curTimeBlockIndex = -1;
-				}
-			}
-			
+			find(code);
 			// read time
 			if (curCodeItem != null) {
 				nextTimeBlock();
@@ -375,21 +472,29 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			nextCodeBlock();
 		}
 		if(curCodeBlock != null){
-			return curCodeBlock.next();
+			curCodeItem = curCodeBlock.next();
+		}else{
+			curCodeItem = null;
 		}
-		return null;
+		return curCodeItem;
 	}
 
+	@Override
+	public CodeItem currentCode() throws IOException{
+		return curCodeItem;
+	}
+	
 	@Override
 	public CodeItem prevCode() throws IOException {
 		if(curCodeBlock == null){
 			prevCodeBlock();
 		}
 		if(curCodeBlock != null){
-			return curCodeBlock.prev();
+			curCodeItem = curCodeBlock.prev();
+		}else{
+			curCodeItem = null;
 		}
-
-		return null;
+		return curCodeItem;
 	}
 
 	@Override
@@ -412,7 +517,5 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	public long priority() {
 		return fileNumber;
 	}
-
-
 
 }
