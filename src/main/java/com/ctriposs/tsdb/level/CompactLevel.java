@@ -17,7 +17,6 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.util.DateFormatter;
 
 public class CompactLevel extends Level {
 
@@ -65,11 +64,9 @@ public class CompactLevel extends Level {
 		}
 
 		private boolean check(){
-			 if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)){
-				 return false;
-			 }else{
+
 				 return true;
-			 }
+			
 		}
 		@Override
 		public void process() throws Exception {
@@ -83,7 +80,7 @@ public class CompactLevel extends Level {
                 int power = (int) Math.pow(4, (double) (level - 1));
 
                 for (Long time : keySet) {
-                    long partition = DateFormatter.minuteFormatter(time, power);
+                    long partition = 0;
 
                     if (levelMap.containsKey(partition)) {
                         levelMap.get(partition).add(time);

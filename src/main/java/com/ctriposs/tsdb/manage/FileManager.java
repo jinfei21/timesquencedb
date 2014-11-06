@@ -72,7 +72,7 @@ public class FileManager {
 	public void recoveryName()throws IOException {
 		List<File> list = FileUtil.listFiles(new File(dir),"name");
 		for(File file:list){
-			ILogReader logReader = new MapFileLogReader(file);
+			ILogReader logReader = new MapFileLogReader(file,0,internalKeyComparator);
 			
 			for(Entry<String,Short>entry:logReader.getNameMap().entrySet()){
 				nameManager.add(entry.getKey(), entry.getValue());

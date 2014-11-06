@@ -75,9 +75,11 @@ public class DBEngine implements IDB {
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);
 		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
 		this.storeLevel.start();
-		//
+		//initialize compact level
+		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().start();
+			entry.getValue().recoveryData();
 		}
 		this.fileManager.recoveryName();
 		this.storeLevel.recoveryData();
@@ -88,20 +90,20 @@ public class DBEngine implements IDB {
 		List<File> files = FileUtil.listFiles(new File(fileManager.getStoreDir()), "log");
 		
 		for(File file:files){
-			ILogReader logReader = new MapFileLogReader(file);
-
+			
 			String name[] = file.getName().split("[-|.]");
-			long time = Long.parseLong(name[0]);
 			long fileNumber = Long.parseLong(name[1]);
 			fileManager.upateFileNumber(fileNumber);
-			
+			ILogReader logReader = new MapFileLogReader(file,fileNumber,internalKeyComparator);
 			try {
+				
 				storeLevel.addMemTable(logReader.getMemTable());
 			} catch (Exception e) {
 				throw new IOException(e);
-			}
+			}finally{
 			
-			logReader.close();
+				logReader.close();
+			}
 		}
 		
 	}
@@ -175,8 +177,8 @@ public class DBEngine implements IDB {
 
 	@Override
 	public void close() throws IOException {
-		
-		this.storeLevel.stop();
+		nameManager.close();
+		storeLevel.stop();
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().stop();

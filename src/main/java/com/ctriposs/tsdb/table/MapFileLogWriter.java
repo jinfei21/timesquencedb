@@ -1,5 +1,6 @@
 package com.ctriposs.tsdb.table;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +23,11 @@ public class MapFileLogWriter implements ILogWriter {
 	public MapFileLogWriter(String dir, String fileName, long capacity) throws IOException {
 		this.current = new AtomicInteger(0);
 		this.storage = new MapFileStorage(dir, System.currentTimeMillis(),fileName, capacity);
+	}
+	
+	public MapFileLogWriter(File file) throws IOException {
+		this.current = new AtomicInteger(0);
+		this.storage = new MapFileStorage(file);
 	}
 
 	@Override
