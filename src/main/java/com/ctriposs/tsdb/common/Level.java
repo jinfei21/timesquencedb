@@ -2,10 +2,10 @@ package com.ctriposs.tsdb.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
@@ -13,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.LevelSeekIterator;
@@ -151,11 +150,14 @@ public abstract class Level {
 	
 	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
-		Queue<FileMeta> list = getFiles(format(ts));
-		if(list != null) {
-			for(FileMeta meta : list) {
-				if(meta.contains(key)){
-					IStorage storage = new PureFileStorage(meta.getFile());
+		Queue<FileMeta> queue = getFiles(format(ts));
+		if(queue != null) {
+			FileMeta fileMetas[] = new FileMeta[queue.size()];
+			queue.toArray(fileMetas);
+			Arrays.sort(fileMetas, fileMetaComparator);
+			for(FileMeta fileMeta : fileMetas) {
+				if(fileMeta.contains(key)){
+					IStorage storage = new PureFileStorage(fileMeta.getFile());
 					FileSeekIterator it = new FileSeekIterator(storage);
 					it.seekToFirst(key.getCode());
 
