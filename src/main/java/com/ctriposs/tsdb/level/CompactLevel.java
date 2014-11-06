@@ -28,8 +28,12 @@ public class CompactLevel extends Level {
 	private Level prevLevel;
 
 	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
-		super(fileManager, level,interval,threads);
+		super(fileManager, level, interval, threads);
 		this.prevLevel = prevLevel;
+
+        for (int i = 0; i < threads; i++) {
+            tasks[i] = new CompactTask(i);
+        }
 	}
 
 	public long getStoreCounter(){
@@ -43,7 +47,6 @@ public class CompactLevel extends Level {
 	@Override
 	public void incrementStoreError() {
 		storeErrorCounter.incrementAndGet();
-		
 	}
 
 	@Override
@@ -63,10 +66,14 @@ public class CompactLevel extends Level {
 			return null;
 		}
 
-		private boolean check(){
+		private boolean check() {
+            if (level == 2 && (System.currentTimeMillis() - prevLevel.getTimeFileMap().firstKey()) < ONE_HOUR) {
+                return true;
+            } else if (level > 2) {
+                return prevLevel.getTimeFileMap().size() <= 4;
+            }
 
-				 return true;
-			
+            return false;
 		}
 
 		@Override

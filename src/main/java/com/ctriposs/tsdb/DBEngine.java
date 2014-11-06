@@ -25,10 +25,10 @@ public class DBEngine implements IDB {
 	/** The engine config*/
 	private DBConfig config;
 	
-	/** The memory table for kv*/
+	/** The active memory table*/
 	private MemTable memTable;
 	
-	/** Store memtable to file*/
+	/** Store memory table to file*/
 	private StoreLevel storeLevel;
 	
 	/** Compact files */
@@ -43,7 +43,7 @@ public class DBEngine implements IDB {
 	/** The comparator for key*/
 	private InternalKeyComparator internalKeyComparator;
 	
-	/** The memtable change lock. */
+	/** The memory table change lock. */
 	private final Lock lock = new ReentrantLock();
 	
 	/** The hit counter. */
@@ -77,11 +77,11 @@ public class DBEngine implements IDB {
 		this.fileManager = new FileManager(config.getDBDir(),config.getMaxPeriod(), internalKeyComparator, nameManager);
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
-		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);
+		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(), MemTable.MINUTE);
 		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
 		this.storeLevel.start();
+
 		//initialize compact level
-		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			//entry.getValue().recoveryData();
 			entry.getValue().start();
