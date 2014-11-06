@@ -90,7 +90,9 @@ public class DBEngine implements IDB {
 		List<File> files = FileUtil.listFiles(new File(fileManager.getStoreDir()), "log");
 		
 		for(File file:files){
-			
+			if(file.getPath().equals(memTable.getLogFile())){
+				continue;
+			}
 			String name[] = file.getName().split("[-|.]");
 			long fileNumber = Long.parseLong(name[1]);
 			fileManager.upateFileNumber(fileNumber);
@@ -98,14 +100,16 @@ public class DBEngine implements IDB {
 			try {
 				MemTable memTable = logReader.getMemTable();
 				memTable.close();
+				logReader.close();
 				if(!memTable.isEmpty()){
 					storeLevel.addMemTable(memTable);
+				}else{
+					
+					FileUtil.forceDelete(file);
+					
 				}
 			} catch (Exception e) {
 				throw new IOException(e);
-			}finally{
-			
-				logReader.close();
 			}
 		}
 		

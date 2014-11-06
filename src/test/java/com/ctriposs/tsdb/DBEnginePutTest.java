@@ -44,7 +44,7 @@ public class DBEnginePutTest {
         	if(s != null){
         		String dd = new String(s);
         		if(d[1].equals(dd)){
-        			//System.out.println("OK");
+        			System.out.println("OK");
         		}else{
         			System.out.println(++error+"error ");
         			System.out.println(" µº ÷µ£∫"+d[1]);
