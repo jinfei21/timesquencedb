@@ -68,6 +68,7 @@ public class CompactLevel extends Level {
 				 return true;
 			
 		}
+
 		@Override
 		public void process() throws Exception {
             System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
@@ -104,7 +105,7 @@ public class CompactLevel extends Level {
 		}
 
         private FileMeta mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
-        	 MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
+        	MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
             long fileLen = 0;
             for (FileMeta meta : fileMetaList) {
