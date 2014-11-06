@@ -35,13 +35,18 @@ public abstract class Level {
 	protected int level;
 	protected long interval;
 
+    /** The list change lock. */
+    private final Lock lock = new ReentrantLock();
+    /** The empty list remove lock. */
+    protected final Lock deleteLock = new ReentrantLock();
+
     protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
         @Override
         public int compare(Long o1, Long o2) {
             return (int) (o1 - o2);
         }
     });
-    
+
     private Comparator<FileMeta> fileMetaComparator =  new Comparator<FileMeta>() {
 
 		@Override
@@ -49,9 +54,6 @@ public abstract class Level {
 			return (int) (o2.getFileNumber() - o1.getFileNumber());
 		}
 	};
-	
-	/** The list change lock. */
-	private final Lock lock = new ReentrantLock();
 
 	public Level(FileManager fileManager, int level, long interval, int threads) {
 		this.fileManager = fileManager;

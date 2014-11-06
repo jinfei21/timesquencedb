@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.Level;
@@ -70,7 +72,7 @@ public class CompactLevel extends Level {
             if (level == 2 && (System.currentTimeMillis() - prevLevel.getTimeFileMap().firstKey()) < ONE_HOUR) {
                 return true;
             } else if (level > 2) {
-                return prevLevel.getTimeFileMap().size() <= 4;
+                return prevLevel.getTimeFileMap().size() >= 4;
             }
 
             return false;
@@ -82,21 +84,31 @@ public class CompactLevel extends Level {
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
             if (check()) {
-
                 Map<Long, List<Long>> levelMap = new HashMap<Long, List<Long>>();
                 NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
-                int power = (int) Math.pow(4, (double) (level - 1));
 
                 for (Long time : keySet) {
-                    long partition = 0;
-
-                    if (levelMap.containsKey(partition)) {
-                        levelMap.get(partition).add(time);
+                    if (prevLevel.getFiles(time).size() == 0) {
+                        try {
+                            deleteLock.lock();
+                            if (prevLevel.getFiles(time).size() == 0) {
+                                prevLevel.getTimeFileMap().remove(time);
+                            }
+                        } finally {
+                            deleteLock.unlock();
+                        }
                     } else {
-                        List<Long> timeList = new ArrayList<Long>();
-                        timeList.add(time);
-                        levelMap.put(partition, timeList);
+                        long partition = format(time);
+
+                        if (levelMap.containsKey(partition)) {
+                            levelMap.get(partition).add(time);
+                        } else {
+                            List<Long> timeList = new ArrayList<Long>();
+                            timeList.add(time);
+                            levelMap.put(partition, timeList);
+                        }
                     }
+
                 }
 
                 for (Map.Entry<Long, List<Long>> entry : levelMap.entrySet()) {
@@ -117,12 +129,11 @@ public class CompactLevel extends Level {
             long fileLen = 0;
             for (FileMeta meta : fileMetaList) {
                 FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
-                mergeIterator.addIterator(fileIterator);;
+                mergeIterator.addIterator(fileIterator);
                 totalTimeCount += fileIterator.timeItemCount();
                 fileLen += meta.getFile().length();
             }
 
-           
             long fileNumber = fileManager.getFileNumber();
             PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber(), level), fileLen);
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
@@ -130,9 +141,10 @@ public class CompactLevel extends Level {
                 Map.Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
+
+
             return dbWriter.close();
         }
-		
 	}
 
 	@Override
