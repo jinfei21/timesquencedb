@@ -35,7 +35,7 @@ public class MemTable {
 		this.fileNumber = fileNumber;
 	}
 	
-	public MemTable(File file,long fileNumber, InternalKeyComparator internalKeyComparator) throws IOException {
+	public MemTable(File file, long fileNumber, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
 		this.maxMemTableSize = MAX_MEM_SIZE;
 		this.internalKeyComparator = internalKeyComparator;

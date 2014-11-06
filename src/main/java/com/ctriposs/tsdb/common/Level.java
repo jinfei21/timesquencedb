@@ -46,15 +46,14 @@ public abstract class Level {
 
 		@Override
 		public int compare(FileMeta o1, FileMeta o2) {
-			int diff = (int) (o1.getFileNumber() - o2.getFileNumber());
-			return -diff;
+			return (int) (o2.getFileNumber() - o1.getFileNumber());
 		}
 	};
 	
 	/** The list change lock. */
 	private final Lock lock = new ReentrantLock();
 
-	public Level(FileManager fileManager, int level, long interval, int threads){
+	public Level(FileManager fileManager, int level, long interval, int threads) {
 		this.fileManager = fileManager;
 		this.level = level;
 		this.interval = interval;
@@ -107,7 +106,7 @@ public abstract class Level {
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityBlockingQueue<FileMeta>(5,fileMetaComparator);
+					list = new PriorityBlockingQueue<FileMeta>(5, fileMetaComparator);
 					timeFileMap.put(time, list);
 				}
 			} finally {
@@ -184,8 +183,6 @@ public abstract class Level {
 			this.num = num;
 		}
 		
-		public abstract byte[] getValue(InternalKey key);
-
 		@Override
 		public void run() {
 			while(run) {
@@ -194,13 +191,14 @@ public abstract class Level {
 					process();
 					Thread.sleep(500);
 				} catch (Throwable e) {
-					//TODO 
-					e.printStackTrace();
+					//TODO
 					incrementStoreError();
 				}
 			}
 		}
-		
+
+        public abstract byte[] getValue(InternalKey key);
+
 		public abstract void process() throws Exception;
 
 	}

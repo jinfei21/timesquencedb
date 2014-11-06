@@ -21,22 +21,19 @@ import com.ctriposs.tsdb.table.MemTable;
 
 public class StoreLevel extends Level {
 
-
 	private ArrayBlockingQueue<MemTable> memQueue;
 	protected AtomicInteger fileCount = new AtomicInteger(0);
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 
-	public StoreLevel(FileManager fileManager, int threads, int memCount,long interval) {
-		super(fileManager,0,interval,threads);
+	public StoreLevel(FileManager fileManager, int threads, int memCount, long interval) {
+		super(fileManager, 0, interval, threads);
 		this.memQueue = new ArrayBlockingQueue<MemTable>(memCount);		
 		
 		for(int i = 0; i < threads; i++){
 			tasks[i] = new MemTask(i);
 		}
-
 	}
-	
 
 	public void addMemTable(MemTable memTable) throws Exception {
 		if(memTable != null){
@@ -89,7 +86,7 @@ public class StoreLevel extends Level {
 			for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();
-					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(),table.getFileNumber());
+					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(), table.getFileNumber());
 					add(entry.getKey(), fileMeta);					
 					fileCount.decrementAndGet();
 				}catch(IOException e){
