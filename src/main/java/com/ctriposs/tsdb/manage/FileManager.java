@@ -2,12 +2,15 @@ package com.ctriposs.tsdb.manage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.ILogReader;
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
+import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MapFileLogReader;
 import com.ctriposs.tsdb.util.FileUtil;
@@ -22,7 +25,29 @@ public class FileManager {
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
     private long maxPeriod; 
+    
+	private Comparator<FileMeta> fileMetaComparator = new Comparator<FileMeta>(){
+
+		@Override
+		public int compare(FileMeta o1, FileMeta o2) {
+			
+			return (int) (o1.getFileNumber() - o2.getFileNumber());
+		}
+		
+	};
+	
+	private Comparator<IFileIterator<InternalKey, byte[]>> fileIteratorComparator = new Comparator<IFileIterator<InternalKey, byte[]>>(){
+
+		@Override
+		public int compare(IFileIterator<InternalKey, byte[]> o1,
+				IFileIterator<InternalKey, byte[]> o2) {
+			
+			return (int) (o1.priority() - o2.priority());
+		}
+	};
    
+	
+	
 	public FileManager(String dir,long maxPeriod, InternalKeyComparator internalKeyComparator, NameManager nameManager){
 		this.dir = dir;
 		this.internalKeyComparator = internalKeyComparator;
@@ -86,5 +111,11 @@ public class FileManager {
 		}
 	}
 	
+	public Comparator<FileMeta> getFileMetaComparator(){
+		return fileMetaComparator;
+	}
 
+	public Comparator<IFileIterator<InternalKey, byte[]>> getFileIteratorComparator(){
+		return fileIteratorComparator;
+	}
 }

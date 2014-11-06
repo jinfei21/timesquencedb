@@ -41,10 +41,6 @@ public class DBWriter {
 		}
 		largest = key;
 		
-		if(smallest.compareTo(largest)>0){
-			System.out.println("fdsfasdfda");
-		}
-
 		// write time item
 		long tOffset = timeOffset.getAndAdd(TimeItem.TIME_ITEM_SIZE);
 		long vOffset = valueOffset.getAndAdd(value.length);

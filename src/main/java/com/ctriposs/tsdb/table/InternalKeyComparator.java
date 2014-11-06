@@ -11,9 +11,7 @@ public class InternalKeyComparator implements Comparator<InternalKey> {
 		if(o1.getCode() == o2.getCode()){
 			return (int) (o1.getTime() - o2.getTime());
 		}else{
-			
-			int min = Math.min(o1.getCode() , o2.getCode());
-			if(min == o1.getCode()){
+			if(o1.getCode()<o2.getCode()){
 				return -1;
 			}else{
 				return 1;

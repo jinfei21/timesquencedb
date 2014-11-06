@@ -1,9 +1,10 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.Queue;
 
 import com.ctriposs.tsdb.ISeekIterator;
@@ -17,7 +18,7 @@ import com.ctriposs.tsdb.storage.FileMeta;
 public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 	
 	private FileManager fileManager;
-	private Queue<IFileIterator<InternalKey, byte[]>> itQueue;
+	private IFileIterator<InternalKey, byte[]>[] itQueue;
 	private Direction direction;
 	private Entry<InternalKey, byte[]> curEntry;
 	private IFileIterator<InternalKey, byte[]> curIt;
@@ -172,32 +173,32 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-	private void findSmallest(){
-		if(null != itQueue){
+	private void findSmallest() {
+		if (null != itQueue) {
 			IFileIterator<InternalKey, byte[]> smallest = null;
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
-				itQueue.remove(it);
-				if(it.valid()){
-					if(smallest == null){
-						smallest = it;
-					}else if(fileManager.compare(smallest.key(), it.key())>0){
-						smallest = it;
-					}else if(fileManager.compare(smallest.key(), it.key())==0){
-						while(it.hasNext()){
-							it.next();
-							int diff = fileManager.compare(smallest.key(),it.key());
-							if(0==diff){
-								continue;
-							}else{
-								break;
-							}
-						}
 
-					}					
-					itQueue.add(it);
+				for (IFileIterator<InternalKey, byte[]> it : itQueue) {
+					if (it.valid()) {
+						if (smallest == null) {
+							smallest = it;
+						} else if (fileManager.compare(smallest.key(), it.key()) > 0) {
+							smallest = it;
+						} else if (fileManager.compare(smallest.key(), it.key()) == 0) {
+							while (it.hasNext()) {
+								it.next();
+								int diff = fileManager.compare(smallest.key(),it.key());
+								if (0 == diff) {
+									continue;
+								} else {
+									break;
+								}
+							}
+
+						}
+					}
 				}
-			}
-			curIt = smallest;
+				curIt = smallest;
+			
 		}
 	}
 	
@@ -205,7 +206,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		if(null != itQueue){
 			IFileIterator<InternalKey, byte[]> largest = null;
 			for(IFileIterator<InternalKey, byte[]> it:itQueue){
-				itQueue.remove(it);
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
@@ -222,20 +222,19 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 							}
 						}
 					}					
-					itQueue.add(it);
 				}
 			}
 			curIt = largest;
 		}
 	}
 	
-	private Queue<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException {
+	private IFileIterator<InternalKey, byte[]>[] getNextIterators(long time) throws IOException {
 
 		if(time > System.currentTimeMillis()){
 			return null;
 		}
 
-		Queue<IFileIterator<InternalKey, byte[]>> queue = getIterators(time);
+		IFileIterator<InternalKey, byte[]>[] queue = getIterators(time);
 		if(queue != null){
 			
 			if(itQueue!=null){
@@ -249,35 +248,32 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]>{
 		}
 	}
 	
-	private Queue<IFileIterator<InternalKey, byte[]>> getIterators(long time) throws IOException {
+	private IFileIterator<InternalKey, byte[]>[] getIterators(long time) throws IOException {
 		curSeekTime = time;
 		Queue<FileMeta> metaQueue = level.getFiles(time);
 		if(metaQueue != null) {
-			Queue<IFileIterator<InternalKey, byte[]>> queue = new PriorityQueue<IFileIterator<InternalKey, byte[]>>(5, new Comparator<IFileIterator<InternalKey, byte[]>>() {
-
-				@Override
-				public int compare(IFileIterator<InternalKey, byte[]> o1,IFileIterator<InternalKey, byte[]> o2) {
-					int diff = (int) (o2.priority() - o1.priority());
-					return diff;
-				}
-			});
+			List<IFileIterator<InternalKey, byte[]>> list = new ArrayList<IFileIterator<InternalKey, byte[]>>();
 			
 			for(FileMeta meta : metaQueue) {
-				queue.add(new FileSeekIterator(new PureFileStorage(meta.getFile()),meta.getFileNumber()));
+				list.add(new FileSeekIterator(new PureFileStorage(meta.getFile()),meta.getFileNumber()));
 			}	
-			return queue;
+			
+			IFileIterator<InternalKey, byte[]> array[] = new FileSeekIterator[list.size()];
+			list.toArray(array);
+			Arrays.sort(array, fileManager.getFileIteratorComparator());
+			return array;
 		}else{
 			return null;
 		}
 	}
 	
-	private Queue<IFileIterator<InternalKey, byte[]>> getPrevIterators(long time) throws IOException {
+	private IFileIterator<InternalKey, byte[]>[] getPrevIterators(long time) throws IOException {
 
-		if(time < System.currentTimeMillis()-fileManager.getMaxPeriod()){
+		if(time < System.currentTimeMillis() - fileManager.getMaxPeriod()){
 			return null;
 		}
 
-		Queue<IFileIterator<InternalKey, byte[]>> queue = getIterators(time);
+		IFileIterator<InternalKey, byte[]>[] queue = getIterators(time);
 		if(queue != null){
 			
 			if(itQueue!=null){

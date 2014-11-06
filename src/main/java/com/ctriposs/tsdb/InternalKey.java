@@ -65,8 +65,7 @@ public class InternalKey implements Comparable<InternalKey> {
 		if( code == o.code){
 			return (int) (time - o.time);
 		}else{
-			int min = Math.min(code, o.code);
-			if(min == code){
+			if(code < o.code){
 				return -1;
 			}else{
 				return 1;
