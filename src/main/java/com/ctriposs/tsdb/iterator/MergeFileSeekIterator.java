@@ -33,9 +33,7 @@ public class MergeFileSeekIterator implements ISeekIterator<InternalKey, byte[]>
 			}
 		});
 		
-		for(IFileIterator<InternalKey, byte[]> it:its){
-			itQueue.add(it);
-		}
+		addIterator(its);
 		this.direction = Direction.forward;
 		this.curEntry = null;
 		this.curIt = null;

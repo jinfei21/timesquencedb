@@ -17,16 +17,14 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
-import com.ctriposs.tsdb.table.MemTable;
-import com.ctriposs.tsdb.util.DateFormatter;
 
 public class CompactLevel extends Level {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
     public final static long ONE_HOUR = 1000 * 60 * 60L;
 
-	private AtomicLong purgeCounter = new AtomicLong(0);
-	private AtomicLong purgeErrorCounter = new AtomicLong(0);
+	private AtomicLong storeCounter = new AtomicLong(0);
+	private AtomicLong storeErrorCounter = new AtomicLong(0);
 	private Level prevLevel;
 
 	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
@@ -34,24 +32,23 @@ public class CompactLevel extends Level {
 		this.prevLevel = prevLevel;
 	}
 
+	public long getStoreCounter(){
+		return storeCounter.get();
+	}
+	
+	public long getStoreErrorCounter(){
+		return storeErrorCounter.get();
+	}
+
 	@Override
 	public void incrementStoreError() {
-		purgeErrorCounter.incrementAndGet();
+		storeErrorCounter.incrementAndGet();
+		
 	}
 
 	@Override
 	public void incrementStoreCount() {
-		purgeCounter.incrementAndGet();
-	}
-
-	@Override
-	public long getStoreErrorCounter() {
-		return purgeErrorCounter.get();
-	}
-
-	@Override
-	public long getStoreCounter() {
-		return purgeCounter.get();
+		storeCounter.incrementAndGet();
 	}
 
 	class CompactTask extends Task {
@@ -67,11 +64,9 @@ public class CompactLevel extends Level {
 		}
 
 		private boolean check(){
-			 if (level == 2 && prevLevel.getTimeFileMap().firstKey() > DateFormatter.minuteFormatter(System.currentTimeMillis() - ONE_HOUR, level)){
-				 return false;
-			 }else{
+
 				 return true;
-			 }
+			
 		}
 
 		@Override
@@ -86,7 +81,7 @@ public class CompactLevel extends Level {
                 int power = (int) Math.pow(4, (double) (level - 1));
 
                 for (Long time : keySet) {
-                    long partition = DateFormatter.minuteFormatter(time, power);
+                    long partition = 0;
 
                     if (levelMap.containsKey(partition)) {
                         levelMap.get(partition).add(time);
@@ -109,23 +104,26 @@ public class CompactLevel extends Level {
             }
 		}
 
-        private void mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
-        	 MergeFileSeekIterator fileSeekIterator = new MergeFileSeekIterator(fileManager);
+        private FileMeta mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
+        	MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
+            long fileLen = 0;
             for (FileMeta meta : fileMetaList) {
                 FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
-                fileSeekIterator.addIterator(fileIterator);
+                mergeIterator.addIterator(fileIterator);;
                 totalTimeCount += fileIterator.timeItemCount();
+                fileLen += meta.getFile().length();
             }
 
            
             long fileNumber = fileManager.getFileNumber();
-            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level), MemTable.MAX_MEM_SIZE);
+            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber(), level), fileLen);
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
-            while (fileSeekIterator.hasNext()) {
-                Map.Entry<InternalKey, byte[]> entry = fileSeekIterator.next();
+            while (mergeIterator.hasNext()) {
+                Map.Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
+            return dbWriter.close();
         }
 		
 	}

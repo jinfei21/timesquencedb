@@ -1,14 +1,17 @@
 package com.ctriposs.tsdb.manage;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.table.MapFileLogWriter;
 import com.ctriposs.tsdb.table.MemTable;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public class NameManager {
 
@@ -17,7 +20,7 @@ public class NameManager {
 	private Lock lock = new ReentrantLock();
 	private AtomicInteger maxCode = new AtomicInteger(1);
     private MapFileLogWriter fileWriter;
-
+    private boolean hasData = false;
 	public NameManager(String dir) throws IOException {
         this.fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
 	}
@@ -33,6 +36,7 @@ public class NameManager {
 					nameMap.put(name, code);
 					codeMap.put(code, name);  
 					fileWriter.add(name, code);
+					hasData = true;
 				}
 			}finally{
 				lock.unlock();
@@ -44,5 +48,18 @@ public class NameManager {
 	
 	public String getName(short code){
 		return codeMap.get(code);
+	}
+	
+	public void add(String name,short code){
+		nameMap.put(name, code);
+		codeMap.put(code, name);  
+		maxCode.incrementAndGet();
+	}
+	
+	public void close() throws IOException{
+		fileWriter.close();
+		if(!hasData){
+			FileUtil.forceDelete(new File(fileWriter.getName()));
+		}
 	}
 }

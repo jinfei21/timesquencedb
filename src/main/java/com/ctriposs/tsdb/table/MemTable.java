@@ -1,5 +1,6 @@
 package com.ctriposs.tsdb.table;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -9,8 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.ILogWriter;
 import com.ctriposs.tsdb.InternalKey;
-import com.ctriposs.tsdb.storage.Head;
 import com.ctriposs.tsdb.storage.CodeItem;
+import com.ctriposs.tsdb.storage.Head;
 import com.ctriposs.tsdb.storage.TimeItem;
 
 public class MemTable {
@@ -31,6 +32,14 @@ public class MemTable {
 		this.maxMemTableSize = maxMemTableSize;
 		this.internalKeyComparator = internalKeyComparator;
 		this.logWriter = new MapFileLogWriter(dir, fileNumber, capacity);
+		this.fileNumber = fileNumber;
+	}
+	
+	public MemTable(File file,long fileNumber, InternalKeyComparator internalKeyComparator) throws IOException {
+		this.table = new ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>>();
+		this.maxMemTableSize = MAX_MEM_SIZE;
+		this.internalKeyComparator = internalKeyComparator;
+		this.logWriter = new MapFileLogWriter(file);
 		this.fileNumber = fileNumber;
 	}
 

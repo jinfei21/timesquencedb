@@ -39,7 +39,7 @@ public class FileMeta implements Comparable<FileMeta> {
     }
 
     public boolean contains(InternalKey key) {
-        return key.compareTo( smallest) >= 0 && key.compareTo(largest) <= 0;
+        return key.compareTo(smallest) >= 0 && key.compareTo(largest) <= 0;
 
     }
 

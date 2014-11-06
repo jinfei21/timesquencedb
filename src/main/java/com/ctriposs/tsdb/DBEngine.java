@@ -1,7 +1,9 @@
 package com.ctriposs.tsdb;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
@@ -14,7 +16,9 @@ import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
+import com.ctriposs.tsdb.table.MapFileLogReader;
 import com.ctriposs.tsdb.table.MemTable;
+import com.ctriposs.tsdb.util.FileUtil;
 
 public class DBEngine implements IDB {
 
@@ -71,10 +75,37 @@ public class DBEngine implements IDB {
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(),MemTable.MINUTE);
 		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
 		this.storeLevel.start();
-		//
+		//initialize compact level
+		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().start();
+			entry.getValue().recoveryData();
 		}
+		this.fileManager.recoveryName();
+		this.storeLevel.recoveryData();
+		recoveryLog();
+	}
+	
+	private void recoveryLog()throws IOException{
+		List<File> files = FileUtil.listFiles(new File(fileManager.getStoreDir()), "log");
+		
+		for(File file:files){
+			
+			String name[] = file.getName().split("[-|.]");
+			long fileNumber = Long.parseLong(name[1]);
+			fileManager.upateFileNumber(fileNumber);
+			ILogReader logReader = new MapFileLogReader(file,fileNumber,internalKeyComparator);
+			try {
+				
+				storeLevel.addMemTable(logReader.getMemTable());
+			} catch (Exception e) {
+				throw new IOException(e);
+			}finally{
+			
+				logReader.close();
+			}
+		}
+		
 	}
 
 	@Override
@@ -146,8 +177,8 @@ public class DBEngine implements IDB {
 
 	@Override
 	public void close() throws IOException {
-		
-		this.storeLevel.stop();
+		nameManager.close();
+		storeLevel.stop();
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			entry.getValue().stop();

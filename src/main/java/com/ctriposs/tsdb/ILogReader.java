@@ -1,14 +1,17 @@
 package com.ctriposs.tsdb;
 
 import java.io.IOException;
+import java.util.Map;
+
+import com.ctriposs.tsdb.table.MemTable;
 
 public interface ILogReader {
 
     void close() throws IOException;
 
-    void add(int code, long time, byte[] value) throws IOException;
+    MemTable getMemTable() throws IOException;
 
-    void add(String name, short code) throws IOException;
+    Map<String,Short> getNameMap() throws IOException;
     
     String getName();
 }

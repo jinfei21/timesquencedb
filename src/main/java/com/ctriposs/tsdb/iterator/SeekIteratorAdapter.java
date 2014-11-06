@@ -31,9 +31,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			}
 		});
 		
-		for(LevelSeekIterator it:its){
-			itQueue.add(it);
-		}
+		addIterator(its);
 		this.fileManager = fileManager;
 		this.direction = Direction.forward;
 		this.curIt = null;

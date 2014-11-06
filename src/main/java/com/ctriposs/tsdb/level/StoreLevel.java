@@ -36,9 +36,12 @@ public class StoreLevel extends Level {
 		}
 
 	}
+	
 
 	public void addMemTable(MemTable memTable) throws Exception {
-		this.memQueue.put(memTable);
+		if(memTable != null){
+			this.memQueue.put(memTable);
+		}
 	}
 
 	@Override
