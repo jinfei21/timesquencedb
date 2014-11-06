@@ -24,7 +24,6 @@ public class CompactLevel extends Level {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
     public final static long ONE_HOUR = 1000 * 60 * 60L;
-    private static final int MAX_SLEEP_TIME = 5 * 1000;
 
 	private AtomicLong purgeCounter = new AtomicLong(0);
 	private AtomicLong purgeErrorCounter = new AtomicLong(0);
@@ -74,6 +73,7 @@ public class CompactLevel extends Level {
 				 return true;
 			 }
 		}
+
 		@Override
 		public void process() throws Exception {
             System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
@@ -114,7 +114,7 @@ public class CompactLevel extends Level {
             long totalTimeCount = 0;
             for (FileMeta meta : fileMetaList) {
                 FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
-                fileSeekIterator.addIterator(fileIterator);;
+                fileSeekIterator.addIterator(fileIterator);
                 totalTimeCount += fileIterator.timeItemCount();
             }
 
