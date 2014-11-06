@@ -40,6 +40,10 @@ public class DBWriter {
 			throw new IOException("add item over timecount");
 		}
 		largest = key;
+		
+		if(smallest.compareTo(largest)>0){
+			System.out.println("fdsfasdfda");
+		}
 
 		// write time item
 		long tOffset = timeOffset.getAndAdd(TimeItem.TIME_ITEM_SIZE);

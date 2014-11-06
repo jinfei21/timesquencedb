@@ -62,11 +62,17 @@ public class InternalKey implements Comparable<InternalKey> {
 
 	@Override
 	public int compareTo(InternalKey o) {
-		int diff = (int) (code - o.code);
-		if(diff == 0){
-			diff = (int) (time - o.time);
+		if( code == o.code){
+			return (int) (time - o.time);
+		}else{
+			int min = Math.min(code, o.code);
+			if(min == code){
+				return -1;
+			}else{
+				return 1;
+			}
 		}
-		return diff;
+		
 	}
 	
 	@Override

@@ -27,7 +27,7 @@ public class DBEnginePutTest {
         Map<Long,String> map = new HashMap<Long,String>();
         
         for (int i = 0; i < 2*INIT_COUNT; i++) {
-        	String n = String.valueOf(random.nextInt(300));
+        	String n = String.valueOf(random.nextInt(300000));
 
         	long l = System.currentTimeMillis();
         	String d = data+i;

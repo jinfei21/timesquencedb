@@ -60,6 +60,7 @@ public class DBEngine implements IDB {
 
     /** The delete counter. */
     private AtomicLong deleteCounter = new AtomicLong();
+    
 	
 	public DBEngine(DBConfig config) throws IOException{
 		this.config = config;
@@ -68,6 +69,10 @@ public class DBEngine implements IDB {
 		}else{
 			this.internalKeyComparator = config.getInternalKeyComparator();
 		}
+		
+		FileUtil.cleanDirectory(new File(config.getDBDir()));
+		
+		
 		this.nameManager = new NameManager(config.getDBDir());
 		this.fileManager = new FileManager(config.getDBDir(),config.getMaxPeriod(), internalKeyComparator, nameManager);
 		
@@ -78,12 +83,14 @@ public class DBEngine implements IDB {
 		//initialize compact level
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+			//entry.getValue().recoveryData();
 			entry.getValue().start();
-			entry.getValue().recoveryData();
 		}
-		this.fileManager.recoveryName();
-		this.storeLevel.recoveryData();
-		recoveryLog();
+		//this.fileManager.recoveryName();
+		//this.storeLevel.recoveryData();
+		
+		//recoveryLog();
+		
 	}
 	
 	private void recoveryLog()throws IOException{
