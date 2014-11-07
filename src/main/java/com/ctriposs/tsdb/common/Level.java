@@ -121,14 +121,14 @@ public abstract class Level {
 	}
 	
 	public ConcurrentSkipListSet<FileMeta> getFiles(long time){
-		return timeFileMap.get(format(time));
+		return timeFileMap.get(format(time, interval));
 	}
 	
 	public int getFileSize(){
 		return timeFileMap.size();
 	}
 
-	public long format(long time) {
+	public long format(long time, long interval) {
 		return time/interval*interval;
 	}
 	
@@ -138,6 +138,10 @@ public abstract class Level {
 	
     public int getLevelNum(){
     	return level;
+    }
+
+    public long getLevelInterval() {
+        return interval;
     }
 
 	public void delete(long afterTime) throws IOException {
@@ -153,7 +157,7 @@ public abstract class Level {
 	
 	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
-		ConcurrentSkipListSet<FileMeta> list = getFiles(format(ts));
+		ConcurrentSkipListSet<FileMeta> list = getFiles(format(ts, interval));
 		if(list != null) {
 			for(FileMeta fileMeta : list) {
 				if(fileMeta.contains(key)){
