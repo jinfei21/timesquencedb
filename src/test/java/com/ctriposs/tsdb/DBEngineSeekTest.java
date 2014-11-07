@@ -27,6 +27,8 @@ public class DBEngineSeekTest {
 
         long s = 0;
         String table = null;
+        String last = null;
+        long lt = 0;
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
             int n = random.nextInt(7);
             
@@ -35,9 +37,14 @@ public class DBEngineSeekTest {
             	s = l;
             	table = str[n];
             }
+
             String d = data+i;
             engine.put(str[n], str[n], l, d.getBytes());
             map.put(l,str[n] + "-" + d);
+            if(table.equals(str[n])){
+            	last = d;
+            	lt = l;
+            }
         }
         
         System.out.println(new String(engine.get(table, table, s)));
@@ -47,8 +54,10 @@ public class DBEngineSeekTest {
         iterator.seek(table, table, s);
         while(iterator.hasNext()){
         	iterator.next();
-        	System.out.println(iterator.table()+":"+new String(iterator.value()));
+        	System.out.println(iterator.time()+":"+iterator.table()+":"+new String(iterator.value()));
         }
+        
+        System.out.println(lt+":"+table+":last:"+last);
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
                 (int) (INIT_COUNT * 2 * 1e6 / duration));
