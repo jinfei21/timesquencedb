@@ -36,7 +36,7 @@ public class StoreLevel extends Level {
 	}
 
 	public void addMemTable(MemTable memTable) throws Exception {
-		if(memTable != null){
+		if(memTable != null) {
 			this.memQueue.put(memTable);
 		}
 	}
@@ -83,7 +83,7 @@ public class StoreLevel extends Level {
 			table = memQueue.poll();
 			if(table == null) return;
 			
-			for(Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
+			for (Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();
 					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(), table.getFileNumber());

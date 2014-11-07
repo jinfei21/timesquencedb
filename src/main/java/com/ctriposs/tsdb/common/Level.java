@@ -35,7 +35,7 @@ public abstract class Level {
 	protected long interval;
 
     /** The list change lock. */
-    private final Lock changelock = new ReentrantLock();
+    private final Lock changeLock = new ReentrantLock();
     
     /** The empty list remove lock. */
     protected final Lock deleteLock = new ReentrantLock();
@@ -97,14 +97,14 @@ public abstract class Level {
 		ConcurrentSkipListSet<FileMeta> list = timeFileMap.get(time);
 		if(list == null) {
 			try{
-				changelock.lock();
+				changeLock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
 					list = new ConcurrentSkipListSet<FileMeta>(fileManager.getFileMetaComparator());
 					timeFileMap.put(time, list);
 				}
 			} finally {
-				changelock.unlock();
+				changeLock.unlock();
 			}
 		}
 		list.add(fileMeta);

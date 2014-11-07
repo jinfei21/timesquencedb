@@ -20,7 +20,7 @@ public class MapFileLogReader implements ILogReader{
 	private long fileNumber;
 	private File file;
 	
-	public MapFileLogReader(File file,long fileNumber,InternalKeyComparator internalKeyComparator) throws IOException {
+	public MapFileLogReader(File file, long fileNumber, InternalKeyComparator internalKeyComparator) throws IOException {
 		this.current = new AtomicInteger(0);
 		this.storage = new MapFileStorage(file);
 		this.internalKeyComparator = internalKeyComparator;
@@ -40,12 +40,12 @@ public class MapFileLogReader implements ILogReader{
 	
 	@Override
 	public MemTable getMemTable() throws IOException {
-		MemTable memTable = new MemTable(file,fileNumber,internalKeyComparator);
-		while(current.get()<file.length()){
+		MemTable memTable = new MemTable(file, fileNumber, internalKeyComparator);
+		while(current.get() < file.length()) {
 			byte[] bytes = new byte[16];
 			storage.get(current.getAndAdd(16), bytes);
 			int code = ByteUtil.ToInt(bytes, 0);
-			if(code==0){
+			if(code==0) {
 				break;
 			}
 			long time = ByteUtil.ToLong(bytes, 4);
