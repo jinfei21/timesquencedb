@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -84,7 +85,7 @@ public class CompactLevel extends Level {
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
             if (check()) {
-                Map<Long, List<Long>> levelMap = new HashMap<Long, List<Long>>();
+                Map<Long, List<Long>> levelMap = new ConcurrentHashMap<Long, List<Long>>();
                 NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
 
                 for (Long time : keySet) {
@@ -99,14 +100,13 @@ public class CompactLevel extends Level {
                         }
                     } else {
                         long partition = format(time);
+                        List<Long> timeList = levelMap.get(partition);
 
-                        if (levelMap.containsKey(partition)) {
-                            levelMap.get(partition).add(time);
-                        } else {
-                            List<Long> timeList = new ArrayList<Long>();
-                            timeList.add(time);
+                        if (timeList == null) {
+                            timeList = new ArrayList<Long>();
                             levelMap.put(partition, timeList);
                         }
+                        timeList.add(time);
                     }
 
                 }
