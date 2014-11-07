@@ -55,6 +55,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					if (null != itSet) {
 						for (IFileIterator<InternalKey, byte[]> it : itSet) {
 							it.seek(seekKey.getCode(), curSeekTime);
+							it.next();
 						}
 						findSmallest();
 						direction = Direction.forward;
@@ -85,13 +86,13 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 		if (!result) {
 			curSeekTime -= interval;
-			if (curSeekTime > System.currentTimeMillis()
-					- fileManager.getMaxPeriod()) {
+			if (curSeekTime > System.currentTimeMillis() - fileManager.getMaxPeriod()) {
 				try {
 					itSet = getPrevIterators(curSeekTime);
 					if (null != itSet) {
 						for (IFileIterator<InternalKey, byte[]> it : itSet) {
 							it.seek(seekKey.getCode(), curSeekTime);
+							it.prev();
 						}
 						findLargest();
 						direction = Direction.reverse;
@@ -125,7 +126,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 			direction = Direction.forward;
 		}
-		curEntry = curIt.next();
+		curEntry = curIt.current();
+		curIt.next();
 		findSmallest();
 		return curEntry;
 	}
@@ -138,6 +140,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					try {
 						if (it.hasNext()) {
 							it.seek(seekKey.getCode(), curSeekTime);
+							it.prev();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -146,7 +149,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 			direction = Direction.reverse;
 		}
-		curEntry = curIt.prev();
+		curEntry = curIt.current();
+		curIt.prev();
 		findLargest();
 		return curEntry;
 	}
@@ -154,14 +158,14 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 
-		seekKey = new InternalKey(fileManager.getCode(table),
-				fileManager.getCode(column), time);
+		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
 
-		itSet = getNextIterators(level.format(time));
+		itSet = getNextIterators(level.format(time,level.getLevelInterval()));
 
 		if (null != itSet) {
 			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 				it.seek(seekKey.getCode(), curSeekTime);
+				it.next();
 			}
 			findSmallest();
 			direction = Direction.forward;
@@ -181,8 +185,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					} else if (fileManager.compare(smallest.key(), it.key()) == 0) {
 						while (it.hasNext()) {
 							it.next();
-							int diff = fileManager.compare(smallest.key(),
-									it.key());
+							int diff = fileManager.compare(smallest.key(),it.key());
 							if (0 == diff) {
 								continue;
 							} else {
@@ -246,7 +249,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		curSeekTime = time;
 		ConcurrentSkipListSet<FileMeta> metaSet = level.getFiles(time);
 		if (metaSet != null) {
-			ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = new ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>>();
+			ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = new ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>>(fileManager.getFileIteratorComparator());
 
 			for (FileMeta meta : metaSet) {
 				set.add(new FileSeekIterator(new PureFileStorage(meta.getFile()), meta.getFileNumber()));
@@ -257,8 +260,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		}
 	}
 
-	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getPrevIterators(
-			long time) throws IOException {
+	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getPrevIterators(long time) throws IOException {
 
 		if (time < System.currentTimeMillis() - fileManager.getMaxPeriod()) {
 			return null;

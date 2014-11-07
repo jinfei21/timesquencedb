@@ -279,7 +279,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeBlock != null) {
 				curCodeItem = curCodeBlock.current();
 				if (curCodeItem != null) {
-					maxCodeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
+					maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
 					curTimeBlockIndex = -1;
 				}
 			}
@@ -288,7 +288,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
-					while(curTimeBlock.containTime(time)<0){
+					while(!(curTimeBlock.containTime(time)<0)){
 						nextTimeBlock();
 						if(curTimeBlock == null){
 							break;
@@ -296,9 +296,9 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 					}
 					if(curTimeBlock != null){
 						if(curTimeBlock.containTime(time)==0){
-							curTimeBlock.seek(time);
-							return;
+							curTimeBlock.seek(time);	
 						}
+						return;
 					}
 					
 				}
@@ -516,6 +516,11 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	@Override
 	public long priority() {
 		return fileNumber;
+	}
+
+	@Override
+	public Entry<InternalKey, byte[]> current() {
+		return curEntry;
 	}
 
 }

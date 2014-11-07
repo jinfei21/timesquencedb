@@ -1,14 +1,14 @@
 package com.ctriposs.tsdb.level;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
@@ -115,8 +115,8 @@ public class CompactLevel extends Level {
                     try {
                         FileUtil.forceDelete(fileMeta.getFile());
                     } catch (IOException e) {
-
                     }
+
                 }
             }
 		}

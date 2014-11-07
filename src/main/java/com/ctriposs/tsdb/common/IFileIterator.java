@@ -39,6 +39,8 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
     boolean hasPrev();
 
 	Entry<K, V> prev();
+	
+	Entry<K, V> current();
 
 	void close() throws IOException;
 }

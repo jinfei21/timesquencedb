@@ -2,16 +2,13 @@ package com.ctriposs.tsdb.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -38,7 +35,8 @@ public abstract class Level {
 	protected long interval;
 
     /** The list change lock. */
-    private final Lock lock = new ReentrantLock();
+    private final Lock changelock = new ReentrantLock();
+    
     /** The empty list remove lock. */
     protected final Lock deleteLock = new ReentrantLock();
 
@@ -48,14 +46,6 @@ public abstract class Level {
             return (int) (o1 - o2);
         }
     });
-
-    private Comparator<FileMeta> fileMetaComparator =  new Comparator<FileMeta>() {
-
-		@Override
-		public int compare(FileMeta o1, FileMeta o2) {
-			return (int) (o2.getFileNumber() - o1.getFileNumber());
-		}
-	};
 
 	public Level(FileManager fileManager, int level, long interval, int threads) {
 		this.fileManager = fileManager;
@@ -107,14 +97,14 @@ public abstract class Level {
 		ConcurrentSkipListSet<FileMeta> list = timeFileMap.get(time);
 		if(list == null) {
 			try{
-				lock.lock();
+				changelock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new ConcurrentSkipListSet<FileMeta>(fileMetaComparator);
+					list = new ConcurrentSkipListSet<FileMeta>(fileManager.getFileMetaComparator());
 					timeFileMap.put(time, list);
 				}
 			} finally {
-				lock.unlock();
+				changelock.unlock();
 			}
 		}
 		list.add(fileMeta);
@@ -148,8 +138,21 @@ public abstract class Level {
 		for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry : timeFileMap.entrySet()) {
 			if(entry.getKey() < afterTime) {
 				ConcurrentSkipListSet<FileMeta> list = entry.getValue();
-				for(FileMeta meta : list){
-					fileManager.delete(meta.getFile());
+				boolean OK = true;
+				try{
+					for(FileMeta meta : list){
+						try{
+							fileManager.delete(meta.getFile());
+							list.remove(meta);
+						}catch(IOException e){
+							OK = false;
+							throw e;
+						}
+					}
+				}finally{
+					if(OK){
+						timeFileMap.remove(entry.getKey());
+					}
 				}
 			}
 		}
@@ -197,6 +200,7 @@ public abstract class Level {
 					Thread.sleep(500);
 				} catch (Throwable e) {
 					//TODO
+					e.printStackTrace();
 					incrementStoreError();
 				}
 			}
