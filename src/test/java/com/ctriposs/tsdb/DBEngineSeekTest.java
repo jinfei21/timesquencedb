@@ -47,7 +47,7 @@ public class DBEngineSeekTest {
         iterator.seek(table, table, s);
         while(iterator.hasNext()){
         	iterator.next();
-        	System.out.println(new String(iterator.value()));
+        	System.out.println(iterator.table()+":"+new String(iterator.value()));
         }
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",

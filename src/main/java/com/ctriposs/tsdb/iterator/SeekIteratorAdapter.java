@@ -188,7 +188,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public String table() {
 		if(curIt != null){
-			curIt.table();
+			return curIt.table();
 		}
 		return null;
 	}
@@ -196,7 +196,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public String column() {
 		if(curIt != null){
-			curIt.column();
+			return curIt.column();
 		}
 		return null;
 	}

@@ -283,7 +283,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public String table() {
 		if (curEntry != null) {
-			fileManager.getName(curEntry.getKey().getTableCode());
+			return fileManager.getName(curEntry.getKey().getTableCode());
 		}
 		return null;
 	}
@@ -291,7 +291,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public String column() {
 		if (curEntry != null) {
-			fileManager.getName(curEntry.getKey().getColumnCode());
+			return fileManager.getName(curEntry.getKey().getColumnCode());
 		}
 		return null;
 	}

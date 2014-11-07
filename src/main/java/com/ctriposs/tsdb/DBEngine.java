@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
+import com.ctriposs.tsdb.level.CompactLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
@@ -80,7 +81,7 @@ public class DBEngine implements IDB {
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(), MemTable.MINUTE);
 		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
 		this.storeLevel.start();
-
+		
 		//initialize compact level
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
 			//entry.getValue().recoveryData();
