@@ -160,7 +160,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
 
-		itSet = getNextIterators(level.format(time));
+		itSet = getNextIterators(level.format(time,level.getLevelInterval()));
 
 		if (null != itSet) {
 			for (IFileIterator<InternalKey, byte[]> it : itSet) {
