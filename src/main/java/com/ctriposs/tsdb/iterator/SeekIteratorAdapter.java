@@ -74,7 +74,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					try {
 						if (it.hasNext()) {
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
-							it.next();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -99,7 +98,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					try {
 						if(it.hasNext()){
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
-							it.prev();
 						}
 					} catch (IOException e) {			
 						throw new RuntimeException(e);
@@ -123,10 +121,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.curSeekColumn = column;
 		this.curSeekTime = time;
 		
-		if(null != itSet){
+		if(!itSet.isEmpty()){
 			for(LevelSeekIterator it:itSet){
 				it.seek(table, column,time);
-				it.next();
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -134,7 +131,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	}
 	
 	private void findSmallest(){
-		if(null != itSet){
+		if(!itSet.isEmpty()){
 			LevelSeekIterator smallest = null;
 			for(LevelSeekIterator it:itSet){
 				if(it.valid()){
@@ -160,7 +157,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	}
 	
 	private void findLargest(){
-		if(null != itSet){
+		if(!itSet.isEmpty()){
 			LevelSeekIterator largest = null;
 			for(LevelSeekIterator it:itSet){
 				if(it.valid()){
@@ -229,7 +226,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public void close() throws IOException{
 		
-		if(null != itSet){
+		if(!itSet.isEmpty()){
 			for(LevelSeekIterator it:itSet){
 				it.close();
 			}

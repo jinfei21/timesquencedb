@@ -91,6 +91,7 @@ public class MergeFileSeekIterator{
 					try {
 						if (it.hasNext()) {
 							it.seekToCurrent(it.currentCode().getCode());
+							it.next();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -229,7 +230,7 @@ public class MergeFileSeekIterator{
 
 	public String table() {
 		if(curEntry != null){
-			fileManager.getName(curEntry.getKey().getTableCode());
+			return fileManager.getName(curEntry.getKey().getTableCode());
 		}
 		return null;
 	}
@@ -237,7 +238,7 @@ public class MergeFileSeekIterator{
 	
 	public String column() {
 		if(curEntry != null){
-			fileManager.getName(curEntry.getKey().getColumnCode());
+			return fileManager.getName(curEntry.getKey().getColumnCode());
 		}
 		return null;
 	}

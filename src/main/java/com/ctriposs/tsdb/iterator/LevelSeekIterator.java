@@ -55,7 +55,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					if (null != itSet) {
 						for (IFileIterator<InternalKey, byte[]> it : itSet) {
 							it.seek(seekKey.getCode(), curSeekTime);
-							it.next();
 						}
 						findSmallest();
 						direction = Direction.forward;
@@ -92,7 +91,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					if (null != itSet) {
 						for (IFileIterator<InternalKey, byte[]> it : itSet) {
 							it.seek(seekKey.getCode(), curSeekTime);
-							it.prev();
 						}
 						findLargest();
 						direction = Direction.reverse;
@@ -126,8 +124,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 			direction = Direction.forward;
 		}
-		curEntry = curIt.current();
-		curIt.next();
+		curEntry = curIt.next();
 		findSmallest();
 		return curEntry;
 	}
@@ -140,7 +137,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					try {
 						if (it.hasNext()) {
 							it.seek(seekKey.getCode(), curSeekTime);
-							it.prev();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -149,25 +145,24 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 			direction = Direction.reverse;
 		}
-		curEntry = curIt.current();
-		curIt.prev();
+		curEntry = curIt.prev();
 		findLargest();
 		return curEntry;
 	}
 
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
-
+		
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
 
 		itSet = getNextIterators(level.format(time,level.getLevelInterval()));
 
 		if (null != itSet) {
 			for (IFileIterator<InternalKey, byte[]> it : itSet) {
-				it.seek(seekKey.getCode(), curSeekTime);
-				it.next();
+				it.seek(seekKey.getCode(), time);
 			}
 			findSmallest();
+			curEntry = curIt.current();
 			direction = Direction.forward;
 		}
 	}

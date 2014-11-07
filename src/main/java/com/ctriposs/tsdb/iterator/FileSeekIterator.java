@@ -298,6 +298,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 						if(curTimeBlock.containTime(time)==0){
 							curTimeBlock.seek(time);	
 						}
+						readEntry(code, curTimeBlock.current(), true);
 						return;
 					}
 					
@@ -323,6 +324,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
+					readEntry(code, curTimeBlock.current(), true);
 					return;
 				}
 			}
@@ -362,6 +364,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
+					readEntry(code, curTimeBlock.current(), true);
 					return;
 				}
 			}
