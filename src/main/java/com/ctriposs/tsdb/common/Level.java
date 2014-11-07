@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
 import com.ctriposs.tsdb.iterator.LevelSeekIterator;
@@ -23,7 +25,7 @@ import com.ctriposs.tsdb.util.FileUtil;
 
 public abstract class Level {
 
-	public final static int MAX_SIZE = 6;
+	public final static int MAX_SIZE = 3;
 	public final static long FILE_SIZE = 256 * 1024 * 1024L;
 	public final static int THREAD_COUNT = 3;
 	
@@ -40,7 +42,7 @@ public abstract class Level {
     /** The empty list remove lock. */
     protected final Lock deleteLock = new ReentrantLock();
 
-    protected ConcurrentSkipListMap<Long, Queue<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, Queue<FileMeta>>(new Comparator<Long>() {
+    protected ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>>(new Comparator<Long>() {
         @Override
         public int compare(Long o1, Long o2) {
             return (int) (o1 - o2);
@@ -102,13 +104,13 @@ public abstract class Level {
 	}
 	
 	public void add(long time, FileMeta fileMeta) {
-		Queue<FileMeta> list = timeFileMap.get(time);
+		ConcurrentSkipListSet<FileMeta> list = timeFileMap.get(time);
 		if(list == null) {
 			try{
 				lock.lock();
 				list = timeFileMap.get(time);
 				if(list == null) {
-					list = new PriorityBlockingQueue<FileMeta>(5, fileMetaComparator);
+					list = new ConcurrentSkipListSet<FileMeta>(fileMetaComparator);
 					timeFileMap.put(time, list);
 				}
 			} finally {
@@ -118,7 +120,7 @@ public abstract class Level {
 		list.add(fileMeta);
 	}
 	
-	public Queue<FileMeta> getFiles(long time){
+	public ConcurrentSkipListSet<FileMeta> getFiles(long time){
 		return timeFileMap.get(format(time));
 	}
 	
@@ -130,7 +132,7 @@ public abstract class Level {
 		return time/interval*interval;
 	}
 	
-    public ConcurrentSkipListMap<Long, Queue<FileMeta>> getTimeFileMap() {
+    public ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>> getTimeFileMap() {
         return timeFileMap;
     }
 	
@@ -139,9 +141,9 @@ public abstract class Level {
     }
 
 	public void delete(long afterTime) throws IOException {
-		for(Entry<Long, Queue<FileMeta>> entry : timeFileMap.entrySet()) {
+		for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry : timeFileMap.entrySet()) {
 			if(entry.getKey() < afterTime) {
-				Queue<FileMeta> list = entry.getValue();
+				ConcurrentSkipListSet<FileMeta> list = entry.getValue();
 				for(FileMeta meta : list){
 					fileManager.delete(meta.getFile());
 				}
@@ -151,12 +153,9 @@ public abstract class Level {
 	
 	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
-		Queue<FileMeta> queue = getFiles(format(ts));
-		if(queue != null) {
-			FileMeta fileMetas[] = new FileMeta[queue.size()];
-			queue.toArray(fileMetas);
-			Arrays.sort(fileMetas, fileMetaComparator);
-			for(FileMeta fileMeta : fileMetas) {
+		ConcurrentSkipListSet<FileMeta> list = getFiles(format(ts));
+		if(list != null) {
+			for(FileMeta fileMeta : list) {
 				if(fileMeta.contains(key)){
 					IStorage storage = new PureFileStorage(fileMeta.getFile());
 					FileSeekIterator it = new FileSeekIterator(storage);

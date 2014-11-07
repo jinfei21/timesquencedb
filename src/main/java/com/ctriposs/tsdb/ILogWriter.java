@@ -10,5 +10,7 @@ public interface ILogWriter {
 
     void add(String name, short code) throws IOException;
     
+    int getLength();
+    
     String getName();
 }

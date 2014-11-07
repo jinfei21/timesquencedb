@@ -108,8 +108,15 @@ public class CodeItem implements Serializable, Comparable<CodeItem> {
 
 	@Override
 	public int compareTo(CodeItem o) {
-		int diff = code - o.code;
-		return diff;
+		if(code == o.code){
+			return 0;
+		}else{
+			if(code < o.code){
+				return -1;
+			}else{
+				return 1;
+			}
+		}
 	}
 	
 }

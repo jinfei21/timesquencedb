@@ -21,8 +21,10 @@ public class NameManager {
 	private AtomicInteger maxCode = new AtomicInteger(1);
     private MapFileLogWriter fileWriter;
     private boolean hasData = false;
+    private String dir;
 
 	public NameManager(String dir) throws IOException {
+		this.dir = dir;
         this.fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
 	}
 	
@@ -36,6 +38,10 @@ public class NameManager {
 					code = (short) maxCode.incrementAndGet();
 					nameMap.put(name, code);
 					codeMap.put(code, name);  
+					if(fileWriter.getLength() > MemTable.MAX_MEM_SIZE-10000){
+						fileWriter.close();
+						fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
+					}
 					fileWriter.add(name, code);
 					hasData = true;
 				}

@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.ctriposs.tsdb.ILogReader;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
+import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MapFileLogReader;
@@ -34,6 +35,16 @@ public class FileManager {
 			return (int) (o1.getFileNumber() - o2.getFileNumber());
 		}
 		
+	};
+	
+	private Comparator<LevelSeekIterator> levelIteratorComparator = new Comparator<LevelSeekIterator>(){
+
+		@Override
+		public int compare(LevelSeekIterator o1,
+				LevelSeekIterator o2) {
+			
+			return (int) (o1.getLevelNum() - o1.getLevelNum());
+		}
 	};
 	
 	private Comparator<IFileIterator<InternalKey, byte[]>> fileIteratorComparator = new Comparator<IFileIterator<InternalKey, byte[]>>(){
@@ -115,6 +126,10 @@ public class FileManager {
 		return fileMetaComparator;
 	}
 
+	public Comparator<LevelSeekIterator> getLevelIteratorComparator(){
+		return levelIteratorComparator;
+	}
+	
 	public Comparator<IFileIterator<InternalKey, byte[]>> getFileIteratorComparator(){
 		return fileIteratorComparator;
 	}

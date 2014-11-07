@@ -52,8 +52,14 @@ public class MapFileLogWriter implements ILogWriter {
         storage.put(offset + 6, nameBytes);
     }
     
+    
 	@Override
 	public String getName() {
 		return storage.getName();
+	}
+
+	@Override
+	public int getLength() {
+		return current.get();
 	}
 }

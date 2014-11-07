@@ -1,10 +1,8 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
@@ -14,7 +12,7 @@ import com.ctriposs.tsdb.storage.CodeItem;
 public class MergeFileSeekIterator{
 	
 	private FileManager fileManager;
-	private Queue<IFileIterator<InternalKey, byte[]>> itQueue;
+	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> itSet;
 	private Direction direction;
 	private Entry<InternalKey, byte[]> curEntry;
 	private IFileIterator<InternalKey, byte[]> curIt;
@@ -23,26 +21,17 @@ public class MergeFileSeekIterator{
 	
 	public MergeFileSeekIterator(FileManager fileManager, IFileIterator<InternalKey, byte[]>... its) {
 		this.fileManager = fileManager;
-		this.itQueue = new PriorityQueue<IFileIterator<InternalKey,byte[]>>(5,new Comparator<IFileIterator<InternalKey,byte[]>>() {
-
-			@Override
-			public int compare(IFileIterator<InternalKey, byte[]> o1,
-					IFileIterator<InternalKey, byte[]> o2) {
-				int diff = (int) (o1.priority() - o2.priority());
-				return diff;
-			}
-		});
+		this.itSet = new ConcurrentSkipListSet<IFileIterator<InternalKey,byte[]>>(fileManager.getFileIteratorComparator());
 		
 		addIterator(its);
 		this.direction = Direction.forward;
 		this.curEntry = null;
 		this.curIt = null;
-		this.itQueue = null;
 	}
 	
 	public void addIterator(IFileIterator<InternalKey, byte[]>... its) {
 		for(IFileIterator<InternalKey, byte[]> it:its){
-			itQueue.add(it);
+			itSet.add(it);
 		}
 	}
 
@@ -50,8 +39,8 @@ public class MergeFileSeekIterator{
 
 		boolean result = false;
 
-		if(itQueue != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itQueue) {
+		if(itSet != null) {
+			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 				if(it.hasNext()) {
 					result = true;
                     break;
@@ -74,8 +63,8 @@ public class MergeFileSeekIterator{
 	public boolean hasPrev() {
 		boolean result = false;
 
-		if(itQueue != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itQueue) {
+		if(itSet != null) {
+			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 				if(it.hasPrev()) {
 					result = true;
                     break;
@@ -97,7 +86,7 @@ public class MergeFileSeekIterator{
 	
 	public Entry<InternalKey, byte[]> next() throws IOException {
 		if (direction != Direction.forward) {
-			for (IFileIterator<InternalKey, byte[]> it : itQueue) {
+			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 
 				if (it != curIt) {
 					try {
@@ -119,7 +108,7 @@ public class MergeFileSeekIterator{
 
 	public Entry<InternalKey, byte[]> prev() throws IOException {
 		if(direction != Direction.reverse){
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(curIt != it){
 					try {
 						if(it.hasNext()){
@@ -142,8 +131,8 @@ public class MergeFileSeekIterator{
 		
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column),time);
 		
-		if(null != itQueue){
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
+		if(null != itSet){
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				it.seek(seekKey.getCode(),curSeekTime);
 				it.next();
 			}		
@@ -154,8 +143,8 @@ public class MergeFileSeekIterator{
 	
 	public void seekToFirst() throws IOException {
 		
-		if(null != itQueue){
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
+		if(null != itSet){
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(it.hasNextCode()){
 					CodeItem item = it.nextCode();
 					if(item != null){
@@ -170,10 +159,9 @@ public class MergeFileSeekIterator{
 	}
 	
 	private void findSmallest() throws IOException{
-		if(null != itQueue){
+		if(null != itSet){
 			IFileIterator<InternalKey, byte[]> smallest = null;
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
-				itQueue.remove(it);
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(it.valid()){
 					
 					if(smallest == null){
@@ -191,7 +179,6 @@ public class MergeFileSeekIterator{
 							}
 						}
 					}
-					itQueue.add(it);
 				}else{
 					if(it.hasNextCode()){
 						CodeItem item = it.nextCode();
@@ -199,7 +186,6 @@ public class MergeFileSeekIterator{
 							it.seekToCurrent(item.getCode());
 						}
 						it.prev();
-						itQueue.add(it);
 					}
 				}
 			}
@@ -208,10 +194,9 @@ public class MergeFileSeekIterator{
 	}
 	
 	private void findLargest() throws IOException{
-		if(null != itQueue){
+		if(null != itSet){
 			IFileIterator<InternalKey, byte[]> largest = null;
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
-				itQueue.remove(it);
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
@@ -228,7 +213,6 @@ public class MergeFileSeekIterator{
 							}
 						}
 					}
-					itQueue.add(it);
 				}else{
 					if(it.hasPrevCode()){
 						CodeItem item = it.prevCode();
@@ -236,7 +220,6 @@ public class MergeFileSeekIterator{
 							it.seekToCurrent(item.getCode());
 						}
 						it.prev();
-						itQueue.add(it);
 					}
 				}
 			}
@@ -288,8 +271,8 @@ public class MergeFileSeekIterator{
 
 	public void close() throws IOException{
 		
-		if(null != itQueue){
-			for(IFileIterator<InternalKey, byte[]> it:itQueue){
+		if(null != itSet){
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				it.close();
 			}
 		}
