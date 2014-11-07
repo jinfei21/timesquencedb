@@ -1,11 +1,7 @@
 package com.ctriposs.tsdb.level;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -70,7 +66,7 @@ public class CompactLevel extends Level {
 		}
 
 		private boolean check() {
-            if (level == 2 && (System.currentTimeMillis() - prevLevel.getTimeFileMap().firstKey()) < ONE_HOUR) {
+            if (level == 2 && (System.currentTimeMillis() - prevLevel.getTimeFileMap().firstKey()) > ONE_HOUR) {
                 return true;
             } else if (level > 2) {
                 return prevLevel.getTimeFileMap().size() >= 4;
@@ -89,7 +85,8 @@ public class CompactLevel extends Level {
                 NavigableSet<Long> keySet = prevLevel.getTimeFileMap().descendingKeySet();
 
                 for (Long time : keySet) {
-                    if (prevLevel.getFiles(time).size() == 0) {
+                    Queue<FileMeta> metaQueue = prevLevel.getFiles(time);
+                    if (metaQueue.size() == 0) {
                         try {
                             deleteLock.lock();
                             if (prevLevel.getFiles(time).size() == 0) {
@@ -108,7 +105,6 @@ public class CompactLevel extends Level {
                         }
                         timeList.add(time);
                     }
-
                 }
 
                 for (Map.Entry<Long, List<Long>> entry : levelMap.entrySet()) {
@@ -142,6 +138,7 @@ public class CompactLevel extends Level {
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
 
+            // Delete the merged files
 
             return dbWriter.close();
         }
