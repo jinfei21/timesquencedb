@@ -33,7 +33,7 @@ public class DBEngine implements IDB {
 	private StoreLevel storeLevel;
 	
 	/** Compact files */
-	private Map<Integer,Level> compactLevelMap;
+	private Map<Integer, Level> compactLevelMap;
 	
 	/** Manage the file by time sequence */
 	private FileManager fileManager;
@@ -63,7 +63,7 @@ public class DBEngine implements IDB {
     private AtomicLong deleteCounter = new AtomicLong();
     
 	
-	public DBEngine(DBConfig config) throws IOException{
+	public DBEngine(DBConfig config) throws IOException {
 		this.config = config;
 		if(config.getInternalKeyComparator() == null){
 			this.internalKeyComparator = new InternalKeyComparator();
@@ -79,11 +79,12 @@ public class DBEngine implements IDB {
 		
 		this.memTable = new MemTable(config.getDBDir(), fileManager.getFileNumber(), config.getFileCapacity(), config.getMaxMemTableSize(), internalKeyComparator);
 		this.storeLevel = new StoreLevel(fileManager, config.getStoreThread(), config.getMaxMemTable(), MemTable.MINUTE);
-		this.compactLevelMap = new LinkedHashMap<Integer,Level>();
+		this.compactLevelMap = new LinkedHashMap<Integer, Level>();
 		this.storeLevel.start();
-		
+
+        this.compactLevelMap.put(1, new CompactLevel(fileManager, this.storeLevel, 1, 4 * 60 * 1000, 2));
 		//initialize compact level
-		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
+		for(Entry<Integer,Level> entry : compactLevelMap.entrySet()){
 			//entry.getValue().recoveryData();
 			entry.getValue().start();
 		}

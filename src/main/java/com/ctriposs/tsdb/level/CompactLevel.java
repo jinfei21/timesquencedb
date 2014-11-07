@@ -23,7 +23,6 @@ import com.ctriposs.tsdb.util.FileUtil;
 public class CompactLevel extends Level {
 
 	public final static long MAX_PERIOD = 1000 * 60 * 60 * 24 * 30L;
-    public final static long ONE_HOUR = 1000 * 60 * 60L;
 
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
@@ -74,7 +73,7 @@ public class CompactLevel extends Level {
             System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
             Map<Long, HashMap<Long, List<FileMeta>>> levelMap = new HashMap<Long, HashMap<Long, List<FileMeta>>>();
-            long compactFlag = format(System.currentTimeMillis() - 60 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
+            long compactFlag = format(System.currentTimeMillis() - 5 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
             ConcurrentNavigableMap<Long, ConcurrentSkipListSet<FileMeta>> headMap = prevLevel.getTimeFileMap().headMap(compactFlag);
             NavigableSet<Long> keySet = headMap.keySet();
 

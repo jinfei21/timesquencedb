@@ -23,7 +23,7 @@ public class Head implements Serializable {
     private final InternalKey smallest;
     private final InternalKey largest;
     
-    public Head(long codeOffset,int codeCount,long timeCount,InternalKey smallest,InternalKey largest){
+    public Head(long codeOffset, int codeCount, long timeCount, InternalKey smallest, InternalKey largest) {
     	this.codeOffset = codeOffset;
     	this.codeCount = codeCount;
     	this.timeCount = timeCount;
