@@ -32,7 +32,7 @@ public class FileManager {
 		@Override
 		public int compare(FileMeta o1, FileMeta o2) {
 			
-			return (int) (o1.getFileNumber() - o2.getFileNumber());
+			return (int) (o2.getFileNumber() - o1.getFileNumber());
 		}
 		
 	};
@@ -53,7 +53,7 @@ public class FileManager {
 		public int compare(IFileIterator<InternalKey, byte[]> o1,
 				IFileIterator<InternalKey, byte[]> o2) {
 			
-			return (int) (o1.priority() - o2.priority());
+			return (int) (o2.priority() - o1.priority());
 		}
 	};
    

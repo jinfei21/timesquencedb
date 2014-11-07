@@ -22,7 +22,6 @@ public class MergeFileSeekIterator{
 	public MergeFileSeekIterator(FileManager fileManager, IFileIterator<InternalKey, byte[]>... its) {
 		this.fileManager = fileManager;
 		this.itSet = new ConcurrentSkipListSet<IFileIterator<InternalKey,byte[]>>(fileManager.getFileIteratorComparator());
-		
 		addIterator(its);
 		this.direction = Direction.forward;
 		this.curEntry = null;

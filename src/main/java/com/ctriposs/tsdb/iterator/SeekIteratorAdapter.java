@@ -25,7 +25,6 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.fileManager = fileManager;
 		this.direction = Direction.forward;
 		this.curIt = null;
-		this.itSet = null;
 	}
 	
 	public void addIterator(LevelSeekIterator... its) {
@@ -75,6 +74,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					try {
 						if (it.hasNext()) {
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
+							it.next();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -99,6 +99,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					try {
 						if(it.hasNext()){
 							it.seek(curSeekTable,curSeekColumn,curSeekTime);
+							it.prev();
 						}
 					} catch (IOException e) {			
 						throw new RuntimeException(e);
@@ -125,6 +126,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(null != itSet){
 			for(LevelSeekIterator it:itSet){
 				it.seek(table, column,time);
+				it.next();
 			}		
 			findSmallest();
 			direction = Direction.forward;

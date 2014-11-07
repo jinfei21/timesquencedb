@@ -25,39 +25,30 @@ public class DBEngineSeekTest {
 
         Map<Long,String> map = new LinkedHashMap<Long,String>();
 
+        long s = 0;
+        String table = null;
         for (int i = 0; i < 2 * INIT_COUNT; i++) {
             int n = random.nextInt(7);
-
+            
             long l = System.currentTimeMillis();
+            if(i==0){
+            	s = l;
+            	table = str[n];
+            }
             String d = data+i;
             engine.put(str[n], str[n], l, d.getBytes());
             map.put(l,str[n] + "-" + d);
         }
+        
+        System.out.println(new String(engine.get(table, table, s)));
 
         ISeekIterator<InternalKey, byte[]> iterator = engine.iterator();
 
-        for(Map.Entry<Long,String> entry : map.entrySet()){
-            String d[] = entry.getValue().split("-");
-
-            iterator.seek(d[0], d[0], entry.getKey());
-
-            if (iterator.hasNext()) {
-                do {
-                    Map.Entry<InternalKey, byte[]> e = iterator.next();
-                    String ss = new String(e.getValue());
-                    if (d[1].equals(ss)) {
-                        System.out.println("OK");
-                    } else {
-                        System.out.print("error "+entry.getValue()+"---");
-                        System.out.print(d[1]+"--");
-                        System.out.println(ss);
-                    }
-                } while (iterator.hasNext());
-            } else {
-                System.out.println("not found "+entry.getValue()+"-"+entry.getKey());
-            }
+        iterator.seek(table, table, s);
+        while(iterator.hasNext()){
+        	iterator.next();
+        	System.out.println(new String(iterator.value()));
         }
-
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
                 (int) (INIT_COUNT * 2 * 1e6 / duration));
