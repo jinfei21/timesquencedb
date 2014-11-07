@@ -412,6 +412,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			}else{
 				curTimeBlockIndex = -1;
 			}
+			curEntry = null;
 		}else{
 			InternalKey key = new InternalKey(code, tItem.getTime());
 			byte[] value = new byte[tItem.getValueSize()];
