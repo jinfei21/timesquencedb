@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListMap;
+
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
@@ -36,12 +37,20 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	
 	@Override
 	public boolean hasPrev() {
-		
+		if(curEntry != null){
+
+			if(curEntry.equals(dataMap.firstEntry())){
+				return false;
+			}else{
+				return true;
+			}
+		}
 		return false;
 	}
 
 	@Override
 	public Entry<InternalKey, byte[]> next() {
+
 		Entry<InternalKey, byte[]> entry = curEntry;
 		if(curSeeIterator != null){
 			curEntry = curSeeIterator.next();
@@ -51,16 +60,21 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
+		Entry<InternalKey, byte[]> entry = curEntry;
+		if(curSeeIterator != null){
+			if(curEntry != null){
+				curEntry = dataMap.lowerEntry(curEntry.getKey());
+			}
+		}
+		return entry;
 
-		return null;
 	}
 
 
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 
-		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
-			
+		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);		
 		curSeeIterator = dataMap.tailMap(seekKey).entrySet().iterator();
 		curEntry = curSeeIterator.next();
 	}
@@ -128,8 +142,5 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
-	
-	enum Direction {
-		forward, reverse
-	}
+
 }

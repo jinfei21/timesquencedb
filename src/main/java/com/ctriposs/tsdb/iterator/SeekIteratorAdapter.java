@@ -2,6 +2,7 @@ package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.ctriposs.tsdb.ISeekIterator;
@@ -11,6 +12,7 @@ import com.ctriposs.tsdb.manage.FileManager;
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private ConcurrentSkipListSet<LevelSeekIterator> itSet;
+	private Set<MemSeekIterator> memitSet;
 	private Direction direction;
 	private ISeekIterator<InternalKey, byte[]> curIt;
 	private FileManager fileManager;
@@ -21,15 +23,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public SeekIteratorAdapter(FileManager fileManager, LevelSeekIterator... its) {
 
 		this.itSet = new ConcurrentSkipListSet<LevelSeekIterator>(fileManager.getLevelIteratorComparator());
-		addIterator(its);
+		addLevelIterator(its);
 		this.fileManager = fileManager;
 		this.direction = Direction.forward;
 		this.curIt = null;
 	}
 	
-	public void addIterator(LevelSeekIterator... its) {
+	public void addLevelIterator(LevelSeekIterator... its) {
 		for(LevelSeekIterator it:its){
 			itSet.add(it);
+		}
+	}
+	
+	public void addMemIterator(MemSeekIterator... its) {
+		for(MemSeekIterator it:its){
+			memitSet.add(it);
 		}
 	}
 

@@ -104,7 +104,7 @@ public class MemTable {
 		ConcurrentSkipListMap<InternalKey, byte[]> result = new ConcurrentSkipListMap<InternalKey, byte[]>();
 		
 		for(ConcurrentSkipListMap<InternalKey, byte[]> value:table.values()){
-			
+			result.putAll(value);
 		}
 		
 		return result;

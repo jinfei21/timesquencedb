@@ -184,7 +184,7 @@ public class DBEngine implements IDB {
 		SeekIteratorAdapter it = new SeekIteratorAdapter(fileManager, storeLevel.iterator());
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
-			it.addIterator(entry.getValue().iterator());
+			it.addLevelIterator(entry.getValue().iterator());
 		}
 		
 		return it;

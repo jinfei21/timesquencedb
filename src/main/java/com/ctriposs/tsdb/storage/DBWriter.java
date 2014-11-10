@@ -47,7 +47,7 @@ public class DBWriter {
 		storage.put(tOffset, key.toTimeItemByte(value.length, vOffset));
 		// write value item
 		storage.put(vOffset, value);
-		//record code
+		//record start time offset when code change
 		CodeItem codeItem = codeMap.get(key.getCode());
 		if (codeItem == null) {
 			codeItem = new CodeItem(key.getCode(), tOffset, key.getTime(), key.getTime());
