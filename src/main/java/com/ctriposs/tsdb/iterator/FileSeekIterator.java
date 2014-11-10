@@ -41,7 +41,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.curCodeItem = null;
 	}
 	
-	public FileSeekIterator(IStorage storage,long fileNumber)throws IOException {
+	public FileSeekIterator(IStorage storage, long fileNumber)throws IOException {
 		this(storage);
 		this.fileNumber = fileNumber;
 	}
@@ -529,4 +529,13 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		return curEntry;
 	}
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof FileSeekIterator)) {
+            return false;
+        }
+
+        FileSeekIterator iterator = (FileSeekIterator) obj;
+        return this.storage == iterator.storage;
+    }
 }

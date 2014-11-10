@@ -29,8 +29,8 @@ public class MergeFileSeekIterator{
 	}
 	
 	public void addIterator(IFileIterator<InternalKey, byte[]>... its) {
-		for(IFileIterator<InternalKey, byte[]> it:its){
-			itSet.add(it);
+		for(IFileIterator<InternalKey, byte[]> it : its) {
+            itSet.add(it);
 		}
 	}
 

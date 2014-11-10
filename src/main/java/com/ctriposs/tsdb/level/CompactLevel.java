@@ -78,7 +78,6 @@ public class CompactLevel extends Level {
             NavigableSet<Long> keySet = headMap.keySet();
 
 			for (Long time : keySet) {
-                System.out.println(time);
 				long ts = format(time, interval);
 				//only one task can process a time
 				if (ts % tasks.length == num) {
@@ -129,7 +128,7 @@ public class CompactLevel extends Level {
         	MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
             for (FileMeta meta : fileMetaList) {
-                FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
+                FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()), meta.getFileNumber());
                 mergeIterator.addIterator(fileIterator);
                 totalTimeCount += fileIterator.timeItemCount();
             }

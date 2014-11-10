@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
+import com.ctriposs.tsdb.level.CompactLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.manage.NameManager;
