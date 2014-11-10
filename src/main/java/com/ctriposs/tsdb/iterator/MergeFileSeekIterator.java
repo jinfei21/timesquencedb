@@ -72,6 +72,7 @@ public class MergeFileSeekIterator{
 				}else{
 					try {
 						if(it.hasPrevCode()){
+							it.seekToCurrent(it.currentCode().getCode());
 							result = true;
 		                    break;
 						}
