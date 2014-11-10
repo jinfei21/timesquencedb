@@ -72,9 +72,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 				if (it != curIt) {
 					try {
-						if (it.hasNext()) {
-							it.seek(curSeekTable,curSeekColumn,curSeekTime);
-						}
+						it.seek(curSeekTable,curSeekColumn,curSeekTime);						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -96,9 +94,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			for(LevelSeekIterator it:itSet){
 				if(curIt != it){
 					try {
-						if(it.hasNext()){
-							it.seek(curSeekTable,curSeekColumn,curSeekTime);
-						}
+						it.seek(curSeekTable,curSeekColumn,curSeekTime);						
 					} catch (IOException e) {			
 						throw new RuntimeException(e);
 					}

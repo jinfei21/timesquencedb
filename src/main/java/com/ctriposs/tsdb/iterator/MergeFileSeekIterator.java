@@ -92,9 +92,9 @@ public class MergeFileSeekIterator{
 
 				if (it != curIt) {
 					try {
-						if (it.hasNext()) {
-							it.seekToCurrent(it.currentCode().getCode());
-						}
+
+						it.seek(curEntry.getKey().getCode(),curEntry.getKey().getTime());
+						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -113,9 +113,9 @@ public class MergeFileSeekIterator{
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(curIt != it){
 					try {
-						if(it.hasNext()){
-							it.seekToCurrent(it.currentCode().getCode());
-						}
+
+						it.seek(curEntry.getKey().getCode(),curEntry.getKey().getTime());
+						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
