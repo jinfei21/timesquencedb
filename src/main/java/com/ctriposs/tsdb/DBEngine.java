@@ -81,7 +81,7 @@ public class DBEngine implements IDB {
 		this.compactLevelMap = new LinkedHashMap<Integer, Level>();
 		this.storeLevel.start();
 
-        //this.compactLevelMap.put(1, new CompactLevel(fileManager, this.storeLevel, 1, 4 * 60 * 1000, 2));
+        this.compactLevelMap.put(1, new CompactLevel(fileManager, this.storeLevel, 1, 4 * 60 * 1000, 1));
 		//initialize compact level
 		for(Entry<Integer,Level> entry : compactLevelMap.entrySet()){
 			//entry.getValue().recoveryData();

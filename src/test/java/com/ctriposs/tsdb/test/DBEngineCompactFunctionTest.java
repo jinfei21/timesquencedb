@@ -17,7 +17,7 @@ public class DBEngineCompactFunctionTest {
         DBConfig config = new DBConfig(TEST_DIR);
         engine = new DBEngine(config);
 
-        System.out.println("Start from date " + new Date());
+        System.out.println("Start from date " + System.currentTimeMillis());
         for (long counter = 0;; counter++) {
             engine.put("a", "b", System.currentTimeMillis(), "fdsafasdfasdfasdfsdafsdafasdfasdfasdfasfsda".getBytes());
 

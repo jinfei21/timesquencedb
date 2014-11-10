@@ -73,11 +73,12 @@ public class CompactLevel extends Level {
 		public void process() throws Exception {
 
             Map<Long, HashMap<Long, List<FileMeta>>> compactMap = new HashMap<Long, HashMap<Long, List<FileMeta>>>();
-            long startTime = format(System.currentTimeMillis() - 5 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
+            long startTime = format(System.currentTimeMillis() - 1 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
             ConcurrentNavigableMap<Long, ConcurrentSkipListSet<FileMeta>> headMap = prevLevel.getTimeFileMap().headMap(startTime);
             NavigableSet<Long> keySet = headMap.keySet();
 
 			for (Long time : keySet) {
+                System.out.println(time);
 				long ts = format(time, interval);
 				//only one task can process a time
 				if (ts % tasks.length == num) {
@@ -104,7 +105,7 @@ public class CompactLevel extends Level {
 
                 FileMeta newFileMeta = mergeSort(key, fileMetaList);
                 
-                // add to current level
+                // Add to current level
                 add(key, newFileMeta);
                 
                 // Remove the preLevel file meta               

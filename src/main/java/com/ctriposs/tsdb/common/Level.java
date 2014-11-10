@@ -86,9 +86,7 @@ public abstract class Level {
 			executor.shutdownNow();
 		}
 	}
-	
 
-	
 	public LevelSeekIterator iterator(){
 		return new LevelSeekIterator(fileManager, this, interval);
 	}
