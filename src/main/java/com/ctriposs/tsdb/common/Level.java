@@ -149,23 +149,16 @@ public abstract class Level {
     }
 
 	public void delete(long afterTime) throws IOException {
-		for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry : timeFileMap.entrySet()) {
-			if(entry.getKey() < afterTime) {
-				ConcurrentSkipListSet<FileMeta> list = entry.getValue();
-				boolean OK = true;
-				try{
-					for(FileMeta meta : list){
-						try{
-							fileManager.delete(meta.getFile());
-							list.remove(meta);
-						}catch(IOException e){
-							OK = false;
-							throw e;
-						}
-					}
-				}finally{
-					if(OK){
-						timeFileMap.remove(entry.getKey());
+		for (Entry<Long, ConcurrentSkipListSet<FileMeta>> entry : timeFileMap.entrySet()) {
+			if (entry.getKey() < afterTime) {
+				ConcurrentSkipListSet<FileMeta> list = timeFileMap.remove(entry
+						.getKey());
+				for (FileMeta meta : list) {
+					try {
+						fileManager.delete(meta.getFile());
+						list.remove(meta);
+					} catch (IOException e) {
+						throw e;
 					}
 				}
 			}

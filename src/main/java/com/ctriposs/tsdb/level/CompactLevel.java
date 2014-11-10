@@ -79,6 +79,7 @@ public class CompactLevel extends Level {
 
 			for (Long time : keySet) {
 				long ts = format(time, interval);
+				//only one task can process a time
 				if (ts % tasks.length == num) {
 					HashMap<Long, List<FileMeta>> preTimeList = compactMap.get(ts);
 					List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
@@ -94,7 +95,7 @@ public class CompactLevel extends Level {
 			}      
 
 
-            for (Map.Entry<Long, HashMap<Long, List<FileMeta>>> entry : compactMap.entrySet()) {
+            for (Entry<Long, HashMap<Long, List<FileMeta>>> entry : compactMap.entrySet()) {
                 long key = entry.getKey();
                 List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
                 for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {

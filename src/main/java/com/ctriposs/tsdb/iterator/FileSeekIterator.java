@@ -265,7 +265,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	public void seek(int code, long time) throws IOException {
 
 		if (head.containCode(code)) {
-
+			//read code area
 			nextCodeBlock();
 			if (curCodeBlock != null) {
 				while (!curCodeBlock.seek(code)) {
@@ -284,7 +284,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 				}
 			}
 
-			// read time
+			// read time area
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
@@ -316,11 +316,12 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		curCodeBlockIndex = -1;
 		curTimeBlockIndex = -1;
 		if (head.containCode(code)) {
+			// read code area
 			if(curCodeBlock==null){
 				nextCodeBlock();
 			}
 			find(code);
-			// read time
+			// read time area
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
@@ -356,11 +357,12 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	public void seekToCurrent(int code) throws IOException {
 
 		if (head.containCode(code)) {
+			// read code area
 			if(curCodeBlock==null){
 				nextCodeBlock();
 			}
 			find(code);
-			// read time
+			// read time area
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {

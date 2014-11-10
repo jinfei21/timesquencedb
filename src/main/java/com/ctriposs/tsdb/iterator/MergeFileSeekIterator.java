@@ -46,9 +46,11 @@ public class MergeFileSeekIterator{
 				}else{
 					try {
 						if(it.hasNextCode()){
+							it.seekToCurrent(it.currentCode().getCode());
 							result = true;
 		                    break;
 						}
+						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}

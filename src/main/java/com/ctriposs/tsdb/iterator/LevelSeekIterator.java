@@ -178,6 +178,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					} else if (fileManager.compare(smallest.key(), it.key()) > 0) {
 						smallest = it;
 					} else if (fileManager.compare(smallest.key(), it.key()) == 0) {
+						//filter the same key after lower level
 						while (it.hasNext()) {
 							it.next();
 							int diff = fileManager.compare(smallest.key(),it.key());
@@ -204,6 +205,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					} else if (fileManager.compare(largest.key(), it.key()) < 0) {
 						largest = it;
 					} else if (fileManager.compare(largest.key(), it.key()) == 0) {
+						//filter the same key after lower level
 						while (it.hasPrev()) {
 							it.prev();
 							int diff = fileManager.compare(largest.key(),it.key());
@@ -220,6 +222,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		}
 	}
 
+	//get next time interval iterator for this level
 	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException {
 
 		if (time > System.currentTimeMillis()) {

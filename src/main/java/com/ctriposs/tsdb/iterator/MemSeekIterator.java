@@ -11,14 +11,14 @@ import com.ctriposs.tsdb.table.MemTable;
 
 public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	
-	private MemTable memTable;
+	private ConcurrentSkipListMap<InternalKey, byte[]> dataMap;
 	private Iterator<Entry<InternalKey, byte[]>> curSeeIterator;
 	private Entry<InternalKey, byte[]> curEntry;
 	private InternalKey seekKey;
 	private FileManager fileManager;
 	
 	public MemSeekIterator(FileManager fileManager,MemTable memTable){
-		this.memTable = memTable;
+		this.dataMap = memTable.getAllConcurrentSkipList();
 		this.fileManager = fileManager;
 		this.curSeeIterator = null;
 		this.seekKey = null;
@@ -49,18 +49,20 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		return entry;
 	}
 
+	@Override
+	public Entry<InternalKey, byte[]> prev() {
+
+		return null;
+	}
+
 
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
 
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
-		ConcurrentSkipListMap<InternalKey, byte[]> list = memTable.getConcurrentSkipList(time);
-		if(list != null){
 			
-			curSeeIterator = list.tailMap(seekKey).entrySet().iterator();
-			curEntry = curSeeIterator.next();
-		}
-		
+		curSeeIterator = dataMap.tailMap(seekKey).entrySet().iterator();
+		curEntry = curSeeIterator.next();
 	}
 
 	@Override
@@ -116,16 +118,10 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	}
 
 
-
-	@Override
-	public Entry<InternalKey, byte[]> prev() {
-
-		return null;
-	}
-
 	@Override
 	public void close() throws IOException {
-
+		dataMap.clear();
+		dataMap = null;
 	}
 	
 	@Override
@@ -133,4 +129,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		throw new UnsupportedOperationException("unsupport remove operation!");
 	}
 	
+	enum Direction {
+		forward, reverse
+	}
 }

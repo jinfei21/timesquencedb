@@ -79,7 +79,7 @@ public class FileManager {
 	}
 	
 	public long getFileNumber(){
-		return maxFileNumber.incrementAndGet();
+		return maxFileNumber.getAndIncrement();
 	}
 	
 	public void upateFileNumber(long fileNumber){
