@@ -38,8 +38,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public boolean hasPrev() {
 		if(curEntry != null){
-
-			if(curEntry.equals(dataMap.firstEntry())){
+			if(null == dataMap.higherKey(curEntry.getKey())){
 				return false;
 			}else{
 				return true;
@@ -63,7 +62,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		Entry<InternalKey, byte[]> entry = curEntry;
 		if(curSeeIterator != null){
 			if(curEntry != null){
-				curEntry = dataMap.lowerEntry(curEntry.getKey());
+				curEntry = dataMap.higherEntry(curEntry.getKey());
 			}
 		}
 		return entry;
