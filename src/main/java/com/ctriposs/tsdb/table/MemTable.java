@@ -97,6 +97,10 @@ public class MemTable {
 	public ConcurrentHashMap<Long, ConcurrentSkipListMap<InternalKey, byte[]>> getTable(){
 		return this.table;
 	}
+	
+	public ConcurrentSkipListMap<InternalKey, byte[]> getConcurrentSkipList(long time){
+		return this.table.get(format(time));
+	}
 
 	public void close() throws IOException{
 		logWriter.close();

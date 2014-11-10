@@ -1,11 +1,16 @@
-package com.ctriposs.tsdb;
+package com.ctriposs.tsdb.test;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class DBEngineSeekTest {
+import com.ctriposs.tsdb.DBConfig;
+import com.ctriposs.tsdb.DBEngine;
+import com.ctriposs.tsdb.ISeekIterator;
+import com.ctriposs.tsdb.InternalKey;
+
+public class DBEngineSeekFunctionTest {
 
     private static final String TEST_DIR = "d:\\tsdb_test\\seek_test";
     private static final int INIT_COUNT = 10*1000*1000;
@@ -30,24 +35,25 @@ public class DBEngineSeekTest {
         String last = null;
         long lt = 0;
         int sss = 0;
-        for (int i = 0; i < 2 * INIT_COUNT; i++) {
-            int n = random.nextInt(7);
-            
+        
+        for (int i = 0; i < 2*INIT_COUNT; i++) {
+        	String n = String.valueOf(random.nextInt(30000));
+
             long l = System.currentTimeMillis();
             if(i==0){
             	s = l;
-            	table = str[n];
+            	table = n;
             }
-
-            String d = data+i;
-            engine.put(str[n], str[n], l, d.getBytes());
-            map.put(l,str[n] + "-" + d);
-            if(table.equals(str[n])){
+        	String d = data+i;
+        	engine.put(n, n, l, d.getBytes());
+        	map.put(l,n + "-" + d);
+            if(table.equals(n)){
             	last = d;
             	lt = l;
             	sss++;
             }
         }
+
         
         System.out.println(new String(engine.get(table, table, s)));
 

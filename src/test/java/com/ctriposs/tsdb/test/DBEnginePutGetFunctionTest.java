@@ -1,4 +1,4 @@
-package com.ctriposs.tsdb;
+package com.ctriposs.tsdb.test;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-public class DBEnginePutTest {
+import com.ctriposs.tsdb.DBConfig;
+import com.ctriposs.tsdb.DBEngine;
+
+public class DBEnginePutGetFunctionTest {
 
     private static final String TEST_DIR = "d:\\tsdb_test\\put_test";
     private static final int INIT_COUNT = 10*1000*1000;

@@ -8,7 +8,7 @@ public interface ILogWriter {
 
     void add(int code, long time, byte[] value) throws IOException;
 
-    void add(String name, short code) throws IOException;
+    boolean add(String name, short code) throws IOException;
     
     int getLength();
     

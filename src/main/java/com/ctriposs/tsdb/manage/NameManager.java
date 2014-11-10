@@ -38,11 +38,11 @@ public class NameManager {
 					code = (short) maxCode.incrementAndGet();
 					nameMap.put(name, code);
 					codeMap.put(code, name);  
-					if(fileWriter.getLength() > MemTable.MAX_MEM_SIZE-10000){
+					if(!fileWriter.add(name, code)){
 						fileWriter.close();
-						fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;
+						fileWriter = new MapFileLogWriter( dir, FileName.nameFileName(0),  MemTable.MAX_MEM_SIZE) ;	
+						fileWriter.add(name, code);
 					}
-					fileWriter.add(name, code);
 					hasData = true;
 				}
 			} finally {

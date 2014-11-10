@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
+
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
@@ -69,53 +71,54 @@ public class CompactLevel extends Level {
 
 		@Override
 		public void process() throws Exception {
-            System.out.println("Start running level " + level + " merge thread at " + System.currentTimeMillis());
-            System.out.println("Current hash map size at level " + level + " is " + timeFileMap.size());
 
-            Map<Long, HashMap<Long, List<FileMeta>>> levelMap = new HashMap<Long, HashMap<Long, List<FileMeta>>>();
-            long compactFlag = format(System.currentTimeMillis() - 5 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
-            ConcurrentNavigableMap<Long, ConcurrentSkipListSet<FileMeta>> headMap = prevLevel.getTimeFileMap().headMap(compactFlag);
+            Map<Long, HashMap<Long, List<FileMeta>>> compactMap = new HashMap<Long, HashMap<Long, List<FileMeta>>>();
+            long startTime = format(System.currentTimeMillis() - 5 * prevLevel.getLevelInterval(), prevLevel.getLevelInterval());
+            ConcurrentNavigableMap<Long, ConcurrentSkipListSet<FileMeta>> headMap = prevLevel.getTimeFileMap().headMap(startTime);
             NavigableSet<Long> keySet = headMap.keySet();
 
-            for (Long time : keySet) {
-                long ts = format(time, interval);
-                if (ts % tasks.length == num) {
-                    HashMap<Long, List<FileMeta>> preTimeList = levelMap.get(ts);
-                    List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
+			for (Long time : keySet) {
+				long ts = format(time, interval);
+				if (ts % tasks.length == num) {
+					HashMap<Long, List<FileMeta>> preTimeList = compactMap.get(ts);
+					List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
 
-                    if (preTimeList == null) {
-                        preTimeList = new HashMap<Long, List<FileMeta>>();
-                        fileMetaList.addAll(prevLevel.getFiles(time));
-                        preTimeList.put(time, fileMetaList);
-                    } else {
-                        fileMetaList.addAll(prevLevel.getFiles(time));
-                        preTimeList.put(time, fileMetaList);
-                    }
-                    levelMap.put(ts, preTimeList);
-                }
-            }
+					if (preTimeList == null) {
+						preTimeList = new HashMap<Long, List<FileMeta>>();
+					}
+					fileMetaList.addAll(prevLevel.getFiles(time));
+					preTimeList.put(time, fileMetaList);
 
-            for (Map.Entry<Long, HashMap<Long, List<FileMeta>>> entry : levelMap.entrySet()) {
-                long higherLevelKey = entry.getKey();
+					compactMap.put(ts, preTimeList);
+				}
+			}      
+
+
+            for (Map.Entry<Long, HashMap<Long, List<FileMeta>>> entry : compactMap.entrySet()) {
+                long key = entry.getKey();
                 List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
-                for (Map.Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
+                for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
                     fileMetaList.addAll(e.getValue());
-                    // Remove the preLevel file meta
-                    prevLevel.getTimeFileMap().remove(e.getKey());
                 }
 
-                FileMeta newFileMeta = mergeSort(higherLevelKey, fileMetaList);
-
+                FileMeta newFileMeta = mergeSort(key, fileMetaList);
+                
                 // add to current level
-                add(higherLevelKey, newFileMeta);
-
+                add(key, newFileMeta);
+                
+                // Remove the preLevel file meta               
+                for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
+                     prevLevel.delete(e.getKey(), e.getValue());
+                }
+                
                 // delete the preLevel disk files
                 for (FileMeta fileMeta : fileMetaList) {
                     try {
                         FileUtil.forceDelete(fileMeta.getFile());
                     } catch (IOException e) {
+                    	e.printStackTrace();
+                    	incrementStoreError();
                     }
-
                 }
             }
 		}
@@ -123,19 +126,17 @@ public class CompactLevel extends Level {
         private FileMeta mergeSort(long time, List<FileMeta> fileMetaList) throws IOException {
         	MergeFileSeekIterator mergeIterator = new MergeFileSeekIterator(fileManager);
             long totalTimeCount = 0;
-            long fileLen = 0;
             for (FileMeta meta : fileMetaList) {
                 FileSeekIterator fileIterator = new FileSeekIterator(new PureFileStorage(meta.getFile()));
                 mergeIterator.addIterator(fileIterator);
                 totalTimeCount += fileIterator.timeItemCount();
-                fileLen += meta.getFile().length();
             }
 
             long fileNumber = fileManager.getFileNumber();
-            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileManager.getFileNumber(), level), fileLen);
+            PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level));
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
             while (mergeIterator.hasNext()) {
-                Map.Entry<InternalKey, byte[]> entry = mergeIterator.next();
+                Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 dbWriter.add(entry.getKey(), entry.getValue());
             }
 

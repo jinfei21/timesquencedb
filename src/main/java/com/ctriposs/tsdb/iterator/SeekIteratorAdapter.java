@@ -152,7 +152,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
-			curIt = smallest;
+			if(smallest != null){
+				curIt = smallest;
+			}
 		}
 	}
 	
@@ -178,7 +180,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
-			curIt = largest;
+			if(largest != null){
+				curIt = largest;
+			}
 		}
 	}
 

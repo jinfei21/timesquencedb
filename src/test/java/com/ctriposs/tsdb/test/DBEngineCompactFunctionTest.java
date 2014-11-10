@@ -1,9 +1,12 @@
-package com.ctriposs.tsdb;
+package com.ctriposs.tsdb.test;
 
 import java.io.IOException;
 import java.util.Date;
 
-public class DBEngineCompactTest {
+import com.ctriposs.tsdb.DBConfig;
+import com.ctriposs.tsdb.DBEngine;
+
+public class DBEngineCompactFunctionTest {
 
     private static final String TEST_DIR = "d://tsdb_test/compact/";
 

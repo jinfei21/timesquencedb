@@ -37,8 +37,6 @@ public abstract class Level {
     /** The list change lock. */
     private final Lock changeLock = new ReentrantLock();
     
-    /** The empty list remove lock. */
-    protected final Lock deleteLock = new ReentrantLock();
 
     protected ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>>(new Comparator<Long>() {
         @Override
@@ -89,6 +87,8 @@ public abstract class Level {
 		}
 	}
 	
+
+	
 	public LevelSeekIterator iterator(){
 		return new LevelSeekIterator(fileManager, this, interval);
 	}
@@ -101,13 +101,27 @@ public abstract class Level {
 				list = timeFileMap.get(time);
 				if(list == null) {
 					list = new ConcurrentSkipListSet<FileMeta>(fileManager.getFileMetaComparator());
+					list.add(fileMeta);
 					timeFileMap.put(time, list);
+				}else{
+					list.add(fileMeta);
 				}
 			} finally {
 				changeLock.unlock();
 			}
+		}else{
+			list.add(fileMeta);
 		}
-		list.add(fileMeta);
+		
+	}
+	
+	public void delete(long time, List<FileMeta> fileMetaList) {
+		ConcurrentSkipListSet<FileMeta> list = timeFileMap.get(time);
+		if(list != null) {
+			for(FileMeta fileMeta:fileMetaList){
+				list.remove(fileMeta);
+			}
+		}
 	}
 	
 	public ConcurrentSkipListSet<FileMeta> getFiles(long time){
@@ -166,16 +180,16 @@ public abstract class Level {
 				if(fileMeta.contains(key)){
 					IStorage storage = new PureFileStorage(fileMeta.getFile());
 					FileSeekIterator it = new FileSeekIterator(storage);
-					it.seekToFirst(key.getCode());
+					it.seek(key.getCode(),key.getTime());
 
 					while(it.hasNext()){
-						it.next();
 						int diff = fileManager.compare(key,it.key());
 						if(0==diff){
 							return it.value();
 						}else if(diff < 0){
 							break;
 						}
+						it.next();
 					}
 				}
 			}
@@ -196,12 +210,35 @@ public abstract class Level {
 			while(run) {
 				try {
 					incrementStoreCount();
+					clear();
 					process();
 					Thread.sleep(500);
 				} catch (Throwable e) {
 					//TODO
 					e.printStackTrace();
 					incrementStoreError();
+				}
+			}
+		}
+		
+		private void clear(){
+			for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry:timeFileMap.entrySet()){
+				long time = entry.getKey();
+				if (time % tasks.length == num) {
+					ConcurrentSkipListSet<FileMeta> list = entry.getValue();
+					if(list.size()==0){
+						try{
+							changeLock.lock();
+							list = timeFileMap.get(time);
+							if(list != null) {
+								if(list.size()==0){
+									timeFileMap.remove(time, list);
+								}
+							}
+						} finally {
+							changeLock.unlock();
+						}
+					}
 				}
 			}
 		}

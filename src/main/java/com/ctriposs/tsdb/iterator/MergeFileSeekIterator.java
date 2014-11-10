@@ -91,7 +91,6 @@ public class MergeFileSeekIterator{
 					try {
 						if (it.hasNext()) {
 							it.seekToCurrent(it.currentCode().getCode());
-							it.next();
 						}
 					} catch (IOException e) {
 						throw new RuntimeException(e);
@@ -134,7 +133,6 @@ public class MergeFileSeekIterator{
 		if(null != itSet){
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				it.seek(seekKey.getCode(),curSeekTime);
-				it.next();
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -150,7 +148,6 @@ public class MergeFileSeekIterator{
 					if(item != null){
 						it.seekToCurrent(item.getCode());
 					}
-					it.next();
 				}
 			}		
 			findSmallest();
@@ -189,7 +186,9 @@ public class MergeFileSeekIterator{
 					}
 				}
 			}
-			curIt = smallest;
+			if(smallest != null){
+				curIt = smallest;
+			}
 		}
 	}
 	
@@ -223,7 +222,9 @@ public class MergeFileSeekIterator{
 					}
 				}
 			}
-			curIt = largest;
+			if(largest != null){
+				curIt = largest;
+			}
 		}
 	}
 	

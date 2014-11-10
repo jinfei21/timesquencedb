@@ -44,12 +44,16 @@ public class MapFileLogWriter implements ILogWriter {
 		storage.put(metaOffset + 16, value);
 	}
 
-    public void add(String name, short code) throws IOException {
+    public boolean add(String name, short code) throws IOException {
         byte[] nameBytes = ByteUtil.ToBytes(name);
         int offset = current.getAndAdd(6 + nameBytes.length);
+        if(current.get()>MemTable.MAX_MEM_SIZE){
+        	return false;
+        }
         storage.put(offset, ByteUtil.toBytes(code));
         storage.put(offset + 2, ByteUtil.toBytes(nameBytes.length));
         storage.put(offset + 6, nameBytes);
+        return true;
     }
     
     

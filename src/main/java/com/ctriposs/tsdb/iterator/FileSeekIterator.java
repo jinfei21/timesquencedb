@@ -288,7 +288,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			if (curCodeItem != null) {
 				nextTimeBlock();
 				if (curTimeBlock != null) {
-					while(!(curTimeBlock.containTime(time)<0)){
+					while(!(curTimeBlock.containTime(time)<=0)){
 						nextTimeBlock();
 						if(curTimeBlock == null){
 							break;
