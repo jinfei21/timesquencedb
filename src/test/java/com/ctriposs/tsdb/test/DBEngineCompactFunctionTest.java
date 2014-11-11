@@ -15,26 +15,32 @@ public class DBEngineCompactFunctionTest {
 
     private static DBEngine engine;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         DBConfig config = new DBConfig(TEST_DIR);
         engine = new DBEngine(config);
         Random random = new Random();
 
-        System.out.println("Start from date " + System.currentTimeMillis());
+        long start = System.currentTimeMillis();
+        System.out.println("Start from date " + start);
         for (long counter = 0;; counter++) {
+
             engine.put(TABLE_NAME_ARRAY[random.nextInt(TABLE_NAME_ARRAY.length)], COLUMN_NAME_ARRAY[random.nextInt(COLUMN_NAME_ARRAY.length)], System.currentTimeMillis(), "fdsafasdfasdfasdfsdafsdafasdfasdfasdfasfsda".getBytes());
 
             if (counter  % 1000000 == 0) {
-                System.out.println("Current date:" + new Date());
+                Thread.sleep(100);
+               /* System.out.println("Current date:" + new Date());
                 System.out.println("counter:     " + counter);
                 System.out.println("store        " + engine.getStoreCounter(0));
                 System.out.println("store error  " + engine.getStoreErrorCounter(0));
 
                 System.out.println();
-                System.out.println();
+                System.out.println();*/
             }
 
+            if (System.currentTimeMillis() - start > 2 * 60 * 1000) {
+                break;
+            }
         }
     }
 }
