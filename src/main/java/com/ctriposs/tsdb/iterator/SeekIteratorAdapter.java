@@ -257,4 +257,9 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	enum Direction{
 		forward,reverse
 	}
+
+	@Override
+	public long priority() {
+		return 0;
+	}
 }

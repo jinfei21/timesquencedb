@@ -17,10 +17,11 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	private Entry<InternalKey, byte[]> curEntry;
 	private InternalKey seekKey;
 	private FileManager fileManager;
-	
-	public MemSeekIterator(FileManager fileManager,MemTable memTable){
+	private long fileNumber;
+	public MemSeekIterator(FileManager fileManager,MemTable memTable,long fileNumber){
 		this.dataMap = memTable.getAllConcurrentSkipList();
 		this.fileManager = fileManager;
+		this.fileNumber = fileNumber;
 		this.curSeeIterator = null;
 		this.seekKey = null;
 		this.curEntry = null;
@@ -38,7 +39,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public boolean hasPrev() {
 		if(curEntry != null){
-			if(null == dataMap.higherKey(curEntry.getKey())){
+			if(null == dataMap.lowerEntry(curEntry.getKey())){
 				return false;
 			}else{
 				return true;
@@ -62,7 +63,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		Entry<InternalKey, byte[]> entry = curEntry;
 		if(curSeeIterator != null){
 			if(curEntry != null){
-				curEntry = dataMap.higherEntry(curEntry.getKey());
+				curEntry = dataMap.lowerEntry(curEntry.getKey());
 			}
 		}
 		return entry;
@@ -74,7 +75,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	public void seek(String table, String column, long time) throws IOException {
 
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);		
-		curSeeIterator = dataMap.tailMap(seekKey).entrySet().iterator();
+		curSeeIterator = dataMap.tailMap(seekKey,true).entrySet().iterator();
 		curEntry = curSeeIterator.next();
 	}
 
@@ -140,6 +141,11 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("unsupport remove operation!");
+	}
+
+	@Override
+	public long priority() {
+		return 0;
 	}
 
 }

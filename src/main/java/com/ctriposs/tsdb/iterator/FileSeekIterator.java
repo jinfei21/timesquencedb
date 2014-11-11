@@ -35,6 +35,8 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.storage.get(0, bytes);
 		this.head = new Head(bytes);
 		this.maxCodeBlockIndex = (head.getCodeCount() + DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
+		nextCodeBlock();
+		this.curCodeBlockIndex = -1;
 		this.curEntry = null;
 		this.curTimeBlock = null;
 		this.curCodeBlock = null;

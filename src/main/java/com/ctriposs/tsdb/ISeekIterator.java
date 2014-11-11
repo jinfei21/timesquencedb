@@ -23,6 +23,8 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	boolean hasPrev();
 	
 	Entry<K,V> prev();
+	
+	long priority();
 
 	void close() throws IOException;
 }
