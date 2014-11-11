@@ -39,21 +39,31 @@ public class MergeFileSeekIterator{
 		boolean result = false;
 
 		if(itSet != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itSet) {
-				if(it.hasNext()) {
-					result = true;
-                    break;
-				}else{
-					try {
-						if(it.hasNextCode()){
-							it.seekToCurrent();
-							result = true;
-		                    break;
+			if(curIt.hasNext()){
+				return true;
+			}else{
+				for (IFileIterator<InternalKey, byte[]> it : itSet) {
+					if(it.hasNext()) {
+						result = true;
+	                    break;
+					}else{
+						try {
+							if(it.hasNextCode()){
+								it.nextCode();
+								it.seekToCurrent();
+								result = true;
+			                    break;
+							}
+							
+						} catch (IOException e) {
+							throw new RuntimeException(e);
 						}
-						
-					} catch (IOException e) {
-						throw new RuntimeException(e);
 					}
+				}
+				try {
+					findSmallest();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
 				}
 			}
 		}		
@@ -61,24 +71,34 @@ public class MergeFileSeekIterator{
 	}
 
 
-	public boolean hasPrev() {
+	public boolean hasPrev(){
 		boolean result = false;
 
 		if(itSet != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itSet) {
-				if(it.hasPrev()) {
-					result = true;
-                    break;
-				}else{
-					try {
-						if(it.hasPrevCode()){
-							it.seekToCurrent();
-							result = true;
-		                    break;
+			if(curIt.hasNext()){
+				
+			}else{
+				for (IFileIterator<InternalKey, byte[]> it : itSet) {
+					if(it.hasPrev()) {
+						result = true;
+	                    break;
+					}else{
+						try {
+							if(it.hasPrevCode()){
+								it.prevCode();
+								it.seekToCurrent();
+								result = true;
+			                    break;
+							}
+						} catch (IOException e) {
+							throw new RuntimeException(e);
 						}
-					} catch (IOException e) {
-						throw new RuntimeException(e);
 					}
+				}
+				try {
+					findLargest();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
 				}
 			}
 		}		

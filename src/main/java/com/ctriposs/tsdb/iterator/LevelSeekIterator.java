@@ -38,69 +38,82 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	public boolean hasNext() {
 
 		boolean result = false;
-		if (itSet != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itSet) {
-				if (it.hasNext()) {
-					result = true;
-					break;
-				}
-			}
-		}
-
-		if (!result) {
-			curSeekTime += interval;
-			if (curSeekTime < System.currentTimeMillis()) {
-				try {
-					itSet = getNextIterators(curSeekTime);
-					if (null != itSet) {
-						for (IFileIterator<InternalKey, byte[]> it : itSet) {
-							it.seek(seekKey.getCode(), curSeekTime);
-						}
-						findSmallest();
-						direction = Direction.forward;
+		if(curIt.hasNext()){
+			result = true; 
+		}else{
+		
+			if (itSet != null) {
+				for (IFileIterator<InternalKey, byte[]> it : itSet) {
+					if (it.hasNext()) {
+						result = true;
+						break;
 					}
-				} catch (IOException e) {
-					result = false;
-					throw new RuntimeException(e);
 				}
-			} else {
-				result = false;
+			}
+	
+			if (!result) {
+				curSeekTime += interval;
+				if (curSeekTime < System.currentTimeMillis()) {
+					try {
+						itSet = getNextIterators(curSeekTime);
+						if (null != itSet) {
+							for (IFileIterator<InternalKey, byte[]> it : itSet) {
+								it.seek(seekKey.getCode(), curSeekTime);
+							}
+							findSmallest();
+							direction = Direction.forward;
+						}
+					} catch (IOException e) {
+						result = false;
+						throw new RuntimeException(e);
+					}
+				} else {
+					curEntry = null;
+					result = false;
+				}
+			}else{
+				findSmallest();
 			}
 		}
-
 		return result;
 	}
 
 	@Override
 	public boolean hasPrev() {
 		boolean result = false;
-		if (itSet != null) {
-			for (IFileIterator<InternalKey, byte[]> it : itSet) {
-				if (it.hasPrev()) {
-					result = true;
-					break;
+		if(curIt.hasPrev()){
+			result = true;
+		}else{
+			if (itSet != null) {
+				for (IFileIterator<InternalKey, byte[]> it : itSet) {
+					if (it.hasPrev()) {
+						result = true;
+						break;
+					}
 				}
 			}
-		}
-
-		if (!result) {
-			curSeekTime -= interval;
-			if (curSeekTime > System.currentTimeMillis() - fileManager.getMaxPeriod()) {
-				try {
-					itSet = getPrevIterators(curSeekTime);
-					if (null != itSet) {
-						for (IFileIterator<InternalKey, byte[]> it : itSet) {
-							it.seek(seekKey.getCode(), curSeekTime);
+	
+			if (!result) {
+				curSeekTime -= interval;
+				if (curSeekTime > System.currentTimeMillis() - fileManager.getMaxPeriod()) {
+					try {
+						itSet = getPrevIterators(curSeekTime);
+						if (null != itSet) {
+							for (IFileIterator<InternalKey, byte[]> it : itSet) {
+								it.seek(seekKey.getCode(), curSeekTime);
+							}
+							findLargest();
+							direction = Direction.reverse;
 						}
-						findLargest();
-						direction = Direction.reverse;
+					} catch (IOException e) {
+						result = false;
+						throw new RuntimeException(e);
 					}
-				} catch (IOException e) {
+				} else {
 					result = false;
-					throw new RuntimeException(e);
 				}
-			} else {
-				result = false;
+			}else{
+				findLargest();
 			}
 		}
 

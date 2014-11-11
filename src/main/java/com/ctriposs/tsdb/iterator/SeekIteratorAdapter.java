@@ -45,15 +45,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public boolean hasNext() {
 
 		boolean result = false;
-		if(itSet != null) {
-			for (LevelSeekIterator it : itSet) {
-				if(it.hasNext()) {
-					result = true;
-                    break;
+		if(curIt.hasNext()){
+			result = true;
+		}else{
+			if(itSet != null) {
+				for (LevelSeekIterator it : itSet) {
+					if(it.hasNext()) {
+						result = true;
+	                    break;
+					}
 				}
 			}
+			if(result){
+				findLargest();
+			}
 		}
-
 		return result;
 	}
 	
@@ -61,12 +67,19 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public boolean hasPrev() {
 		boolean result = false;
-		if(itSet != null) {
-			for (LevelSeekIterator it : itSet) {
-				if(it.hasPrev()) {
-					result = true;
-                    break;
+		if(curIt.hasPrev()){
+			result = true;
+		}else{
+			if(itSet != null) {
+				for (LevelSeekIterator it : itSet) {
+					if(it.hasPrev()) {
+						result = true;
+	                    break;
+					}
 				}
+			}
+			if(result){
+				findLargest();
 			}
 		}
 
