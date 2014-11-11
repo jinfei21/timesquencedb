@@ -60,7 +60,9 @@ public class MergeFileSeekIterator{
 					}
 				}
 				try {
-					findSmallest();
+					if(result){
+						findSmallest();
+					}
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -95,7 +97,9 @@ public class MergeFileSeekIterator{
 					}
 				}
 				try {
-					findLargest();
+					if(result){
+						findLargest();
+					}
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}

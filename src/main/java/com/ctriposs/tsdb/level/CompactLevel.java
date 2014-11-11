@@ -101,7 +101,10 @@ public class CompactLevel extends Level {
                 for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
                     fileMetaList.addAll(e.getValue());
                 }
-
+                
+                if(fileMetaList.size() < 2){
+                	continue;
+                }
                 FileMeta newFileMeta = mergeSort(key, fileMetaList);
                 
                 // Add to current level
@@ -148,7 +151,12 @@ public class CompactLevel extends Level {
                 }
                 
             }
-
+            try{
+            	mergeIterator.close();
+            }catch(Throwable t){
+            	t.printStackTrace();
+            	incrementStoreError();
+            }
             return dbWriter.close();
         }
 	}

@@ -53,14 +53,16 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 				if(!curTimeBlock.hasNext()){
 					try{
 						nextTimeBlock();
+						if(curTimeBlock == null){
+							return false;
+						}else{
+							readEntry(curCodeBlock.current().getCode(), curTimeBlock.current(), true);
+							return true;
+						}
 					}catch(IOException e){
 						throw new RuntimeException(e);
 					}
-					if(curTimeBlock == null){
-						return false;
-					}else{
-						return true;
-					}
+
 				}else{
 					return true;
 				}
@@ -90,14 +92,16 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 				if(!curTimeBlock.hasPrev()){
 					try{
 						prevTimeBlock();
+						if(curTimeBlock == null){
+							return false;
+						}else{
+							readEntry(curCodeBlock.current().getCode(), curTimeBlock.current(), true);
+							return true;
+						}
 					}catch(IOException e){
 						throw new RuntimeException(e);
 					}
-					if(curTimeBlock == null){
-						return false;
-					}else{
-						return true;
-					}
+
 				}else{
 					return true;
 				}		
@@ -474,9 +478,14 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 		if(curCodeBlock != null){
 			curCodeItem = curCodeBlock.next();
-		}else{
-			curCodeItem = null;
 		}
+		if(curCodeItem == null){
+			nextCodeBlock();
+			if(curCodeBlock != null){
+				curCodeItem = curCodeBlock.next();
+			}
+		}
+		
 		return curCodeItem;
 	}
 
@@ -492,8 +501,13 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 		if(curCodeBlock != null){
 			curCodeItem = curCodeBlock.prev();
-		}else{
-			curCodeItem = null;
+		}
+		
+		if(curCodeItem == null){
+			prevCodeBlock();
+			if(curCodeBlock != null){
+				curCodeItem = curCodeBlock.prev();
+			}
 		}
 		return curCodeItem;
 	}
