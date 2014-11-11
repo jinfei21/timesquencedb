@@ -477,6 +477,14 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}else{
 			curCodeItem = null;
 		}
+
+        if (curCodeItem == null) {
+            nextCodeBlock();
+            if (curCodeBlock != null) {
+                curCodeItem = curCodeBlock.next();
+            }
+        }
+
 		return curCodeItem;
 	}
 
