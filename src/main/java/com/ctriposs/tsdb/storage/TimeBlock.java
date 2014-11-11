@@ -73,7 +73,7 @@ public class TimeBlock {
 	}
 	
 	public TimeItem current(){
-		if (curPos <= maxPos&&curPos >= 0) {
+		if (curPos <= maxPos && curPos >= 0) {
 			return times[curPos];
 		}
 		return null;

@@ -1,6 +1,7 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -29,9 +30,7 @@ public class MergeFileSeekIterator{
 	}
 	
 	public void addIterator(IFileIterator<InternalKey, byte[]>... its) {
-		for(IFileIterator<InternalKey, byte[]> it : its) {
-            itSet.add(it);
-		}
+        Collections.addAll(itSet, its);
 	}
 
 	public boolean hasNext() {
@@ -122,6 +121,7 @@ public class MergeFileSeekIterator{
 			}
 			direction = Direction.forward;
 		}
+
 		curEntry = curIt.next();
 		findSmallest();
 		return curEntry;
@@ -164,7 +164,7 @@ public class MergeFileSeekIterator{
 	
 	public void seekToFirst() throws IOException {
 		
-		if(null != itSet){
+		if(null != itSet) {
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				if(it.hasNextCode()){
 					CodeItem item = it.nextCode();
@@ -181,7 +181,7 @@ public class MergeFileSeekIterator{
 	private void findSmallest() throws IOException{
 		if(null != itSet){
 			IFileIterator<InternalKey, byte[]> smallest = null;
-			for(IFileIterator<InternalKey, byte[]> it:itSet){
+			for(IFileIterator<InternalKey, byte[]> it : itSet) {
 				if(it.valid()){
 					
 					if(smallest == null){
@@ -225,6 +225,7 @@ public class MergeFileSeekIterator{
 					}
 				}
 			}
+
 			if(smallest != null){
 				curIt = smallest;
 			}

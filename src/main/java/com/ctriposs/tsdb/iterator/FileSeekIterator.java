@@ -193,9 +193,9 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		++curCodeBlockIndex;
 		byte[] bytes = null;
 		int count = 0;
-		if(curCodeBlockIndex == maxCodeBlockIndex){
+		if(curCodeBlockIndex == maxCodeBlockIndex) {
 			count = head.getCodeCount() - curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT;
-		}else if(curCodeBlockIndex < maxCodeBlockIndex){
+		}else if(curCodeBlockIndex < maxCodeBlockIndex) {
 			count = DBConfig.BLOCK_MAX_COUNT;		
 		}else{
 			curCodeBlock = null;
@@ -203,9 +203,8 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 		bytes = new byte[count*CodeItem.CODE_ITEM_SIZE];
 		
-		storage.get(head.getCodeOffset()+curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
+		storage.get(head.getCodeOffset() + curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
 		curCodeBlock = new CodeBlock(bytes, count);
-
 	}
 	
 	private void prevCodeBlock() throws IOException{
@@ -406,7 +405,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		return false;
 	}
 
-	private void readEntry(int code,TimeItem tItem,boolean isNext) throws IOException{
+	private void readEntry(int code, TimeItem tItem, boolean isNext) throws IOException{
 		if(tItem == null){
 			if(isNext){
 				curTimeBlockIndex = maxTimeBlockIndex + 1;
