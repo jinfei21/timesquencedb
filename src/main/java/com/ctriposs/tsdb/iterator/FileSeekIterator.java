@@ -118,7 +118,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		
 		return false;
 	}
-	
 
 	@Override
 	public boolean hasNextCode() throws IOException {
@@ -187,7 +186,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		}
 		return false;
 	}
-
 
 	private void nextCodeBlock() throws IOException{
 		++curCodeBlockIndex;
