@@ -8,15 +8,14 @@ public class InternalKeyComparator implements Comparator<InternalKey> {
 
 	@Override
 	public int compare(InternalKey o1, InternalKey o2) {
-		if(o1.getCode() == o2.getCode()){
+		if(o1.getCode() == o2.getCode()) {
 			return (int) (o1.getTime() - o2.getTime());
-		}else{
-			if(o1.getCode()<o2.getCode()){
+		} else {
+			if(o1.getCode() < o2.getCode()){
 				return -1;
-			}else{
+			} else {
 				return 1;
 			}
 		}
-		 
 	}
 }
