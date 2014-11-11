@@ -53,7 +53,7 @@ public class CodeBlock {
 	}
 	
 	public CodeItem current() {
-		if (curPos <= maxPos || curPos >= 0) {
+		if (curPos <= maxPos && curPos >= 0) {
 			return codes[curPos];
 		}
 

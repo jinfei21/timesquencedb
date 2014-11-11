@@ -136,9 +136,17 @@ public class CompactLevel extends Level {
             long fileNumber = fileManager.getFileNumber();
             PureFileStorage fileStorage = new PureFileStorage(fileManager.getStoreDir(), time, FileName.dataFileName(fileNumber, level));
             DBWriter dbWriter = new DBWriter(fileStorage, totalTimeCount, fileNumber);
+            mergeIterator.seekToFirst();
+            
             while (mergeIterator.hasNext()) {
                 Entry<InternalKey, byte[]> entry = mergeIterator.next();
-                dbWriter.add(entry.getKey(), entry.getValue());
+                if(entry != null){
+                	System.out.println(entry.getKey()+" | " + new String(entry.getValue()));
+                	dbWriter.add(entry.getKey(), entry.getValue());
+                }else{
+                	System.out.println("null");
+                }
+                
             }
 
             return dbWriter.close();

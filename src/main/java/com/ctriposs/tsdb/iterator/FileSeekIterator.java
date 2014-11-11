@@ -37,11 +37,8 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.maxCodeBlockIndex = (head.getCodeCount() + DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
 		nextCodeBlock();
 		this.curCodeItem = curCodeBlock.current();
-		this.curCodeBlockIndex = -1;
 		this.curEntry = null;
 		this.curTimeBlock = null;
-		this.curCodeBlock = null;
-		this.curCodeItem = null;
 	}
 	
 	public FileSeekIterator(IStorage storage, long fileNumber)throws IOException {
@@ -266,24 +263,11 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	public void seek(int code, long time) throws IOException {
 
 		if (head.containCode(code)) {
-			//read code area
-			nextCodeBlock();
-			if (curCodeBlock != null) {
-				while (!curCodeBlock.seek(code)) {
-					nextCodeBlock();
-					if (curCodeBlock == null) {
-						break;
-					}
-				}
+			// read code area
+			if(curCodeBlock==null){
+				nextCodeBlock();
 			}
-
-			if (curCodeBlock != null) {
-				curCodeItem = curCodeBlock.current();
-				if (curCodeItem != null) {
-					maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
-					curTimeBlockIndex = -1;
-				}
-			}
+			find(code);
 
 			// read time area
 			if (curCodeItem != null) {
@@ -318,9 +302,8 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		curTimeBlockIndex = -1;
 		if (head.containCode(code)) {
 			// read code area
-			if(curCodeBlock==null){
-				nextCodeBlock();
-			}
+			nextCodeBlock();
+			
 			find(code);
 			// read time area
 			if (curCodeItem != null) {
@@ -355,25 +338,33 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 	}
 	
 	@Override
-	public void seekToCurrent(int code) throws IOException {
+	public boolean seekToCurrent() throws IOException {
 
-		if (head.containCode(code)) {
-			// read code area
-			if(curCodeBlock==null){
-				nextCodeBlock();
-			}
-			find(code);
-			// read time area
-			if (curCodeItem != null) {
-				nextTimeBlock();
-				if (curTimeBlock != null) {
-					readEntry(code, curTimeBlock.current(), true);
-					return;
-				}
+		// read code area
+		if (curCodeBlock == null) {
+			nextCodeBlock();
+		}
+		
+		if(curCodeBlock != null){
+			if(null == curCodeItem){
+				curCodeItem = curCodeBlock.current();
 			}
 		}
+		
+		// read time area
+		if (curCodeItem != null) {
+			maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
+			curTimeBlockIndex = -1;
+			nextTimeBlock();
+			if (curTimeBlock != null) {
+				readEntry(curCodeItem.getCode(), curTimeBlock.current(), true);
+				return true;
+			}
+		}
+
 		curTimeBlockIndex = -1;
 		maxTimeBlockIndex = -2;
+		return false;
 	}
 
 	@Override

@@ -46,7 +46,7 @@ public class MergeFileSeekIterator{
 				}else{
 					try {
 						if(it.hasNextCode()){
-							it.seekToCurrent(it.currentCode().getCode());
+							it.seekToCurrent();
 							result = true;
 		                    break;
 						}
@@ -72,7 +72,7 @@ public class MergeFileSeekIterator{
 				}else{
 					try {
 						if(it.hasPrevCode()){
-							it.seekToCurrent(it.currentCode().getCode());
+							it.seekToCurrent();
 							result = true;
 		                    break;
 						}
@@ -149,7 +149,7 @@ public class MergeFileSeekIterator{
 				if(it.hasNextCode()){
 					CodeItem item = it.nextCode();
 					if(item != null){
-						it.seekToCurrent(item.getCode());
+						it.seekToCurrent();
 					}
 				}
 			}		
@@ -183,9 +183,25 @@ public class MergeFileSeekIterator{
 					if(it.hasNextCode()){
 						CodeItem item = it.nextCode();
 						if(item != null){
-							it.seekToCurrent(item.getCode());
+							it.seekToCurrent();
 						}
-						it.prev();
+					}
+					if(it.valid()){
+						if(smallest == null){
+							smallest = it;
+						}else if(fileManager.compare(smallest.key(), it.key())>0){
+							smallest = it;
+						}else if(fileManager.compare(smallest.key(), it.key())==0){
+							while(it.hasNext()){
+								it.next();
+								int diff = fileManager.compare(smallest.key(),it.key());
+								if(0==diff){
+									continue;
+								}else{
+									break;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -219,9 +235,25 @@ public class MergeFileSeekIterator{
 					if(it.hasPrevCode()){
 						CodeItem item = it.prevCode();
 						if(item != null){
-							it.seekToCurrent(item.getCode());
+							it.seekToCurrent();
 						}
-						it.prev();
+					}
+					if(it.valid()){
+						if(largest == null){
+							largest = it;
+						}else if(fileManager.compare(largest.key(), it.key())<0){
+							largest = it;
+						}else if(fileManager.compare(largest.key(), it.key())==0){
+							while(it.hasPrev()){
+								it.prev();
+								int diff = fileManager.compare(largest.key(),it.key());
+								if(0==diff){
+									continue;
+								}else{
+									break;
+								}
+							}
+						}
 					}
 				}
 			}

@@ -145,7 +145,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	@Override
 	public long priority() {
-		return 0;
+		return 0L;
 	}
 
 }
