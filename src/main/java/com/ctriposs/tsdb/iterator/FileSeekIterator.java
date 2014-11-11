@@ -41,7 +41,6 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		this.curEntry = null;
 		this.curTimeBlock = null;
 		this.curCodeBlock = null;
-		this.curCodeItem = null;
 	}
 	
 	public FileSeekIterator(IStorage storage, long fileNumber)throws IOException {

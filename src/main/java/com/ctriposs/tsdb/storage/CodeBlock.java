@@ -1,14 +1,12 @@
 package com.ctriposs.tsdb.storage;
 
-
 public class CodeBlock {
 
-	
 	private final CodeItem codes[];
 	private int curPos = 0;
 	private int maxPos = -1;
 	
-	public CodeBlock(byte[] bytes, int count){
+	public CodeBlock(byte[] bytes, int count) {
 		this.maxPos = count - 1;
 		this.codes = new CodeItem[count]; 
 		for(int i = 0; i < count; i++) {
@@ -21,10 +19,10 @@ public class CodeBlock {
 	}
 	
 	public boolean hasPrev(){
-        return curPos >= 0;
+        return curPos > 0;
 	}
 	
-	public boolean seek(int code){
+	public boolean seek(int code) {
 	
 		boolean result = false;
 		int left = 0;
@@ -53,7 +51,7 @@ public class CodeBlock {
 	}
 	
 	public CodeItem current() {
-		if (curPos <= maxPos || curPos >= 0) {
+		if (curPos <= maxPos && curPos >= 0) {
 			return codes[curPos];
 		}
 
@@ -61,16 +59,15 @@ public class CodeBlock {
 	}
 
 	public CodeItem next()  {
-		if (curPos <= maxPos) {
+		if (curPos < maxPos) {
 			return codes[curPos++];
 		}
 
 		return null;
 	}
 
-	
 	public CodeItem prev() {
-		if (curPos >= 0) {
+		if (curPos > 0) {
 			return codes[curPos--];
 		}
 
