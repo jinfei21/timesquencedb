@@ -15,6 +15,7 @@ import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MapFileLogReader;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class FileManager {
@@ -58,6 +59,14 @@ public class FileManager {
 		}
 	};
    
+	private Comparator<MemTable> memTableComparator = new Comparator<MemTable>() {
+
+		@Override
+		public int compare(MemTable o1, MemTable o2) {
+			
+			return (int)(o2.getFileNumber()-o1.getFileNumber());
+		}
+	};
 	
 	
 	public FileManager(String dir,long maxPeriod, InternalKeyComparator internalKeyComparator, NameManager nameManager){
@@ -133,5 +142,9 @@ public class FileManager {
 	
 	public Comparator<IFileIterator<InternalKey, byte[]>> getFileIteratorComparator(){
 		return fileIteratorComparator;
+	}
+	
+	public Comparator<MemTable> getMemTableComparator(){
+		return memTableComparator;
 	}
 }

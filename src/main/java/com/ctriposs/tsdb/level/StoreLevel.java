@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IStorage;
@@ -45,14 +48,21 @@ public class StoreLevel extends Level {
 	public byte[] getValue(InternalKey key) throws IOException{
 		byte[] value = null;
 
+		ConcurrentSkipListSet<MemTable> tableSet = new ConcurrentSkipListSet<MemTable>(fileManager.getMemTableComparator());
+
 		for(MemTable table : memQueue) {
-			value = table.getValue(key);
-			if(value != null){
-				return value;
+			tableSet.add(table);
+		}
+		
+		for(Task task: tasks) {
+			MemTable table = task.getMemTable();
+			if(table != null){
+				tableSet.add(table);
 			}
 		}
-		for(Task task: tasks) {
-			value = task.getValue(key);
+		
+		for(MemTable table : tableSet) {
+			value = table.getValue(key);
 			if(value != null){
 				return value;
 			}
@@ -64,30 +74,56 @@ public class StoreLevel extends Level {
 	class MemTask extends Task {
 		
 		private MemTable table = null;
-
+		private Lock lock;
 		public MemTask(int num) {
 			super(num);
+			this.lock = new ReentrantLock();
 		}
 
 		@Override
 		public byte[] getValue(InternalKey key) {
-			if(table != null){
-				return table.getValue(key);
-			}else{
-				return null;
+			try{
+				lock.lock();
+				if(table != null){
+					return table.getValue(key);
+				}else{
+					return null;
+				}
+			}finally{
+				lock.unlock();
+			}
+		}
+		
+
+		@Override
+		public MemTable getMemTable() {
+			try{
+				lock.lock();
+				return table;
+			}finally{
+				lock.unlock();
 			}
 		}
 
 		@Override
 		public void process() throws Exception {
-			table = memQueue.poll();
-			if(table == null) return;
+			try{
+				lock.lock();
+				table = memQueue.poll();
+				if(table == null) {
+					return;
+				}
+			}finally{
+				lock.unlock();
+			}
 			
 			for (Entry<Long, ConcurrentSkipListMap<InternalKey, byte[]>> entry : table.getTable().entrySet()) {
 				try{
 					fileCount.incrementAndGet();
 					FileMeta fileMeta = storeFile(entry.getKey(), entry.getValue(), table.getFileNumber());
-					add(entry.getKey(), fileMeta);					
+					if(fileMeta != null){
+						add(entry.getKey(), fileMeta);		
+					}
 					fileCount.decrementAndGet();
 				}catch(IOException e){
 					//TODO
@@ -114,8 +150,17 @@ public class StoreLevel extends Level {
 				dbWriter.add(entry.getKey(), entry.getValue());
 			}	
 			
-			return dbWriter.close();	
+			FileMeta fileMeta = null;	
+			try{
+				fileMeta = dbWriter.close();	
+			}catch(Throwable t){
+				t.printStackTrace();
+				incrementStoreError();
+				closeStorages.add(storage);
+			}
+			return fileMeta;
 		}
+
 
 	}
 	

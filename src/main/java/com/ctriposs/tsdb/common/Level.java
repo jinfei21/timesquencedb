@@ -21,6 +21,7 @@ import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.Head;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public abstract class Level {
@@ -41,7 +42,8 @@ public abstract class Level {
     private final Lock changeLock = new ReentrantLock();
     
     protected final ArrayBlockingQueue<File> deleteFiles = new ArrayBlockingQueue<File>(60);
-    
+    protected final ArrayBlockingQueue<IStorage> closeStorages = new ArrayBlockingQueue<IStorage>(60);
+    protected final ArrayBlockingQueue<IFileIterator<InternalKey, byte[]>> closeIterators = new ArrayBlockingQueue<IFileIterator<InternalKey, byte[]>>(60);
 
     protected ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>>(new Comparator<Long>() {
         @Override
@@ -65,6 +67,10 @@ public abstract class Level {
 			byte[] bytes = new byte[Head.HEAD_SIZE];
 			storage.get(0, bytes);
 			Head head = new Head(bytes);
+			if(head.getCodeCount() == 0||head.getTimeCount() == 0){
+				file.renameTo(new File(file.getPath()+".backup"));
+				continue;
+			}
 			String name[] = file.getName().split("[-|.]");
 			long time = Long.parseLong(name[0]);
 			long fileNumber = Long.parseLong(name[1]);
@@ -172,7 +178,7 @@ public abstract class Level {
 	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
 		ConcurrentSkipListSet<FileMeta> list = getFiles(format(ts, interval));
-		Map<FileSeekIterator,File> itSet = new HashMap<FileSeekIterator,File>();
+		Map<FileSeekIterator,IStorage> itSet = new HashMap<FileSeekIterator,IStorage>();
 		try{
 
 			if(list != null) {
@@ -180,7 +186,7 @@ public abstract class Level {
 					if(fileMeta.contains(key)){
 						IStorage storage = new PureFileStorage(fileMeta.getFile());
 						FileSeekIterator it = new FileSeekIterator(storage);
-						itSet.put(it, fileMeta.getFile());
+						itSet.put(it, storage);
 						it.seek(key.getCode(),key.getTime());
 	
 						while(it.hasNext()){
@@ -196,11 +202,11 @@ public abstract class Level {
 				}
 			}
 		}finally{
-			for(Entry<FileSeekIterator,File> entry :itSet.entrySet()){
+			for(Entry<FileSeekIterator,IStorage> entry :itSet.entrySet()){
 				try{
 					entry.getKey().close();
 				}catch(Throwable t){
-					deleteFiles.add(entry.getValue());
+					closeStorages.add(entry.getValue());
 					t.printStackTrace();
 					incrementStoreError();
 				}
@@ -222,7 +228,7 @@ public abstract class Level {
 			while(run) {
 				try {
 					incrementStoreCount();
-					deleteOldFiles();
+					purgeFiles();
 					clear();
 					process();
 					Thread.sleep(500);
@@ -233,10 +239,32 @@ public abstract class Level {
 				}
 			}
 		}
-		private void deleteOldFiles(){
+		private void purgeFiles(){
+			//close iterators
+			IFileIterator<InternalKey, byte[]> iterator = closeIterators.poll();
+			if(iterator != null){
+				try{
+					iterator.close();
+				}catch(Throwable t){
+					t.printStackTrace();
+					incrementStoreError();
+					closeIterators.add(iterator);
+				}
+			}
+			//close storages
+			IStorage storage = closeStorages.poll();
+			if(storage != null){
+				try{
+					storage.close();
+				}catch(Throwable t){
+					t.printStackTrace();
+					incrementStoreError();
+					closeStorages.add(storage);
+				}
+			}
+			//delete files
 			File file = deleteFiles.poll();
-			if(file != null){
-		
+			if(file != null){		
 				try{
 					FileUtil.forceDelete(file);
 				}catch(Throwable t){
@@ -269,6 +297,8 @@ public abstract class Level {
 		}
 
         public abstract byte[] getValue(InternalKey key);
+        
+        public abstract MemTable getMemTable();
 
 		public abstract void process() throws Exception;
 

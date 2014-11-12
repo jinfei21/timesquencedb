@@ -37,25 +37,27 @@ public class MergeFileSeekIterator{
 
 		boolean result = false;
 
-		if(itSet != null) {
+		if(itSet != null&&curIt != null) {
 			if(curIt.hasNext()){
 				return true;
 			}else{
-				for (IFileIterator<InternalKey, byte[]> it : itSet) {
-					if(it.hasNext()) {
+				
+				try {
+					if(curIt.hasNextCode()){
+						curIt.nextCode();
+						curIt.seekToCurrent();
 						result = true;
-	                    break;
-					}else{
-						try {
-							if(it.hasNextCode()){
-								it.nextCode();
-								it.seekToCurrent();
-								result = true;
-			                    break;
-							}
-							
-						} catch (IOException e) {
-							throw new RuntimeException(e);
+					}
+					
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				
+				if(!result){
+					for (IFileIterator<InternalKey, byte[]> it : itSet) {
+						if(it.hasNext()) {
+							result = true;
+		                    break;
 						}
 					}
 				}
@@ -75,24 +77,26 @@ public class MergeFileSeekIterator{
 	public boolean hasPrev(){
 		boolean result = false;
 
-		if(itSet != null) {
-			if(curIt.hasNext()){
-				
+		if(itSet != null&&curIt != null) {
+			if(curIt.hasPrev()){
+				return true;
 			}else{
-				for (IFileIterator<InternalKey, byte[]> it : itSet) {
-					if(it.hasPrev()) {
+				
+				try {
+					if(curIt.hasPrevCode()){
+						curIt.prevCode();
+						curIt.seekToCurrent();
 						result = true;
-	                    break;
-					}else{
-						try {
-							if(it.hasPrevCode()){
-								it.prevCode();
-								it.seekToCurrent();
-								result = true;
-			                    break;
-							}
-						} catch (IOException e) {
-							throw new RuntimeException(e);
+					}
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				
+				if(!result){
+					for (IFileIterator<InternalKey, byte[]> it : itSet) {
+						if(it.hasPrev()) {
+							result = true;
+		                    break;
 						}
 					}
 				}
@@ -127,6 +131,9 @@ public class MergeFileSeekIterator{
 		}
 
 		curEntry = curIt.next();
+		if(curEntry==null){
+			System.out.println("fdsafasdfasdfasd");
+		}
 		findSmallest();
 		return curEntry;
 	}
@@ -338,7 +345,10 @@ public class MergeFileSeekIterator{
 			}
 		}
 	}
-
+	
+	public ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getAllFileIterators(){
+		return itSet;
+	}
 
 	public InternalKey key() {
 		if(curEntry != null){

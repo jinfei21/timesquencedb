@@ -1,5 +1,6 @@
 package com.ctriposs.tsdb.level;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.ctriposs.tsdb.InternalKey;
+import com.ctriposs.tsdb.common.IFileIterator;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.iterator.FileSeekIterator;
@@ -20,6 +22,7 @@ import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
+import com.ctriposs.tsdb.table.MemTable;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class CompactLevel extends Level {
@@ -66,6 +69,11 @@ public class CompactLevel extends Level {
 
 		@Override
 		public byte[] getValue(InternalKey key) {
+			return null;
+		}
+		
+		@Override
+		public MemTable getMemTable() {
 			return null;
 		}
 
@@ -115,22 +123,24 @@ public class CompactLevel extends Level {
                 	continue;
                 }
                 // Add to current level
-                add(key, newFileMeta);
-                
-                // Remove the preLevel file meta               
-                for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
-                     prevLevel.delete(e.getKey(), e.getValue());
-                }
-                
-                // delete the preLevel disk files
-                for (FileMeta fileMeta : fileMetaList) {
-                    try {
-                        FileUtil.forceDelete(fileMeta.getFile());
-                    } catch (IOException e) {
-                    	e.printStackTrace();
-                    	incrementStoreError();
-                    	deleteFiles.add(fileMeta.getFile());
-                    }
+                if(newFileMeta != null){
+                	add(key, newFileMeta);
+                               
+	                // Remove the preLevel file meta               
+	                for (Entry<Long, List<FileMeta>> e : entry.getValue().entrySet()) {
+	                     prevLevel.delete(e.getKey(), e.getValue());
+	                }
+	                
+	                // delete the preLevel disk files
+	                for (FileMeta fileMeta : fileMetaList) {
+	                    try {
+	                        FileUtil.forceDelete(fileMeta.getFile());
+	                    } catch (IOException e) {
+	                    	e.printStackTrace();
+	                    	incrementStoreError();
+	                    	deleteFiles.add(fileMeta.getFile());
+	                    }
+	                }
                 }
             }
 		}
@@ -151,22 +161,29 @@ public class CompactLevel extends Level {
             
             while (mergeIterator.hasNext()) {
                 Entry<InternalKey, byte[]> entry = mergeIterator.next();
-                if(entry != null){
-                	System.out.println(entry.getKey()+" | " + new String(entry.getValue()));
-                	dbWriter.add(entry.getKey(), entry.getValue());
-                }else{
-                	System.out.println("null");
-                }
-                
+                dbWriter.add(entry.getKey(), entry.getValue());               
             }
             try{
             	mergeIterator.close();
             }catch(Throwable t){
             	t.printStackTrace();
             	incrementStoreError();
+            	for(IFileIterator<InternalKey, byte[]> it:mergeIterator.getAllFileIterators()){
+            		closeIterators.add(it);
+            	}
             }
-            return dbWriter.close();
+            FileMeta fileMeta = null;
+            try{
+            	fileMeta = dbWriter.close();
+            }catch(Throwable t){
+            	t.printStackTrace();
+            	closeStorages.add(fileStorage);
+            	deleteFiles.add(new File(fileStorage.getName()));
+            	incrementStoreError();
+            }
+            return fileMeta;
         }
+
 	}
 
 	@Override

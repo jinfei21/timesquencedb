@@ -204,7 +204,9 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					}
 				}
 			}
-			curIt = smallest;
+			if(smallest != null){
+				curIt = smallest;
+			}
 		}
 	}
 
@@ -231,7 +233,9 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					}
 				}
 			}
-			curIt = largest;
+			if(largest != null){
+				curIt = largest;
+			}
 		}
 	}
 
