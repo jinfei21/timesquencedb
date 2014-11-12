@@ -11,7 +11,6 @@ import com.ctriposs.tsdb.ILogReader;
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
-import com.ctriposs.tsdb.iterator.LevelSeekIterator;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.table.InternalKeyComparator;
 import com.ctriposs.tsdb.table.MapFileLogReader;
@@ -28,6 +27,7 @@ public class FileManager {
 	private InternalKeyComparator internalKeyComparator;
     private NameManager nameManager;
     private long maxPeriod; 
+    private int levelNum = 1;
     
 	private Comparator<FileMeta> fileMetaComparator = new Comparator<FileMeta>(){
 
@@ -39,21 +39,19 @@ public class FileManager {
 		
 	};
 	
-	private Comparator<ISeekIterator> levelIteratorComparator = new Comparator<ISeekIterator>(){
+	private Comparator<ISeekIterator> iteratorComparator = new Comparator<ISeekIterator>(){
 
 		@Override
-		public int compare(ISeekIterator o1,
-				ISeekIterator o2) {
+		public int compare(ISeekIterator o1,ISeekIterator o2) {
 			
 			return (int) (o1.priority() - o1.priority());
 		}
 	};
 	
-	private Comparator<IFileIterator<InternalKey, byte[]>> fileIteratorComparator = new Comparator<IFileIterator<InternalKey, byte[]>>(){
+	private Comparator<IFileIterator> fileIteratorComparator = new Comparator<IFileIterator>(){
 
 		@Override
-		public int compare(IFileIterator<InternalKey, byte[]> o1,
-				IFileIterator<InternalKey, byte[]> o2) {
+		public int compare(IFileIterator o1,IFileIterator o2) {
 			
 			return (int) (o2.priority() - o1.priority());
 		}
@@ -74,6 +72,14 @@ public class FileManager {
 		this.internalKeyComparator = internalKeyComparator;
 		this.nameManager = nameManager;
 		this.maxPeriod = maxPeriod;
+	}
+	
+	public void setLevel(int levelNum){
+		this.levelNum = levelNum;
+	}
+	
+	public int getLevelNum(){
+		return this.levelNum;
 	}
 	
 	public int compare(InternalKey o1, InternalKey o2){
@@ -136,11 +142,11 @@ public class FileManager {
 		return fileMetaComparator;
 	}
 
-	public Comparator<ISeekIterator> getLevelIteratorComparator(){
-		return levelIteratorComparator;
+	public Comparator<ISeekIterator> getIteratorComparator(){
+		return iteratorComparator;
 	}
 	
-	public Comparator<IFileIterator<InternalKey, byte[]>> getFileIteratorComparator(){
+	public Comparator<IFileIterator> getFileIteratorComparator(){
 		return fileIteratorComparator;
 	}
 	

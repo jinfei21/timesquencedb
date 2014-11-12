@@ -17,44 +17,41 @@ public class DBEnginePutGetFunctionTest {
 
     public static void main(String[] args) throws IOException  {
 
-
+    	int numKeyLimit = 30000;
         DBConfig config = new DBConfig(TEST_DIR);
         engine = new DBEngine(config);
         
-        String[] str = new String[]{"a","b","c","d","e","f","g"};
         Random random = new Random();
         long start = System.nanoTime();
         
         String data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         
-        Map<Long,String> map = new HashMap<Long,String>();
+        Map<String,String> map = new HashMap<String,String>();
         
         for (int i = 0; i < 2*INIT_COUNT; i++) {
-        	String n = String.valueOf(random.nextInt(30000));
+        	String rndKey = String.valueOf(random.nextInt(numKeyLimit));
 
-        	long l = System.currentTimeMillis();
-        	String d = data+i;
-        	engine.put(n, n, l, d.getBytes());
-        	map.put(l,n + "-" + d);
+        	long time = System.currentTimeMillis();
+        	String value = data+i;
+        	engine.put(rndKey, rndKey, time, value.getBytes());
+        	map.put(rndKey + "-" + time,value);
         }
         int total=0;
         int miss = 0;
         int error = 0;
-        for(Entry<Long,String> entry:map.entrySet()){
-        	String d[] = entry.getValue().split("-");
+        for(Entry<String,String> entry:map.entrySet()){
+        	String keys[] = entry.getKey().split("-");
         	total++;
-        	byte[] s = engine.get(d[0],d[0],entry.getKey());
-        	if(s != null){
-        		String dd = new String(s);
-        		if(d[1].equals(dd)){
-        			//System.out.println("OK");
-        		}else{
+        	byte[] enginValue = engine.get(keys[0],keys[0],Long.parseLong(keys[1]));
+        	if(enginValue != null){
+        		String engineStr = new String(enginValue);
+        		if(!entry.getValue().equals(engineStr)){
         			System.out.println(++error+"error ");
-        			System.out.println("实际值："+d[1]);
-        			System.out.println("存储值："+dd);
+        			System.out.println("map value	:"+entry.getValue());
+        			System.out.println("engine value:"+engineStr);
         		}
         	}else{
-        		System.out.println(++miss+"not found "+entry.getValue()+"-"+entry.getKey());
+        		System.out.println(++miss+"not found "+entry.getKey()+":"+entry.getValue());
         	}
         }
 

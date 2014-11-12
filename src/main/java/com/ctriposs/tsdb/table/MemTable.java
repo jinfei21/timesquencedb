@@ -123,6 +123,6 @@ public class MemTable {
 	}
 	
 	public MemSeekIterator iterator(FileManager fileManager){
-		return new MemSeekIterator(fileManager, this,fileNumber);
+		return new MemSeekIterator(fileManager, this,fileNumber+fileManager.getLevelNum()+4);
 	}
 }

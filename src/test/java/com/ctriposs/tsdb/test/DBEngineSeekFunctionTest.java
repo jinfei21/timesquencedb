@@ -18,58 +18,61 @@ public class DBEngineSeekFunctionTest {
 
     public static void main(String[] args) throws IOException {
 
-
+    	int numKeyLimit = 30000;
         DBConfig config = new DBConfig(TEST_DIR);
         engine = new DBEngine(config);
 
-        String[] str = new String[]{"a","b","c","d","e","f","g"};
+
         Random random = new Random();
         long start = System.nanoTime();
 
         String data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-        Map<Long,String> map = new LinkedHashMap<Long,String>();
+        Map<String,String> map = new LinkedHashMap<String,String>();
 
-        long s = 0;
-        String table = null;
-        String last = null;
-        long lt = 0;
-        int sss = 0;
+        long startTime = 0;
+        long lastTime = 0;
+        String startKey = null;
+        String startValue = null;
+        String lastValue = null;
         
         for (int i = 0; i < 2*INIT_COUNT; i++) {
-        	String n = String.valueOf(random.nextInt(30000));
-
-            long l = System.currentTimeMillis();
+        	String rndKey = String.valueOf(random.nextInt(numKeyLimit));
+            long time = System.currentTimeMillis();
+            String key = rndKey+"-"+time;
+            String value = data+i;
             if(i==0){
-            	s = l;
-            	table = n;
+            	startTime = time;
+            	startKey = rndKey;
+            	startValue = value;
             }
-        	String d = data+i;
-        	engine.put(n, n, l, d.getBytes());
-        	map.put(l,n + "-" + d);
-            if(table.equals(n)){
-            	last = d;
-            	lt = l;
-            	sss++;
+        	
+        	engine.put(rndKey, rndKey, time, value.getBytes());
+        	
+        	map.put(key,value);
+        	
+            if(rndKey.equals(startKey)){
+            	lastValue = value;
+            	lastTime = time;
             }
         }
 
         
-        System.out.println(new String(engine.get(table, table, s)));
+        System.out.println("start value:"+new String(engine.get(startKey, startKey, startTime)));
 
         ISeekIterator<InternalKey, byte[]> iterator = engine.iterator();
 
-        iterator.seek(table, table, s);
-        int n = 0;
+        iterator.seek(startKey, startKey, startTime);
+        int count = 0;
         while(iterator.hasNext()){
         	iterator.next();
         	if(iterator.value()!=null)
-        	System.out.println(++n+":"+iterator.time()+":"+iterator.table()+":"+new String(iterator.value()));
+        	System.out.println(++count+":"+iterator.time()+":"+iterator.table()+":"+new String(iterator.value()));
         }
         
-        System.out.println(lt+":"+table+":last:"+last);
-        System.out.println(new String(engine.get(table, table, lt)));
-        System.out.println(sss);
+        System.out.println("map size:"+map.size());
+        System.out.println("last enging value:"+new String(engine.get(startKey, startKey, lastTime)));
+        System.out.println("last value:"+lastValue);
         long duration = System.nanoTime() - start;
         System.out.printf("Put/get %,d K operations per second single thread%n",
                 (int) (INIT_COUNT * 2 * 1e6 / duration));

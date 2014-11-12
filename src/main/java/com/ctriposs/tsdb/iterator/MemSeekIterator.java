@@ -134,7 +134,6 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	@Override
 	public void close() throws IOException {
-		dataMap.clear();
 		dataMap = null;
 	}
 	
@@ -145,7 +144,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	@Override
 	public long priority() {
-		return 0L;
+		return fileNumber;
 	}
 
 }

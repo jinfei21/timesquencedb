@@ -161,7 +161,11 @@ public class CompactLevel extends Level {
             
             while (mergeIterator.hasNext()) {
                 Entry<InternalKey, byte[]> entry = mergeIterator.next();
-                dbWriter.add(entry.getKey(), entry.getValue());               
+                if(entry != null){
+                	dbWriter.add(entry.getKey(), entry.getValue());       
+                }else{
+                	System.out.println("fsfasfsadfas");
+                }
             }
             try{
             	mergeIterator.close();

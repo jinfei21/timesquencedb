@@ -2,7 +2,6 @@ package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.ctriposs.tsdb.ISeekIterator;
@@ -11,8 +10,7 @@ import com.ctriposs.tsdb.manage.FileManager;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
-	private ConcurrentSkipListSet<LevelSeekIterator> itSet;
-	private Set<MemSeekIterator> memitSet;
+	private ConcurrentSkipListSet<ISeekIterator<InternalKey, byte[]>> itSet;
 	private Direction direction;
 	private ISeekIterator<InternalKey, byte[]> curIt;
 	private FileManager fileManager;
@@ -20,26 +18,21 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private String curSeekTable;
 	private String curSeekColumn;
 	
-	public SeekIteratorAdapter(FileManager fileManager, LevelSeekIterator... its) {
+	public SeekIteratorAdapter(FileManager fileManager, ISeekIterator<InternalKey, byte[]>... its) {
 
-		this.itSet = new ConcurrentSkipListSet<LevelSeekIterator>(fileManager.getLevelIteratorComparator());
-		addLevelIterator(its);
+		this.itSet = new ConcurrentSkipListSet<ISeekIterator<InternalKey, byte[]>>(fileManager.getIteratorComparator());
+		addIterator(its);
 		this.fileManager = fileManager;
 		this.direction = Direction.forward;
 		this.curIt = null;
 	}
 	
-	public void addLevelIterator(LevelSeekIterator... its) {
-		for(LevelSeekIterator it:its){
+	public void addIterator(ISeekIterator<InternalKey, byte[]>... its) {
+		for(ISeekIterator<InternalKey, byte[]> it:its){
 			itSet.add(it);
 		}
 	}
-	
-	public void addMemIterator(MemSeekIterator... its) {
-		for(MemSeekIterator it:its){
-			memitSet.add(it);
-		}
-	}
+
 
 	@Override
 	public boolean hasNext() {
@@ -49,7 +42,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			result = true;
 		}else{
 			if(itSet != null) {
-				for (LevelSeekIterator it : itSet) {
+				for (ISeekIterator<InternalKey, byte[]> it : itSet) {
 					if(it.hasNext()) {
 						result = true;
 	                    break;
@@ -71,7 +64,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			result = true;
 		}else{
 			if(itSet != null) {
-				for (LevelSeekIterator it : itSet) {
+				for (ISeekIterator<InternalKey, byte[]> it : itSet) {
 					if(it.hasPrev()) {
 						result = true;
 	                    break;
@@ -89,7 +82,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> next() {
 		if (direction != Direction.forward) {
-			for (LevelSeekIterator it : itSet) {
+			for (ISeekIterator<InternalKey, byte[]> it : itSet) {
 
 				if (it != curIt) {
 					try {
@@ -112,7 +105,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if(direction != Direction.reverse){
-			for(LevelSeekIterator it:itSet){
+			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				if(curIt != it){
 					try {
 						it.seek(curSeekTable,curSeekColumn,curSeekTime);						
@@ -139,7 +132,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		this.curSeekTime = time;
 		
 		if(!itSet.isEmpty()){
-			for(LevelSeekIterator it:itSet){
+			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				it.seek(table, column,time);
 			}		
 			findSmallest();
@@ -149,8 +142,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findSmallest(){
 		if(!itSet.isEmpty()){
-			LevelSeekIterator smallest = null;
-			for(LevelSeekIterator it:itSet){
+			ISeekIterator<InternalKey, byte[]> smallest = null;
+			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				if(it.valid()){
 					if(smallest == null){
 						smallest = it;
@@ -177,8 +170,8 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	private void findLargest(){
 		if(!itSet.isEmpty()){
-			LevelSeekIterator largest = null;
-			for(LevelSeekIterator it:itSet){
+			ISeekIterator<InternalKey, byte[]> largest = null;
+			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				if(it.valid()){
 					if(largest == null){
 						largest = it;
@@ -248,7 +241,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public void close() throws IOException{
 		
 		if(!itSet.isEmpty()){
-			for(LevelSeekIterator it:itSet){
+			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				it.close();
 			}
 		}

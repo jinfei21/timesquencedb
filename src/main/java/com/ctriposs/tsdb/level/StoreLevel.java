@@ -2,6 +2,8 @@ package com.ctriposs.tsdb.level;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -16,6 +18,7 @@ import com.ctriposs.tsdb.common.IStorage;
 import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.MapFileStorage;
 import com.ctriposs.tsdb.common.PureFileStorage;
+import com.ctriposs.tsdb.iterator.MemSeekIterator;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
@@ -69,6 +72,20 @@ public class StoreLevel extends Level {
 		}
 		
 		return getValueFromFile(key);
+	}
+	
+	public List<MemSeekIterator> getAllMemSeekIterator(){
+		List<MemSeekIterator> list = new ArrayList<MemSeekIterator>();
+		for(MemTable table : memQueue) {
+			list.add(table.iterator(fileManager));
+		}
+		for(Task task: tasks) {
+			MemTable table = task.getMemTable();
+			if(table != null){
+				list.add(table.iterator(fileManager));
+			}
+		}
+		return list;
 	}
 
 	class MemTask extends Task {

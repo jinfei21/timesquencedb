@@ -11,6 +11,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.ctriposs.tsdb.common.Level;
+import com.ctriposs.tsdb.iterator.MemSeekIterator;
 import com.ctriposs.tsdb.iterator.SeekIteratorAdapter;
 import com.ctriposs.tsdb.level.CompactLevel;
 import com.ctriposs.tsdb.level.StoreLevel;
@@ -185,9 +186,14 @@ public class DBEngine implements IDB {
 		SeekIteratorAdapter it = new SeekIteratorAdapter(fileManager, storeLevel.iterator());
 		
 		for(Entry<Integer,Level> entry:compactLevelMap.entrySet()){
-			it.addLevelIterator(entry.getValue().iterator());
+			it.addIterator(entry.getValue().iterator());
 		}
 		
+		for(MemSeekIterator memit:storeLevel.getAllMemSeekIterator()){
+			it.addIterator(memit);
+		}
+		
+		it.addIterator(memTable.iterator(fileManager));
 		return it;
 	}
 
