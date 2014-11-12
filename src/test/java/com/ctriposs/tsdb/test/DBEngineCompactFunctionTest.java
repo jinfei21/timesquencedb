@@ -42,5 +42,7 @@ public class DBEngineCompactFunctionTest {
                 break;
             }
         }
+
+        System.out.println("Stop putting...");
     }
 }
