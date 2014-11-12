@@ -10,6 +10,7 @@ import java.util.NavigableSet;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.Level;
@@ -21,6 +22,7 @@ import com.ctriposs.tsdb.storage.DBWriter;
 import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.storage.FileName;
 import com.ctriposs.tsdb.util.FileUtil;
+import com.ctriposs.tsdb.util.LogUtil;
 
 public class CompactLevel extends Level {
 
@@ -29,6 +31,8 @@ public class CompactLevel extends Level {
 	private AtomicLong storeCounter = new AtomicLong(0);
 	private AtomicLong storeErrorCounter = new AtomicLong(0);
 	private Level prevLevel;
+
+    private static final Logger logger = LogUtil.getAndSet("CompactLevel");
 
 	public CompactLevel(FileManager fileManager, Level prevLevel, int level, long interval, int threads) {
 		super(fileManager, level, interval, threads);
@@ -152,10 +156,12 @@ public class CompactLevel extends Level {
             while (mergeIterator.hasNext()) {
                 Entry<InternalKey, byte[]> entry = mergeIterator.next();
                 if(entry != null){
-                	System.out.println(entry.getKey()+" | " + new String(entry.getValue()));
+                	//System.out.println(entry.getKey()+" | " + new String(entry.getValue()));
+                    //LogUtil.i(entry.getKey()+" | " + new String(entry.getValue()));
                 	dbWriter.add(entry.getKey(), entry.getValue());
                 }else{
-                	System.out.println("null");
+                	//System.out.println("null");
+                    LogUtil.i("null");
                 }
                 
             }
