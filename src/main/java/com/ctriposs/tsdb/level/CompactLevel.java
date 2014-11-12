@@ -82,6 +82,7 @@ public class CompactLevel extends Level {
 				//only one task can process a time
 				if (ts % tasks.length == num) {
 					HashMap<Long, List<FileMeta>> preTimeList = compactMap.get(ts);
+					
 					List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
 
 					if (preTimeList == null) {
@@ -105,8 +106,14 @@ public class CompactLevel extends Level {
                 if(fileMetaList.size() < 2){
                 	continue;
                 }
-                FileMeta newFileMeta = mergeSort(key, fileMetaList);
-                
+                FileMeta newFileMeta = null;
+                try{
+                	newFileMeta = mergeSort(key, fileMetaList);
+                }catch(Throwable t){
+                	t.printStackTrace();
+                	incrementStoreError();
+                	continue;
+                }
                 // Add to current level
                 add(key, newFileMeta);
                 
@@ -122,6 +129,7 @@ public class CompactLevel extends Level {
                     } catch (IOException e) {
                     	e.printStackTrace();
                     	incrementStoreError();
+                    	deleteFiles.add(fileMeta.getFile());
                     }
                 }
             }

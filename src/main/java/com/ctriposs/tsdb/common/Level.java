@@ -3,8 +3,11 @@ package com.ctriposs.tsdb.common;
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +39,8 @@ public abstract class Level {
 
     /** The list change lock. */
     private final Lock changeLock = new ReentrantLock();
+    
+    protected final ArrayBlockingQueue<File> deleteFiles = new ArrayBlockingQueue<File>(60);
     
 
     protected ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>> timeFileMap = new ConcurrentSkipListMap<Long, ConcurrentSkipListSet<FileMeta>>(new Comparator<Long>() {
@@ -156,6 +161,7 @@ public abstract class Level {
 						fileManager.delete(meta.getFile());
 						list.remove(meta);
 					} catch (IOException e) {
+						deleteFiles.add(meta.getFile());
 						throw e;
 					}
 				}
@@ -166,22 +172,37 @@ public abstract class Level {
 	protected byte[] getValueFromFile(InternalKey key)throws IOException{
 		long ts = key.getTime();
 		ConcurrentSkipListSet<FileMeta> list = getFiles(format(ts, interval));
-		if(list != null) {
-			for(FileMeta fileMeta : list) {
-				if(fileMeta.contains(key)){
-					IStorage storage = new PureFileStorage(fileMeta.getFile());
-					FileSeekIterator it = new FileSeekIterator(storage);
-					it.seek(key.getCode(),key.getTime());
+		Map<FileSeekIterator,File> itSet = new HashMap<FileSeekIterator,File>();
+		try{
 
-					while(it.hasNext()){
-						int diff = fileManager.compare(key,it.key());
-						if(0==diff){
-							return it.value();
-						}else if(diff < 0){
-							break;
+			if(list != null) {
+				for(FileMeta fileMeta : list) {
+					if(fileMeta.contains(key)){
+						IStorage storage = new PureFileStorage(fileMeta.getFile());
+						FileSeekIterator it = new FileSeekIterator(storage);
+						itSet.put(it, fileMeta.getFile());
+						it.seek(key.getCode(),key.getTime());
+	
+						while(it.hasNext()){
+							int diff = fileManager.compare(key,it.key());
+							if(0==diff){
+								return it.value();
+							}else if(diff < 0){
+								break;
+							}
+							it.next();
 						}
-						it.next();
 					}
+				}
+			}
+		}finally{
+			for(Entry<FileSeekIterator,File> entry :itSet.entrySet()){
+				try{
+					entry.getKey().close();
+				}catch(Throwable t){
+					deleteFiles.add(entry.getValue());
+					t.printStackTrace();
+					incrementStoreError();
 				}
 			}
 		}
@@ -201,6 +222,7 @@ public abstract class Level {
 			while(run) {
 				try {
 					incrementStoreCount();
+					deleteOldFiles();
 					clear();
 					process();
 					Thread.sleep(500);
@@ -211,7 +233,19 @@ public abstract class Level {
 				}
 			}
 		}
+		private void deleteOldFiles(){
+			File file = deleteFiles.poll();
+			if(file != null){
 		
+				try{
+					FileUtil.forceDelete(file);
+				}catch(Throwable t){
+					t.printStackTrace();
+					incrementStoreError();
+					deleteFiles.add(file);
+				}
+			}
+		}
 		private void clear(){
 			for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry:timeFileMap.entrySet()){
 				long time = entry.getKey();
