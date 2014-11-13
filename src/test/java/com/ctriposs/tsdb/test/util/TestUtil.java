@@ -10,7 +10,7 @@ public class TestUtil {
     static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     static Random rd = new Random();
 
-    public static final String TEST_BASE_DIR = "d:/quickcache_test/";
+    public static final String TEST_BASE_DIR = "d:/tsdb_test/";
     private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
 
     public static String randomString(int len) {

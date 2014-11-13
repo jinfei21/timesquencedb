@@ -6,11 +6,18 @@ public class CodeBlock {
 	private int curPos = 0;
 	private int maxPos = -1;
 	
+	private int minCode = 0;
+	private int maxCode = 0;
+	
 	public CodeBlock(byte[] bytes, int count) {
 		this.maxPos = count - 1;
 		this.codes = new CodeItem[count]; 
 		for(int i = 0; i < count; i++) {
 			codes[i] = new CodeItem(bytes, i * CodeItem.CODE_ITEM_SIZE);
+			if(i==0){
+				minCode = codes[i].getCode();
+			}
+			maxCode = codes[i].getCode();
 		}
 	}
 
@@ -20,6 +27,16 @@ public class CodeBlock {
 	
 	public boolean hasPrev(){
         return curPos >= 0;
+	}
+	
+	public int containCode(int code){
+		if(code >= minCode && code <= maxCode){
+			return 0;
+		}else if(code > maxCode){
+			return -1;
+		}else{
+			return 1;
+		}
 	}
 	
 	public boolean seek(int code) {
@@ -56,6 +73,11 @@ public class CodeBlock {
 		}
 
 		return null;
+	}
+	
+	public CodeItem last(){
+		curPos = maxPos;
+		return codes[curPos];
 	}
 
 	public CodeItem next()  {

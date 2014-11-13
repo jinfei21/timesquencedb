@@ -18,7 +18,7 @@ public class NameManager {
 	private Map<String,Short> nameMap = new ConcurrentHashMap<String,Short>();
 	private Map<Short,String> codeMap = new ConcurrentHashMap<Short,String>();
 	private Lock lock = new ReentrantLock();
-	private AtomicInteger maxCode = new AtomicInteger(1);
+	private AtomicInteger maxCode = new AtomicInteger(0);
     private MapFileLogWriter fileWriter;
     private boolean hasData = false;
     private String dir;

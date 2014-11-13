@@ -8,10 +8,11 @@ import java.util.Random;
 
 import com.ctriposs.tsdb.DBConfig;
 import com.ctriposs.tsdb.DBEngine;
+import com.ctriposs.tsdb.test.util.TestUtil;
 
 public class DBEnginePutGetFunctionTest {
 
-    private static final String TEST_DIR = "d:\\tsdb_test\\put_test";
+    private static final String TEST_DIR = TestUtil.TEST_BASE_DIR +"put_test";
     private static final int INIT_COUNT = 10*1000*1000;
     private static DBEngine engine;
 
@@ -34,8 +35,15 @@ public class DBEnginePutGetFunctionTest {
         	long time = System.currentTimeMillis();
         	String value = data+i;
         	engine.put(rndKey, rndKey, time, value.getBytes());
-        	map.put(rndKey + "-" + time,value);
+        	if(map.size()<3*numKeyLimit){
+        		map.put(rndKey + "-" + time,value);
+        	}
         }
+        
+        long duration = System.nanoTime() - start;
+        System.out.printf("Put/get %,d K operations per second single thread%n",
+                (int) (INIT_COUNT * 2 * 1e6 / duration));
+        
         int total=0;
         int miss = 0;
         int error = 0;
@@ -56,9 +64,7 @@ public class DBEnginePutGetFunctionTest {
         }
 
         System.out.println("total:"+total+"miss:"+miss+"error:"+error);
-        long duration = System.nanoTime() - start;
-        System.out.printf("Put/get %,d K operations per second single thread%n",
-                (int) (INIT_COUNT * 2 * 1e6 / duration));
+
 		
 	}
 }

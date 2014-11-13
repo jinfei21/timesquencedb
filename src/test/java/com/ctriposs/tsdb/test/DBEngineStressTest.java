@@ -14,7 +14,7 @@ import com.ctriposs.tsdb.test.util.TestUtil;
 
 public class DBEngineStressTest {
 
-    private static final String TEST_DIR = "d://tsdb_test/stress/";
+    private static final String TEST_DIR = TestUtil.TEST_BASE_DIR +"/stress/";
 
     private static DBEngine engine;
 
@@ -44,7 +44,7 @@ public class DBEngineStressTest {
         	engine.put(rndKey, rndKey, time, rndValue);
         	String key = rndKey+"-"+time;
         	bytesMap.put(key, rndValue);
-            if (bytesMap.size() == numKeyLimit) {
+            if (bytesMap.size() == 3*numKeyLimit) {
                 System.out.println("Current date:        " + new Date());
                 System.out.println("counter:             " + counter);
                 System.out.println("store level          " + engine.getStoreCounter(0));

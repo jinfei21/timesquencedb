@@ -85,21 +85,21 @@ public class CompactLevel extends Level {
             ConcurrentNavigableMap<Long, ConcurrentSkipListSet<FileMeta>> headMap = prevLevel.getTimeFileMap().headMap(startTime);
             NavigableSet<Long> keySet = headMap.keySet();
 
-			for (Long time : keySet) {
-				long ts = format(time, interval);
+			for (Long prevTime : keySet) {
+				long time = format(prevTime, interval);
 				//only one task can process a time
-				if (ts % tasks.length == num) {
-					HashMap<Long, List<FileMeta>> preTimeList = compactMap.get(ts);
+				if (time % tasks.length == num) {
+					HashMap<Long, List<FileMeta>> preTimeList = compactMap.get(time);
 					
 					List<FileMeta> fileMetaList = new ArrayList<FileMeta>();
 
 					if (preTimeList == null) {
 						preTimeList = new HashMap<Long, List<FileMeta>>();
 					}
-					fileMetaList.addAll(prevLevel.getFiles(time));
-					preTimeList.put(time, fileMetaList);
+					fileMetaList.addAll(prevLevel.getFiles(prevTime));
+					preTimeList.put(prevTime, fileMetaList);
 
-					compactMap.put(ts, preTimeList);
+					compactMap.put(time, preTimeList);
 				}
 			}      
 
@@ -114,6 +114,7 @@ public class CompactLevel extends Level {
                 if(fileMetaList.size() < 2){
                 	continue;
                 }
+                
                 FileMeta newFileMeta = null;
                 try{
                 	newFileMeta = mergeSort(key, fileMetaList);
@@ -164,7 +165,7 @@ public class CompactLevel extends Level {
                 if(entry != null){
                 	dbWriter.add(entry.getKey(), entry.getValue());       
                 }else{
-                	System.out.println("fsfasfsadfas");
+                	System.out.println("compact level null");
                 }
             }
             try{

@@ -239,6 +239,7 @@ public abstract class Level {
 				}
 			}
 		}
+		
 		private void purgeFiles(){
 			//close iterators
 			IFileIterator<InternalKey, byte[]> iterator = closeIterators.poll();
@@ -274,6 +275,7 @@ public abstract class Level {
 				}
 			}
 		}
+		
 		private void clear(){
 			for(Entry<Long, ConcurrentSkipListSet<FileMeta>> entry:timeFileMap.entrySet()){
 				long time = entry.getKey();

@@ -34,7 +34,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		byte[] bytes = new byte[Head.HEAD_SIZE];
 		this.storage.get(0, bytes);
 		this.head = new Head(bytes);
-		this.maxCodeBlockIndex = (head.getCodeCount() + DBConfig.BLOCK_MAX_COUNT)/DBConfig.BLOCK_MAX_COUNT - 1;
+		this.maxCodeBlockIndex = (head.getCodeCount() + DBConfig.BLOCK_MAX_COUNT-1)/DBConfig.BLOCK_MAX_COUNT - 1;
 		nextCodeBlock();
 		this.curCodeItem = curCodeBlock.current();
 		this.curEntry = null;
@@ -120,8 +120,12 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 					if(curTimeBlock == null){
 						return false;
 					}else{
-						readEntry(curCodeBlock.current().getCode(), curTimeBlock.current(), true);
-						return true;
+						if(curCodeItem != null){
+							readEntry(curCodeItem.getCode(), curTimeBlock.last(), true);
+							return true;
+						}else{
+							return false;
+						}
 					}
 				}catch(IOException e){
 					throw new RuntimeException(e);
@@ -217,6 +221,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		
 		storage.get(head.getCodeOffset() + curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
 		curCodeBlock = new CodeBlock(bytes, count);
+		curCodeItem = curCodeBlock.current();
 	}
 	
 	private void prevCodeBlock() throws IOException{
@@ -234,7 +239,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		bytes = new byte[count*CodeItem.CODE_ITEM_SIZE];
 		storage.get(head.getCodeOffset()+curCodeBlockIndex*DBConfig.BLOCK_MAX_COUNT*CodeItem.CODE_ITEM_SIZE, bytes);
 		curCodeBlock = new CodeBlock(bytes, count);
-
+		curCodeItem = curCodeBlock.last();
 	}
 	
 	private void nextTimeBlock() throws IOException{
@@ -335,25 +340,31 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 
 	private void find(int code)throws IOException {
 		if (curCodeBlock != null) {
-			while (!curCodeBlock.seek(code)) {
+			while(curCodeBlock.containCode(code)<0){
 				nextCodeBlock();
 				if (curCodeBlock == null) {
 					break;
 				}
 			}
+			if(curCodeBlock!=null){
+				if(!curCodeBlock.seek(code)){
+					curCodeBlock = null;
+				}
+			}
+
 		}
 
 		if (curCodeBlock != null) {
 			curCodeItem = curCodeBlock.current();
 			if (curCodeItem != null) {
-				maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
+				maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT-1)/ DBConfig.BLOCK_MAX_COUNT - 1;
 				curTimeBlockIndex = -1;
 			}
 		}
 	}
 	
 	@Override
-	public boolean seekToCurrent() throws IOException {
+	public boolean seekToCurrent(boolean isNext) throws IOException {
 
 		// read code area
 		if (curCodeBlock == null) {
@@ -362,17 +373,30 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		
 		if(curCodeBlock != null){
 			if(null == curCodeItem){
-				curCodeItem = curCodeBlock.current();
+				if(isNext){
+					curCodeItem = curCodeBlock.current();
+				}else{
+					curCodeItem = curCodeBlock.last();
+				}
 			}
 		}
 		
 		// read time area
 		if (curCodeItem != null) {
-			maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT)/ DBConfig.BLOCK_MAX_COUNT - 1;
-			curTimeBlockIndex = -1;
-			nextTimeBlock();
+			maxTimeBlockIndex = (curCodeItem.getTimeCount() + DBConfig.BLOCK_MAX_COUNT - 1)/ DBConfig.BLOCK_MAX_COUNT - 1;
+			if(isNext){
+				curTimeBlockIndex = -1;
+				nextTimeBlock();
+			}else{
+				curTimeBlockIndex = maxTimeBlockIndex + 1;
+				prevTimeBlock();
+			}
 			if (curTimeBlock != null) {
-				readEntry(curCodeItem.getCode(), curTimeBlock.current(), true);
+				if(isNext){
+					readEntry(curCodeItem.getCode(), curTimeBlock.current(), true);
+				}else{
+					readEntry(curCodeItem.getCode(), curTimeBlock.last(), true);
+				}
 				return true;
 			}
 		}
@@ -468,7 +492,7 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		
 		if(curTimeBlock != null){
 			try{
-				readEntry(curCodeItem.getCode(),curTimeBlock.next(),false);
+				readEntry(curCodeItem.getCode(),curTimeBlock.prev(),false);
 			}catch(IOException e){
 				throw new RuntimeException(e);
 			}

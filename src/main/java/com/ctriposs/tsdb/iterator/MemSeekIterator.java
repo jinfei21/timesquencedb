@@ -53,7 +53,12 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 		Entry<InternalKey, byte[]> entry = curEntry;
 		if(curSeeIterator != null){
-			curEntry = curSeeIterator.next();
+			if(curSeeIterator.hasNext()){
+				curEntry = curSeeIterator.next();
+			}else{
+				curEntry = null;
+			}			
+			
 		}
 		return entry;
 	}
@@ -75,7 +80,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	public void seek(String table, String column, long time) throws IOException {
 
 		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);		
-		curSeeIterator = dataMap.tailMap(seekKey,true).entrySet().iterator();
+		curSeeIterator = dataMap.subMap(seekKey, new InternalKey(fileManager.getCode(table),fileManager.getCode(column), System.currentTimeMillis())).entrySet().iterator();
 		curEntry = curSeeIterator.next();
 	}
 

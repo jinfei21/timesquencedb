@@ -45,7 +45,7 @@ public class MergeFileSeekIterator{
 				try {
 					if(curIt.hasNextCode()){
 						curIt.nextCode();
-						curIt.seekToCurrent();
+						curIt.seekToCurrent(true);
 						result = true;
 					}
 					
@@ -85,7 +85,7 @@ public class MergeFileSeekIterator{
 				try {
 					if(curIt.hasPrevCode()){
 						curIt.prevCode();
-						curIt.seekToCurrent();
+						curIt.seekToCurrent(false);
 						result = true;
 					}
 				} catch (IOException e) {
@@ -132,7 +132,7 @@ public class MergeFileSeekIterator{
 
 		curEntry = curIt.next();
 		if(curEntry==null){
-			System.out.println("fdsafasdfasdfasd");
+			System.out.println("merge null");
 		}
 		findSmallest();
 		return curEntry;
@@ -180,7 +180,7 @@ public class MergeFileSeekIterator{
 				if(it.hasNextCode()){
 					CodeItem item = it.nextCode();
 					if(item != null){
-						it.seekToCurrent();
+						it.seekToCurrent(true);
 					}
 				}
 			}		
@@ -214,7 +214,7 @@ public class MergeFileSeekIterator{
 					if(it.hasNextCode()){
 						CodeItem item = it.nextCode();
 						if(item != null){
-							it.seekToCurrent();
+							it.seekToCurrent(true);
 						}
 					}
 					if(it.valid()){
@@ -267,7 +267,7 @@ public class MergeFileSeekIterator{
 					if(it.hasPrevCode()){
 						CodeItem item = it.prevCode();
 						if(item != null){
-							it.seekToCurrent();
+							it.seekToCurrent(false);
 						}
 					}
 					if(it.valid()){

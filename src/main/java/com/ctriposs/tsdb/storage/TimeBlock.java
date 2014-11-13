@@ -1,5 +1,6 @@
 package com.ctriposs.tsdb.storage;
 
+
 public class TimeBlock {
 
 	private final TimeItem times[];
@@ -31,7 +32,7 @@ public class TimeBlock {
 	public int containTime(long time){
 		if(time >= minTime && time <= maxTime){
 			return 0;
-		}else if(time < minTime){
+		}else if(time > maxTime){
 			return -1;
 		}else{
 			return 1;
@@ -78,6 +79,11 @@ public class TimeBlock {
 		}
 		return null;
 	}
+	
+	public TimeItem last(){
+		curPos = maxPos;
+		return times[curPos];
+	}
 
 	public TimeItem next() {
 		if (curPos >= 0 && curPos <= maxPos) {
@@ -89,7 +95,7 @@ public class TimeBlock {
 	
 	public TimeItem prev() {
 		if (curPos >= 0) {
-			return times[curPos++];
+			return times[curPos--];
 		}
 		return null;
 	}

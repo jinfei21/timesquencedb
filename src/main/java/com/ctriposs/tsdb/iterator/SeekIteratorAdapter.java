@@ -38,7 +38,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public boolean hasNext() {
 
 		boolean result = false;
-		if(curIt.hasNext()){
+		if(curIt!=null&&curIt.hasNext()){
 			result = true;
 		}else{
 			if(itSet != null) {
@@ -60,7 +60,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	@Override
 	public boolean hasPrev() {
 		boolean result = false;
-		if(curIt.hasPrev()){
+		if(curIt!=null&&curIt.hasPrev()){
 			result = true;
 		}else{
 			if(itSet != null) {

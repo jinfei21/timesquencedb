@@ -12,7 +12,7 @@ public interface IFileIterator<K, V> extends Iterator<Entry<K, V>> {
 
 	void seekToFirst(int code) throws IOException;
 	
-	boolean seekToCurrent() throws IOException;
+	boolean seekToCurrent(boolean isNext) throws IOException;
 
 	CodeItem nextCode() throws IOException;
 	

@@ -43,8 +43,15 @@ public class FileManager {
 
 		@Override
 		public int compare(ISeekIterator o1,ISeekIterator o2) {
-			
-			return (int) (o1.priority() - o1.priority());
+			if(o2.priority() == o1.priority()){
+				return 0;
+			}else{
+				if(o2.priority() < o1.priority()){
+					return 1;
+				}else{
+					return -1;
+				}
+			}
 		}
 	};
 	
@@ -53,7 +60,7 @@ public class FileManager {
 		@Override
 		public int compare(IFileIterator o1,IFileIterator o2) {
 			
-			return (int) (o2.priority() - o1.priority());
+			return (int) (o1.priority() - o2.priority());
 		}
 	};
    
