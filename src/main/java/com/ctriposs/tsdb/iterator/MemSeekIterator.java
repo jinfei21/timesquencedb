@@ -3,19 +3,21 @@ package com.ctriposs.tsdb.iterator;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.table.MemTable;
+import com.ctriposs.tsdb.util.ByteUtil;
 
 public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	
 	private ConcurrentSkipListMap<InternalKey, byte[]> dataMap;
 	private Iterator<Entry<InternalKey, byte[]>> curSeeIterator;
 	private Entry<InternalKey, byte[]> curEntry;
-	private InternalKey seekKey;
+	private InternalKey curSeekKey;
 	private FileManager fileManager;
 	private long fileNumber;
 	public MemSeekIterator(FileManager fileManager,MemTable memTable,long fileNumber){
@@ -23,15 +25,17 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		this.fileManager = fileManager;
 		this.fileNumber = fileNumber;
 		this.curSeeIterator = null;
-		this.seekKey = null;
+		this.curSeekKey = null;
 		this.curEntry = null;
 	}
 
 	@Override
 	public boolean hasNext() {
 
-		if(curSeeIterator != null){
-			return curSeeIterator.hasNext();
+		if(curEntry != null){
+			if(curEntry.getKey().getCode() ==  curSeekKey.getCode()){
+				return true;
+			}
 		}
 		return false;
 	}
@@ -39,9 +43,7 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public boolean hasPrev() {
 		if(curEntry != null){
-			if(null == dataMap.lowerEntry(curEntry.getKey())){
-				return false;
-			}else{
+			if(curEntry.getKey().getCode() ==  curSeekKey.getCode()){
 				return true;
 			}
 		}
@@ -75,15 +77,41 @@ public class MemSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	}
 
-
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
-
-		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);		
-		curSeeIterator = dataMap.subMap(seekKey, new InternalKey(fileManager.getCode(table),fileManager.getCode(column), System.currentTimeMillis())).entrySet().iterator();
-		curEntry = curSeeIterator.next();
+		int code = ByteUtil.ToInt(fileManager.getCode(table),fileManager.getCode(column));		
+		seek(code, time);
 	}
+	
+	@Override	
+	public void seek(int code, long time) throws IOException {
 
+		curSeekKey = new InternalKey(code, time);		
+		Entry<InternalKey, byte[]> entry = dataMap.lowerEntry(curSeekKey);
+		ConcurrentNavigableMap<InternalKey, byte[]> subMap = null;
+		if(entry == null){
+			subMap = dataMap.subMap(curSeekKey, new InternalKey(code, Long.MAX_VALUE));
+		}else{
+			subMap = dataMap.subMap(entry.getKey(), new InternalKey(code, Long.MAX_VALUE));
+		}
+		
+		curSeeIterator = subMap.entrySet().iterator();
+		curEntry = null;
+		while(curSeeIterator.hasNext()){
+			curEntry = curSeeIterator.next();
+			if(curEntry.getKey().getCode()==code){
+				break;
+			}
+		}
+		
+		if(curEntry != null){
+			if(curEntry.getKey().getCode()!=code){
+				curEntry = null;
+			}
+		}
+	}
+	
+	
 	@Override
 	public String table() {
 		if(curEntry != null){

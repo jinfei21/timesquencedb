@@ -8,6 +8,8 @@ public interface ISeekIterator<K,V> extends Iterator<Entry<K, V>> {
 	
 	void seek(String table, String column, long time) throws IOException;
 	
+	void seek(int code, long time) throws IOException;
+	
 	String table();
 	
 	String column();

@@ -103,8 +103,12 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 						if(curTimeBlock == null){
 							return false;
 						}else{
-							readEntry(curCodeBlock.current().getCode(), curTimeBlock.current(), true);
-							return true;
+							if(curCodeItem != null){
+								readEntry(curCodeItem.getCode(), curTimeBlock.last(), true);
+								return true;
+							}else{
+								return false;
+							}
 						}
 					}catch(IOException e){
 						throw new RuntimeException(e);
@@ -278,59 +282,78 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		storage.get(curCodeItem.getTimeOffSet()+curTimeBlockIndex*DBConfig.BLOCK_MAX_COUNT*TimeItem.TIME_ITEM_SIZE, bytes);
 		curTimeBlock = new TimeBlock(bytes, count);
 	}
-
+	
 	@Override
 	public void seek(int code, long time) throws IOException {
-
+		maxTimeBlockIndex = -2;
+		curCodeBlockIndex = -1;
+		curTimeBlockIndex = -1;
+		curCodeItem = null;
 		if (head.containCode(code)) {
-			// read code area
-			if(curCodeBlock==null){
-				nextCodeBlock();
-			}
+			// read code area			
+			nextCodeBlock();			
 			find(code);
 
 			// read time area
 			if (curCodeItem != null) {
-				nextTimeBlock();
-				if (curTimeBlock != null) {
-					while(curTimeBlock.containTime(time)<0){
+
+
+					curTimeBlockIndex = -1;
+					nextTimeBlock();
+					while (curTimeBlock.containTime(time) < 0) {
 						nextTimeBlock();
-						if(curTimeBlock == null){
+						if (curTimeBlock == null) {
 							break;
 						}
 					}
-					if(curTimeBlock != null){
-						if(curTimeBlock.containTime(time)==0){
-							curTimeBlock.seek(time);	
+					if (curTimeBlock != null) {
+						if (curTimeBlock.containTime(time) == 0) {
+							curTimeBlock.seek(time);							
 						}
 						readEntry(code, curTimeBlock.current(), true);
-						return;
+						
+					}else{//pointer to last time block last time item
+						curTimeBlockIndex = maxTimeBlockIndex + 1;
+						prevTimeBlock();
+						readEntry(code, curTimeBlock.last(), true);
 					}
-					
-				}
-			}
+					return;
 
+				
+			}
+			
+			
 		}
 		curTimeBlockIndex = -1;
 		maxTimeBlockIndex = -2;
 	}
-	
+
 	@Override
-	public void seekToFirst(int code) throws IOException{
+	public void seekToFirst(int code,boolean isNext) throws IOException{
 		maxTimeBlockIndex = -2;
 		curCodeBlockIndex = -1;
 		curTimeBlockIndex = -1;
+		curCodeItem = null;
 		if (head.containCode(code)) {
 			// read code area
-			nextCodeBlock();
-			
+			nextCodeBlock();			
 			find(code);
+			
 			// read time area
 			if (curCodeItem != null) {
-				nextTimeBlock();
-				if (curTimeBlock != null) {
-					readEntry(code, curTimeBlock.current(), true);
-					return;
+				if(isNext){
+					nextTimeBlock();
+					if (curTimeBlock != null) {						
+						readEntry(curCodeItem.getCode(), curTimeBlock.current(), isNext);					
+						return;
+					}
+				}else{
+					curTimeBlockIndex = maxTimeBlockIndex + 1;
+					prevTimeBlock();
+					if (curTimeBlock != null) {						
+						readEntry(curCodeItem.getCode(), curTimeBlock.last(), isNext);					
+						return;
+					}
 				}
 			}
 		}
@@ -393,9 +416,9 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 			}
 			if (curTimeBlock != null) {
 				if(isNext){
-					readEntry(curCodeItem.getCode(), curTimeBlock.current(), true);
+					readEntry(curCodeItem.getCode(), curTimeBlock.current(), isNext);
 				}else{
-					readEntry(curCodeItem.getCode(), curTimeBlock.last(), true);
+					readEntry(curCodeItem.getCode(), curTimeBlock.last(), isNext);
 				}
 				return true;
 			}

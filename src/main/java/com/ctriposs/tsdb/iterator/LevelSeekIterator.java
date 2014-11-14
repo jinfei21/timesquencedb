@@ -3,6 +3,7 @@ package com.ctriposs.tsdb.iterator;
 import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListSet;
+
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IFileIterator;
@@ -10,6 +11,7 @@ import com.ctriposs.tsdb.common.Level;
 import com.ctriposs.tsdb.common.PureFileStorage;
 import com.ctriposs.tsdb.manage.FileManager;
 import com.ctriposs.tsdb.storage.FileMeta;
+import com.ctriposs.tsdb.util.ByteUtil;
 
 public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
@@ -21,12 +23,10 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	private long curSeekTime;
 	private InternalKey seekKey;
 	private Level level;
-	private long interval;
 
-	public LevelSeekIterator(FileManager fileManager, Level level, long interval) {
+	public LevelSeekIterator(FileManager fileManager, Level level) {
 		this.fileManager = fileManager;
 		this.level = level;
-		this.interval = interval;
 		this.direction = Direction.forward;
 		this.curEntry = null;
 		this.curIt = null;
@@ -52,27 +52,34 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 	
 			if (!result) {
-				curSeekTime += interval;
-				if (curSeekTime < System.currentTimeMillis()) {
-					try {
-						itSet = getNextIterators(curSeekTime);
+				curSeekTime += level.getLevelInterval();
+
+				try {
+					if(nextIterators(curSeekTime)){
+					
 						if (null != itSet) {
 							for (IFileIterator<InternalKey, byte[]> it : itSet) {
-								it.seek(seekKey.getCode(), curSeekTime);
+									it.seek(seekKey.getCode(), curSeekTime);
 							}
 							findSmallest();
 							direction = Direction.forward;
+							if(curIt!=null&&curIt.hasNext()){
+								result = true;
+							}
 						}
-					} catch (IOException e) {
-						result = false;
-						throw new RuntimeException(e);
+					}else{
+						return false;
 					}
-				} else {
-					curEntry = null;
+				} catch (IOException e) {
 					result = false;
+					throw new RuntimeException(e);
 				}
+				
 			}else{
 				findSmallest();
+				if(curIt!=null&&curIt.hasNext()){
+					result = true;
+				}
 			}
 		}
 		return result;
@@ -94,26 +101,36 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			}
 	
 			if (!result) {
-				curSeekTime -= interval;
-				if (curSeekTime > System.currentTimeMillis() - fileManager.getMaxPeriod()) {
-					try {
-						itSet = getPrevIterators(curSeekTime);
+				curSeekTime -= level.getLevelInterval();
+				try {
+					if(prevIterators(curSeekTime)){
 						if (null != itSet) {
 							for (IFileIterator<InternalKey, byte[]> it : itSet) {
-								it.seek(seekKey.getCode(), curSeekTime);
+									if(curEntry != null){
+										it.seek(seekKey.getCode(), curEntry.getKey().getTime());
+									}else{
+										it.seek(seekKey.getCode(), curSeekTime);
+									}
 							}
 							findLargest();
 							direction = Direction.reverse;
+							if(curIt!=null&&curIt.hasNext()){
+								result = true;
+							}
 						}
-					} catch (IOException e) {
+					}else{
+						return false;
+					}
+				} catch (IOException e) {
 						result = false;
 						throw new RuntimeException(e);
-					}
-				} else {
-					result = false;
 				}
+				
 			}else{
 				findLargest();
+				if(curIt!=null&&curIt.hasNext()){
+					result = true;
+				}
 			}
 		}
 
@@ -145,6 +162,13 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	@Override
 	public Entry<InternalKey, byte[]> prev() {
 		if (direction != Direction.reverse) {
+			if(itSet == null){
+				try {
+					nextIterators(curEntry.getKey().getTime());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
 			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 				if (curIt != it) {
 					try {
@@ -164,14 +188,23 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	}
 
 	@Override
-	public void seek(String table, String column, long time) throws IOException {
-		
-		seekKey = new InternalKey(fileManager.getCode(table),fileManager.getCode(column), time);
+	public void seek(String table, String column, long time) throws IOException {		
+		int code = ByteUtil.ToInt(fileManager.getCode(table),fileManager.getCode(column));		
+		seek(code, time);
+	}
+	
 
-		itSet = getNextIterators(level.format(time,level.getLevelInterval()));
+	@Override
+	public void seek(int code, long time) throws IOException {
+	
+		seekKey = new InternalKey(code, time);
+
+		if(!nextIterators(time)){
+			prevIterators(time);
+		}
 
 		if (null != itSet) {
-			for (IFileIterator<InternalKey, byte[]> it : itSet) {
+			for (IFileIterator<InternalKey, byte[]> it : itSet) {				
 				it.seek(seekKey.getCode(), time);
 			}
 			findSmallest();
@@ -179,6 +212,8 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 			direction = Direction.forward;
 		}
 	}
+
+	
 
 	private void findSmallest() {
 		if (null != itSet) {
@@ -239,61 +274,48 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		}
 	}
 
-	//get next time interval iterator for this level
-	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getNextIterators(long time) throws IOException {
 
-		if (time > System.currentTimeMillis()) {
-			return null;
-		}
-
-		ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = getIterators(time);
-		if (set != null) {
-
-			if (itSet != null) {
-				for (IFileIterator<InternalKey, byte[]> it : itSet) {
-					it.close();
-				}
+	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getIterators(long time, boolean isNext) throws IOException {
+		
+		while (true) {
+			Long nearTime = level.nearTime(time, isNext);
+			if(nearTime == null){
+				break;
+			}else{
+				curSeekTime = nearTime;
+				ConcurrentSkipListSet<FileMeta> metaSet = level.getFiles(nearTime);
+				if (metaSet != null && metaSet.size() > 0) {
+					ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = new ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>>(fileManager.getFileIteratorComparator());
+					for (FileMeta meta : metaSet) {
+						set.add(new FileSeekIterator(new PureFileStorage(meta.getFile()), meta.getFileNumber()));
+					}
+					return set;
+				} 
 			}
-			return set;
-		} else {
-			return getNextIterators(time + interval);
 		}
+		return null;
 	}
-
-	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getIterators(long time) throws IOException {
-		curSeekTime = time;
-		ConcurrentSkipListSet<FileMeta> metaSet = level.getFiles(time);
-		if (metaSet != null) {
-			ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = new ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>>(fileManager.getFileIteratorComparator());
-
-			for (FileMeta meta : metaSet) {
-				set.add(new FileSeekIterator(new PureFileStorage(meta.getFile()), meta.getFileNumber()));
-			}
-			return set;
-		} else {
-			return null;
+	
+	private boolean nextIterators(long time) throws IOException{
+		ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = getIterators(time,true);
+		if(set != null){
+			close();
+			itSet = set;
+			return true;
 		}
+		return false;
 	}
-
-	private ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> getPrevIterators(long time) throws IOException {
-
-		if (time < System.currentTimeMillis() - fileManager.getMaxPeriod()) {
-			return null;
+	
+	private boolean prevIterators(long time) throws IOException{
+		ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = getIterators(time,false);
+		if(set != null){
+			close();
+			itSet = set;
+			return true;
 		}
-
-		ConcurrentSkipListSet<IFileIterator<InternalKey, byte[]>> set = getIterators(time);
-		if (set != null) {
-
-			if (itSet != null) {
-				for (IFileIterator<InternalKey, byte[]> it : itSet) {
-					it.close();
-				}
-			}
-			return set;
-		} else {
-			return getPrevIterators(time - interval);
-		}
+		return false;
 	}
+	
 
 	@Override
 	public String table() {
@@ -367,5 +389,6 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 	public long priority() {
 		return level.getLevelNum();
 	}
+
 
 }

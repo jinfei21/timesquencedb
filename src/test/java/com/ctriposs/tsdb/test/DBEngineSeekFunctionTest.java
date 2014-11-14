@@ -84,6 +84,7 @@ public class DBEngineSeekFunctionTest {
         
         
         System.out.println("map size:"+map.size());
+        System.out.println("count:"+count);
         System.out.println("last enging value:"+new String(engine.get(startKey, startKey, lastTime)));
         System.out.println("last value:"+lastValue);
         

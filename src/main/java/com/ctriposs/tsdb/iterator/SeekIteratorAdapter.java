@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import com.ctriposs.tsdb.ISeekIterator;
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.manage.FileManager;
+import com.ctriposs.tsdb.util.ByteUtil;
 
 public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
@@ -15,8 +16,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	private ISeekIterator<InternalKey, byte[]> curIt;
 	private FileManager fileManager;
 	private long curSeekTime;
-	private String curSeekTable;
-	private String curSeekColumn;
+	private int curSeekCode;
 	
 	public SeekIteratorAdapter(FileManager fileManager, ISeekIterator<InternalKey, byte[]>... its) {
 
@@ -86,7 +86,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 
 				if (it != curIt) {
 					try {
-						it.seek(curSeekTable,curSeekColumn,curSeekTime);						
+						it.seek(curSeekCode,curSeekTime);						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -108,7 +108,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 			for(ISeekIterator<InternalKey, byte[]> it:itSet){
 				if(curIt != it){
 					try {
-						it.seek(curSeekTable,curSeekColumn,curSeekTime);						
+						it.seek(curSeekCode,curSeekTime);						
 					} catch (IOException e) {			
 						throw new RuntimeException(e);
 					}
@@ -127,17 +127,22 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	
 	@Override
 	public void seek(String table, String column, long time) throws IOException {
-		this.curSeekTable = table;
-		this.curSeekColumn = column;
+		seek(ByteUtil.ToInt(fileManager.getCode(table),fileManager.getCode(column)), time);
+	}
+	
+	@Override
+	public void seek(int code, long time) throws IOException {
+		this.curSeekCode = code;
 		this.curSeekTime = time;
 		
 		if(!itSet.isEmpty()){
 			for(ISeekIterator<InternalKey, byte[]> it:itSet){
-				it.seek(table, column,time);
+				it.seek(curSeekCode,time);
 			}		
 			findSmallest();
 			direction = Direction.forward;
 		}
+		
 	}
 	
 	private void findSmallest(){
@@ -268,4 +273,5 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	public long priority() {
 		return 0;
 	}
+
 }

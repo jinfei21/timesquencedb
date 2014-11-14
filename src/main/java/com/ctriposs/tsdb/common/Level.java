@@ -99,7 +99,7 @@ public abstract class Level {
 	}
 
 	public LevelSeekIterator iterator(){
-		return new LevelSeekIterator(fileManager, this, interval);
+		return new LevelSeekIterator(fileManager, this);
 	}
 	
 	public void add(long time, FileMeta fileMeta) {
@@ -137,11 +137,35 @@ public abstract class Level {
 		return timeFileMap.get(format(time, interval));
 	}
 	
+	
+	public Long nearTime(long time,boolean isNext){
+		ConcurrentSkipListSet<FileMeta> fileMetas = timeFileMap.get(format(time));
+		
+		if(fileMetas == null){
+			Long nearTime = null;
+			if(isNext){
+				nearTime = timeFileMap.higherKey(time);
+			}else{
+				nearTime = timeFileMap.lowerKey(time);
+			}
+			if(nearTime != null){
+				time = nearTime;
+			}else{
+				return null;
+			}
+		}
+		return time;
+	}
+	
 	public int getFileSize(){
 		return timeFileMap.size();
 	}
 
 	public long format(long time, long interval) {
+		return time/interval*interval;
+	}
+	
+	public long format(long time) {
 		return time/interval*interval;
 	}
 	
