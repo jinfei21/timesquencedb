@@ -1,6 +1,7 @@
 package com.ctriposs.tsdb.iterator;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -28,9 +29,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 	}
 	
 	public void addIterator(ISeekIterator<InternalKey, byte[]>... its) {
-		for(ISeekIterator<InternalKey, byte[]> it:its){
-			itSet.add(it);
-		}
+		 Collections.addAll(itSet, its);
 	}
 
 
@@ -92,6 +91,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
+			findSmallest();
 			direction = Direction.forward;
 		}
 		Entry<InternalKey, byte[]> entry = curIt.next();
@@ -114,6 +114,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 					}
 				}
 			}
+			findLargest();
 			direction = Direction.reverse;
 		}
 		Entry<InternalKey, byte[]> entry = curIt.prev();

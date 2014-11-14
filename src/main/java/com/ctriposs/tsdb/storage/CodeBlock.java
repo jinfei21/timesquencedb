@@ -81,7 +81,7 @@ public class CodeBlock {
 	}
 
 	public CodeItem next()  {
-		if (curPos <= maxPos) {
+		if (curPos <= maxPos&&curPos >= 0) {
 			return codes[curPos++];
 		}
 
@@ -89,10 +89,9 @@ public class CodeBlock {
 	}
 
 	public CodeItem prev() {
-		if (curPos >= 0) {
+		if (curPos <= maxPos && curPos >= 0) {
 			return codes[curPos--];
 		}
-
 		return null;
 	}
 }

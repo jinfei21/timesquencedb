@@ -29,7 +29,7 @@ public class LevelSeekIteratorUnitTest {
 	
 	private static LevelSeekIterator lIterator;
 	private static long timecount = 300000;
-	private static long maxtimecount = 200;
+	private static long maxtimecount = 199;
 	private static long maxminute = 5;
 	private static long startTime = 0;
 	private static Random random = new Random();

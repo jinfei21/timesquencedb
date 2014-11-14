@@ -76,6 +76,9 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 				}
 				
 			}else{
+				if(curIt != null){
+					curIt.next();
+				}
 				findSmallest();
 				if(curIt!=null&&curIt.hasNext()){
 					result = true;
@@ -122,13 +125,16 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 						return false;
 					}
 				} catch (IOException e) {
-						result = false;
-						throw new RuntimeException(e);
+					result = false;
+					throw new RuntimeException(e);
 				}
 				
 			}else{
+				if(curIt != null){
+					curIt.prev();
+				}
 				findLargest();
-				if(curIt!=null&&curIt.hasNext()){
+				if(curIt!=null&&curIt.hasPrev()){
 					result = true;
 				}
 			}
@@ -152,6 +158,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					}
 				}
 			}
+			findSmallest();
 			direction = Direction.forward;
 		}
 		curEntry = curIt.next();
@@ -180,6 +187,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 					}
 				}
 			}
+			findLargest();
 			direction = Direction.reverse;
 		}
 		curEntry = curIt.prev();
@@ -213,12 +221,9 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 		}
 	}
 
-	
-
 	private void findSmallest() {
 		if (null != itSet) {
 			IFileIterator<InternalKey, byte[]> smallest = null;
-
 			for (IFileIterator<InternalKey, byte[]> it : itSet) {
 				if (it.valid()) {
 					if (smallest == null) {
