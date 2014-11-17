@@ -60,7 +60,7 @@ public class FileManager {
 		@Override
 		public int compare(IFileIterator o1,IFileIterator o2) {
 			
-			return (int) (o1.priority() - o2.priority());
+			return (int) (o2.priority() - o1.priority());
 		}
 	};
    

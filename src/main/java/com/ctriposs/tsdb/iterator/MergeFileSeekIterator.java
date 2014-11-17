@@ -18,7 +18,6 @@ public class MergeFileSeekIterator{
 	private Direction direction;
 	private Entry<InternalKey, byte[]> curEntry;
 	private IFileIterator<InternalKey, byte[]> curIt;
-	private long curSeekTime;
 	private InternalKey seekKey = null;
 	
 	public MergeFileSeekIterator(FileManager fileManager, IFileIterator<InternalKey, byte[]>... its) {
@@ -45,14 +44,19 @@ public class MergeFileSeekIterator{
 				try {
 
 					if(curIt.hasNextCode()){
-						curIt.nextCode();
+						CodeItem codeItem = curIt.nextCode();
+						if(codeItem.getCode()==curEntry.getKey().getCode()){
+							curIt.nextCode();
+						}
 						curIt.seekToCurrent(true);
-					}	
+					}else{
+						curIt.next();
+					}
 														
 					for (IFileIterator<InternalKey, byte[]> it : itSet) {
 						if(it.hasNext()) {
 							result = true;
-			                   break;
+			                break;
 						}
 					}
 					
@@ -89,11 +93,13 @@ public class MergeFileSeekIterator{
 					
 					if(curIt.hasPrevCode()){
 						CodeItem codeItem = curIt.prevCode();
-						if(codeItem.getCode() == seekKey.getCode()){
+						if(codeItem.getCode()==curEntry.getKey().getCode()){
 							curIt.prevCode();
 						}
 						curIt.seekToCurrent(false);
-					}		
+					}else{
+						curIt.prev();
+					}
 					
 
 					for (IFileIterator<InternalKey, byte[]> it : itSet) {
@@ -131,8 +137,7 @@ public class MergeFileSeekIterator{
 				if (it != curIt) {
 					try {
 
-						it.seek(curEntry.getKey().getCode(),curEntry.getKey().getTime());
-						
+						it.seek(curEntry.getKey().getCode(),curEntry.getKey().getTime());						
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -153,9 +158,7 @@ public class MergeFileSeekIterator{
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
 
 				try {
-					if(curEntry == null){
-						it.seek(seekKey.getCode(),seekKey.getTime());
-					}else{
+					if(curEntry != null){
 						it.seek(curEntry.getKey().getCode(),curEntry.getKey().getTime());
 					}
 				} catch (IOException e) {
@@ -184,7 +187,6 @@ public class MergeFileSeekIterator{
 		if(null != itSet){
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
 				it.seek(seekKey.getCode(),time);
-				it.nextCode();
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -201,6 +203,18 @@ public class MergeFileSeekIterator{
 						it.seekToCurrent(true);
 					}
 				}
+			}		
+			findSmallest();
+			direction = Direction.forward;
+		}
+	}
+	
+	public void seekToLast(int code) throws IOException {
+		
+		
+		if(null != itSet){
+			for(IFileIterator<InternalKey, byte[]> it:itSet){
+				it.seek(code,Long.MAX_VALUE);
 			}		
 			findSmallest();
 			direction = Direction.forward;
@@ -231,10 +245,10 @@ public class MergeFileSeekIterator{
 					}
 				}else{
 					if(it.hasNextCode()){
-						CodeItem item = it.nextCode();
-						if(item != null){
-							it.seekToCurrent(true);
-						}
+						it.nextCode();
+						it.seekToCurrent(true);						
+					}else{
+						it.next();
 					}
 					if(it.valid()){
 						if(smallest == null){
@@ -261,24 +275,13 @@ public class MergeFileSeekIterator{
 			}
 		}
 	}
-	
-	private boolean filter(IFileIterator<InternalKey, byte[]> it){
-		boolean result = it.valid();
-		if(seekKey != null){
-			if(it.valid()){
-				if(seekKey.getCode() != it.key().getCode()){
-					result = false;
-				}
-			}
-		}
-		return result;
-	}
+
 	
 	private void findLargest() throws IOException{
 		if(null != itSet){
 			IFileIterator<InternalKey, byte[]> largest = null;
 			for(IFileIterator<InternalKey, byte[]> it:itSet){
-				if(filter(it)){
+				if(it.valid()){
 					if(largest == null){
 						largest = it;
 					}else if(fileManager.compare(largest.key(), it.key())<0){
@@ -296,10 +299,10 @@ public class MergeFileSeekIterator{
 					}
 				}else{
 					if(it.hasPrevCode()){
-						CodeItem item = it.prevCode();
-						if(item != null){
-							it.seekToCurrent(false);
-						}
+						it.prevCode();						
+						it.seekToCurrent(false);						
+					}else{
+						it.prev();
 					}
 					if(it.valid()){
 						if(largest == null){

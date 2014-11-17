@@ -6,12 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import com.ctriposs.tsdb.InternalKey;
 import com.ctriposs.tsdb.common.IStorage;
 import com.ctriposs.tsdb.common.MapFileStorage;
@@ -47,7 +45,7 @@ public class MergeFileSeekIteratorUnitTest {
 		int maxCode = (int) (timecount/maxtimecount);
 		
 		int code = 0;
-		int value = 0;
+		int value = (int) (fileCount*maxtimecount);;
 		long time = start;
 		for (int i = 0,count = 0; i < timecount; i++,count++) {
 			if(count==maxtimecount){
@@ -82,7 +80,7 @@ public class MergeFileSeekIteratorUnitTest {
 		
 	}
 	
-
+	@Test
 	public void testIteratorNext() throws IOException {
 		int maxCode = (int) (timecount/maxtimecount);
 		int curCode = random.nextInt(maxCode);
@@ -98,10 +96,9 @@ public class MergeFileSeekIteratorUnitTest {
 			expect = (int) (timecount-curCode*maxtimecount);
 		}
 		Assert.assertEquals(count, expect*maxminute);
-		
 	}
 
-
+	@Test
 	public void testIteratorPrev() throws IOException {
 		
 		int maxCode = (int) (timecount/maxtimecount);
@@ -124,6 +121,7 @@ public class MergeFileSeekIteratorUnitTest {
 		Assert.assertEquals(count, -1);
 	}
 	
+
 	@Test
 	public void testAllIteratorNext() throws IOException {
 		int code = 0;
@@ -139,40 +137,37 @@ public class MergeFileSeekIteratorUnitTest {
 				Assert.assertEquals(++code, entry.getKey().getCode());
 				index=0;
 			}
-			
 			Assert.assertEquals(String.valueOf(index++), value);
 			count++;
 		}
 
-		Assert.assertEquals(timecount, count);		
+		Assert.assertEquals(timecount*maxminute, count);		
 		
 	}
 	
-	
+	@Test
 	public void testAllIteratorPrev() throws IOException {
-		int count = 0;
-		int index = 0;
+		int count = 0;		
 		int maxcode = (int) ((timecount+maxtimecount-1)/maxtimecount-1);
-
-		mIterator.seek(maxcode, Long.MAX_VALUE);
+		int index = (int) ((timecount-maxcode*maxtimecount)*maxminute);
+		
+		mIterator.seekToLast(maxcode);
 		int code = maxcode;
 		while(mIterator.hasPrev()){
 			Entry<InternalKey, byte[]> entry = mIterator.prev();
 			String value = new String(entry.getValue());
 			if(code == entry.getKey().getCode()){
-				index = (int) (timecount-code*maxtimecount);
 				Assert.assertEquals(code, entry.getKey().getCode());
-
 			}else{
 				Assert.assertEquals(--code, entry.getKey().getCode());
-				index = (int) maxtimecount;
+				index = (int) (maxtimecount*maxminute);
 			}
 			
-			Assert.assertEquals(String.valueOf(index++), value);
+			Assert.assertEquals(String.valueOf(--index), value);
 			count++;
 		}
 
-		Assert.assertEquals(timecount, count);		
+		Assert.assertEquals(timecount*maxminute, count);	
 	}
 	
 	
