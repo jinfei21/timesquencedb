@@ -40,6 +40,10 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 		if(curIt!=null&&curIt.hasNext()){
 			result = true;
 		}else{
+			if(curIt != null){
+				curIt.next();
+			}
+			
 			if(itSet != null) {
 				for (ISeekIterator<InternalKey, byte[]> it : itSet) {
 					if(it.hasNext()) {
@@ -49,7 +53,7 @@ public class SeekIteratorAdapter implements ISeekIterator<InternalKey, byte[]>{
 				}
 			}
 			if(result){
-				findLargest();
+				findSmallest();
 			}
 		}
 		return result;

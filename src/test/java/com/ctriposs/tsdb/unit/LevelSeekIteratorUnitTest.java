@@ -86,7 +86,6 @@ public class LevelSeekIteratorUnitTest {
 		while (lIterator.hasNext()) {
 			Entry<InternalKey, byte[]> entry = lIterator.next();
 			String value = new String(entry.getValue());
-			System.out.println(value);
 			Assert.assertEquals(String.valueOf(count++), value);
 		}
 		int expect = (int) maxtimecount;
@@ -113,7 +112,6 @@ public class LevelSeekIteratorUnitTest {
 		while (lIterator.hasPrev()) {
 			Entry<InternalKey, byte[]> entry = lIterator.prev();
 			String value = new String(entry.getValue());
-			System.out.println(value);
 			Assert.assertEquals(String.valueOf(count--), value);
 		}
 

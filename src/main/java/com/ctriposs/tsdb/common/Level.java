@@ -139,7 +139,8 @@ public abstract class Level {
 	
 	
 	public Long nearTime(long time,boolean isNext){
-		ConcurrentSkipListSet<FileMeta> fileMetas = timeFileMap.get(format(time));
+		time = format(time);
+		ConcurrentSkipListSet<FileMeta> fileMetas = timeFileMap.get(time);
 		
 		if(fileMetas == null){
 			Long nearTime = null;

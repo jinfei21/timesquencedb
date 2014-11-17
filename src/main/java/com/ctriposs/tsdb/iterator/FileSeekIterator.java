@@ -290,39 +290,35 @@ public class FileSeekIterator implements IFileIterator<InternalKey, byte[]> {
 		curTimeBlockIndex = -1;
 		curCodeItem = null;
 		if (head.containCode(code)) {
-			// read code area			
-			nextCodeBlock();			
+			// read code area
+			nextCodeBlock();
 			find(code);
 
 			// read time area
 			if (curCodeItem != null) {
-
-
-					curTimeBlockIndex = -1;
+				curTimeBlockIndex = -1;
+				nextTimeBlock();
+				while (curTimeBlock.containTime(time) < 0) {
 					nextTimeBlock();
-					while (curTimeBlock.containTime(time) < 0) {
-						nextTimeBlock();
-						if (curTimeBlock == null) {
-							break;
-						}
+					if (curTimeBlock == null) {
+						break;
 					}
-					if (curTimeBlock != null) {
-						if (curTimeBlock.containTime(time) == 0) {
-							curTimeBlock.seek(time);							
-						}
-						readEntry(code, curTimeBlock.current(), true);
-						
-					}else{//pointer to last time block last time item
-						curTimeBlockIndex = maxTimeBlockIndex + 1;
-						prevTimeBlock();
-						readEntry(code, curTimeBlock.last(), true);
+				}
+				if (curTimeBlock != null) {
+					if (curTimeBlock.containTime(time) == 0) {
+						curTimeBlock.seek(time);
 					}
-					return;
+					readEntry(code, curTimeBlock.current(), true);
 
-				
+				} else {// pointer to last time block last time item
+					curTimeBlockIndex = maxTimeBlockIndex + 1;
+					prevTimeBlock();
+					readEntry(code, curTimeBlock.last(), true);
+				}
+				return;
+
 			}
-			
-			
+
 		}
 		curTimeBlockIndex = -1;
 		maxTimeBlockIndex = -2;

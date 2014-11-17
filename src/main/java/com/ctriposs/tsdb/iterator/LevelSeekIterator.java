@@ -204,7 +204,7 @@ public class LevelSeekIterator implements ISeekIterator<InternalKey, byte[]> {
 
 	@Override
 	public void seek(int code, long time) throws IOException {
-	
+		
 		seekKey = new InternalKey(code, time);
 
 		if(!nextIterators(time)){

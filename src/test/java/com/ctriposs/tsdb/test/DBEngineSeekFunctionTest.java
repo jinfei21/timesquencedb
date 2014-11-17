@@ -57,37 +57,50 @@ public class DBEngineSeekFunctionTest {
             }
         }
         long duration = System.nanoTime() - start;
-        System.out.printf("Put/get %,d K operations per second single thread%n",
-                (int) (INIT_COUNT * 2 * 1e6 / duration));
+        System.out.printf("Put/get %,d K operations per second single thread%n", (int) (INIT_COUNT * 2 * 1e6 / duration));
 
         System.out.println("start value:"+new String(engine.get(startKey, startKey, startTime)));
 
         ISeekIterator<InternalKey, byte[]> eIt = engine.iterator();
 
         eIt.seek(startKey, startKey, startTime);
-        int count = 0;
+  
         Iterator<Entry<String,String>> mIt = map.entrySet().iterator();
-        
-        while(mIt.hasNext()){
-        	eIt.next();
-        	Entry<String,String> mEntry = mIt.next();
-        	if(eIt.value()!=null){
-	        	if(!mEntry.getValue().equals(new String(eIt.value()))){
-	        		System.out.println(++count+":"+eIt.time()+":"+eIt.table()+":"+new String(eIt.value()));
-	        	}else{
-	        		++count;
-	        	}
-        	}else{
-        		System.out.println(mEntry.getValue());
-        	}
-        }
-        
-        
-        System.out.println("map size:"+map.size());
-        System.out.println("count:"+count);
+        int total=0;
+        int miss = 0;
+        int error = 0;
+		while (mIt.hasNext()) {
+			Entry<InternalKey, byte[]> entry = null;
+			if(eIt.hasNext()){
+				entry = eIt.next();
+			}
+			Entry<String, String> mEntry = mIt.next();
+			
+			if(entry==null){
+				
+				System.out.println(error++);
+				continue;
+			}
+			String value = new String(entry.getValue());
+
+			if (!value.equals(mEntry.getValue())) {
+				error++;
+				System.out.println("Error----------------------------------"+error+"-----------------------------------------------------" );
+				System.out.println("engine value:"+eIt.column()+"-" +eIt.key().getTime()+ ":" + value+"|");
+				System.out.println("cache  value:" + mEntry.getKey()+":"+mEntry.getValue()+"|");
+				System.out.println("Error---------------------------------------------------------------------------------------" );
+			} else {
+				System.out.println("OK:"+eIt.key() + ":" + value);
+			}
+			total++;
+		}
+		
+		miss = map.size() - total;
+       
+        System.out.println("total:"+total+"miss:"+miss+"error:"+error);
         System.out.println("last enging value:"+new String(engine.get(startKey, startKey, lastTime)));
         System.out.println("last value:"+lastValue);
-        
+        System.out.println("map size:"+map.size());
 
 
     }
