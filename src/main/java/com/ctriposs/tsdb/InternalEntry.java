@@ -23,7 +23,7 @@ public class InternalEntry implements Entry<InternalKey, byte[]> {
 
 	@Override
 	public byte[] setValue(byte[] value) {
-		byte[] old = value;
+		byte[] old = this.value;
 		this.value = value;
 		return old;
 	}
