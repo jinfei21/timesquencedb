@@ -135,11 +135,13 @@ public class CompactLevel extends Level {
 	                // delete the preLevel disk files
 	                for (FileMeta fileMeta : fileMetaList) {
 	                    try {
-	                        FileUtil.forceDelete(fileMeta.getFile());
+	                    	if(fileMeta.getRefCount() == 0){
+	                    		FileUtil.forceDelete(fileMeta.getFile());
+	                    	}
 	                    } catch (IOException e) {
 	                    	e.printStackTrace();
 	                    	incrementStoreError();
-	                    	deleteFiles.add(fileMeta.getFile());
+	                    	deleteFiles.add(fileMeta);
 	                    }
 	                }
                 }
@@ -183,7 +185,7 @@ public class CompactLevel extends Level {
             }catch(Throwable t){
             	t.printStackTrace();
             	closeStorages.add(fileStorage);
-            	deleteFiles.add(new File(fileStorage.getName()));
+            	deleteFiles.add(fileMeta);
             	incrementStoreError();
             }
             return fileMeta;

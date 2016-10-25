@@ -2,6 +2,7 @@ package com.ctriposs.tsdb.storage;
 
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ctriposs.tsdb.InternalKey;
 
@@ -14,12 +15,15 @@ public class FileMeta implements Comparable<FileMeta> {
     private final InternalKey largest;
     
     private final long fileNumber;
+    
+    private final AtomicInteger refCount;
 
 	public FileMeta(long fileNumber,File file, InternalKey smallest, InternalKey largest) {
         this.file = file;
         this.smallest = smallest;
         this.largest = largest;
         this.fileNumber = fileNumber;
+        this.refCount = new AtomicInteger(0);
 	}
 
     public InternalKey getSmallest() {
@@ -40,7 +44,18 @@ public class FileMeta implements Comparable<FileMeta> {
 
     public boolean contains(InternalKey key) {
         return key.compareTo(smallest) >= 0 && key.compareTo(largest) <= 0;
-
+    }
+    
+    public int getRefCount(){
+    	return this.refCount.get();
+    }
+    
+    public int addRefCount(){
+    	return this.refCount.incrementAndGet();
+    }
+    
+    public int decRefCount(){
+    	return this.refCount.decrementAndGet();
     }
 
 	@Override
@@ -52,6 +67,7 @@ public class FileMeta implements Comparable<FileMeta> {
         sb.append(", fileNumber=").append(fileNumber);
         sb.append(", smallest=").append(smallest);
         sb.append(", largest=").append(largest);
+        sb.append(", refCount=").append(refCount.get());
 		sb.append('}');
 
 		return sb.toString();

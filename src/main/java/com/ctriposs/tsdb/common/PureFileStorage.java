@@ -6,11 +6,14 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+import com.ctriposs.tsdb.storage.FileMeta;
+
 public class PureFileStorage implements IStorage {
 
 	private FileChannel fileChannel;
 	private RandomAccessFile raf;
 	private String fullFileName;
+	private FileMeta fileMeta;
 
 	public PureFileStorage(String dir, long time, String suffix, long capacity) throws IOException {
 		File dirFile = new File(dir);
@@ -38,6 +41,11 @@ public class PureFileStorage implements IStorage {
 		raf = new RandomAccessFile(file, "rw");
 		fullFileName = file.getPath();
 		fileChannel = raf.getChannel();
+	}
+	
+	public PureFileStorage(FileMeta fileMeta) throws IOException {
+		this(fileMeta.getFile());
+		this.fileMeta = fileMeta;
 	}
 	
 	@Override
@@ -86,6 +94,11 @@ public class PureFileStorage implements IStorage {
 	@Override
 	public String getName() {
 		return fullFileName;
+	}
+
+	@Override
+	public FileMeta getFileMeta() {
+		return this.fileMeta;
 	}
 
 

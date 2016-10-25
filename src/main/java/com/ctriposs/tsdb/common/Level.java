@@ -41,7 +41,7 @@ public abstract class Level {
     /** The list change lock. */
     private final Lock changeLock = new ReentrantLock();
     
-    protected final ArrayBlockingQueue<File> deleteFiles = new ArrayBlockingQueue<File>(60);
+    protected final ArrayBlockingQueue<FileMeta> deleteFiles = new ArrayBlockingQueue<FileMeta>(60);
     protected final ArrayBlockingQueue<IStorage> closeStorages = new ArrayBlockingQueue<IStorage>(60);
     protected final ArrayBlockingQueue<IFileIterator<InternalKey, byte[]>> closeIterators = new ArrayBlockingQueue<IFileIterator<InternalKey, byte[]>>(60);
 
@@ -189,10 +189,14 @@ public abstract class Level {
 						.getKey());
 				for (FileMeta meta : list) {
 					try {
-						fileManager.delete(meta.getFile());
-						list.remove(meta);
+						if(meta.getRefCount() == 0){
+							fileManager.delete(meta.getFile());
+							list.remove(meta);
+						}else{
+							deleteFiles.add(meta);
+						}
 					} catch (IOException e) {
-						deleteFiles.add(meta.getFile());
+						deleteFiles.add(meta);
 						throw e;
 					}
 				}
@@ -209,7 +213,8 @@ public abstract class Level {
 			if(list != null) {
 				for(FileMeta fileMeta : list) {
 					if(fileMeta.contains(key)){
-						IStorage storage = new PureFileStorage(fileMeta.getFile());
+						IStorage storage = new PureFileStorage(fileMeta);
+						fileMeta.addRefCount();
 						FileSeekIterator it = new FileSeekIterator(storage);
 						itSet.put(it, storage);
 						it.seek(key.getCode(),key.getTime());
@@ -230,6 +235,7 @@ public abstract class Level {
 			for(Entry<FileSeekIterator,IStorage> entry :itSet.entrySet()){
 				try{
 					entry.getKey().close();
+					entry.getValue().getFileMeta().decRefCount();
 				}catch(Throwable t){
 					closeStorages.add(entry.getValue());
 					t.printStackTrace();
@@ -289,14 +295,16 @@ public abstract class Level {
 				}
 			}
 			//delete files
-			File file = deleteFiles.poll();
-			if(file != null){		
+			FileMeta fileMeta = deleteFiles.poll();
+			if(fileMeta != null){		
 				try{
-					FileUtil.forceDelete(file);
+					if(fileMeta.getRefCount() == 0){
+						FileUtil.forceDelete(fileMeta.getFile());
+					}
 				}catch(Throwable t){
 					t.printStackTrace();
 					incrementStoreError();
-					deleteFiles.add(file);
+					deleteFiles.add(fileMeta);
 				}
 			}
 		}

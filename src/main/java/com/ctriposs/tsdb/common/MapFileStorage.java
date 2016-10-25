@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
+import com.ctriposs.tsdb.storage.FileMeta;
 import com.ctriposs.tsdb.util.FileUtil;
 
 public class MapFileStorage implements IStorage {
@@ -111,6 +112,11 @@ public class MapFileStorage implements IStorage {
 	@Override
 	public String getName() {
 		return fullFileName;
+	}
+
+	@Override
+	public FileMeta getFileMeta() {
+		return null;
 	}
 
 

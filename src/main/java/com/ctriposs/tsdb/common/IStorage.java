@@ -4,6 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.ctriposs.tsdb.storage.FileMeta;
+
 
 /**
  * The Interface IStorage for get/put cached data in bytes.
@@ -43,7 +45,9 @@ public interface IStorage  extends Closeable {
 	void free();
 	
 	
-	public String getName();
+	String getName();
+	
+	FileMeta getFileMeta();
   
 }
 
